@@ -1,0 +1,12 @@
+{
+    "connection": {
+        "host": "localhost",
+        "user": "root",
+        "password": "",
+        "database": "root"
+    },
+    "pool": {
+        "min": 1,
+        "max": 10
+    }
+}

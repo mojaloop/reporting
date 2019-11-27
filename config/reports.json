@@ -1,0 +1,3 @@
+{
+    "/jimmy": "select * from participant where name = $P{JIMMYS_NAME}"
+}

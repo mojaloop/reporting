@@ -29,6 +29,12 @@
     "jest": "^24.8.0"
   },
   "dependencies": {
-    "koa": "^2.7.0"
+    "@internal/router": "file:src/lib/router",
+    "el-logger": "file:src/lib/el-logger",
+    "knex": "^0.20.2",
+    "koa": "^2.7.0",
+    "mysql2": "^2.0.1",
+    "object.fromentries": "github:es-shims/Object.fromEntries#v2.0.1",
+    "string.prototype.matchall": "github:es-shims/String.prototype.matchAll#v4.0.0"
   }
 }

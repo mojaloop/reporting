@@ -2,9 +2,12 @@
 const assert = require('assert').strict;
 const qs = require('querystring');
 
+const matchAll = require('string.prototype.matchall');
+const fromEntries = require('object.fromentries');
+
 const healthCheck = async (ctx) => {
     ctx.response.status = 200;
-    ctx.response.body = '';
+    ctx.response.body = { status: 'ok' };
 };
 
 const createReportHandlers = (reportsConfig) => {
@@ -17,7 +20,7 @@ const createReportHandlers = (reportsConfig) => {
         assert(route.substr(-1) !== '/');
 
         const paramRegex = /\$P{([^}{]*)}/g;
-        const params = [...query.matchAll(paramRegex)];
+        const params = [...matchAll(query, paramRegex)];
         // Ensure that every parameter has a name inside the curly braces of $P{}
         params.forEach(p => assert(
             p.length > 1,
@@ -50,22 +53,21 @@ const createReportHandlers = (reportsConfig) => {
                 ctx.assert(
                     requestErrors.length === 0,
                     400,
-                    // TODO: we should not have to stringify this. Add a middleware.
-                    JSON.stringify({
-                        msg: 'Errors in request',
+                    {
+                        message: 'Errors in request',
                         errors: requestErrors,
-                    }),
+                    },
                 );
 
-                const queryArgs = Object.fromEntries(ctx.request.URL.searchParams.entries());
-                const result = await ctx.state.db.query(dbQuery, queryArgs);
+                const queryArgs = fromEntries(ctx.request.URL.searchParams.entries());
+                const result = await ctx.db.query(dbQuery, queryArgs);
                 ctx.response.body = result;
             },
         };
         return [route, handler];
     }
 
-    return Object.fromEntries(Object.entries(reportsConfig).map(createReportHandler));
+    return fromEntries(Object.entries(reportsConfig).map(createReportHandler));
 }
 
 module.exports = {

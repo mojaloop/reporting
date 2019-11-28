@@ -1,5 +1,5 @@
 {
-  "name": "koa-service-template",
+  "name": "mojaloop-reporting-service",
   "version": "0.1.0",
   "description": "",
   "main": "src/server.js",
@@ -9,26 +9,28 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "start": "node src/server.js",
-    "test": "jest test/unit",
+    "test": "jest test/**/*.test.js",
     "test:integration": "jest test/integration"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/casablanca-project/koa-service-template.git"
+    "url": "git+https://github.com/casablanca-project/reports.git"
   },
   "author": "",
   "license": "UNLICENSED",
   "bugs": {
-    "url": "https://github.com/casablanca-project/koa-service-template/issues"
+    "url": "https://github.com/casablanca-project/reports/issues"
   },
-  "homepage": "https://github.com/casablanca-project/koa-service-template#readme",
+  "homepage": "https://github.com/casablanca-project/reports#readme",
   "devDependencies": {
     "eslint": "6.1.0",
     "eslint-config-airbnb-base": "14.0.0",
     "eslint-plugin-import": "^2.18.2",
-    "jest": "^24.8.0"
+    "jest": "^24.8.0",
+    "supertest": "^4.0.2"
   },
   "dependencies": {
+    "@internal/randomphrase": "file:src/lib/randomphrase",
     "@internal/router": "file:src/lib/router",
     "el-logger": "file:src/lib/el-logger",
     "knex": "^0.20.2",

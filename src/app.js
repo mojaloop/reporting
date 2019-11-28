@@ -1,50 +1,60 @@
 
-require('string.prototype.matchall').shim();
-require('object.fromentries').shim();
-
-const Database = require('./db');
 const Koa = require('koa');
-const { Logger, transports } = require('el-logger');
 const router = require('@internal/router');
 const handlers = require('./handlers');
-const reportsConfig = require('../config/reports.json');
-const dbConfig = require('../config/db.json');
+const randomphrase = require('@internal/randomphrase');
 
-const app = new Koa();
+const create = ({ db, reportsConfig, logger }) => {
+    const app = new Koa();
 
-app.use(async (ctx, next) => {
-    ctx.state = {
-        ...ctx.state,
-        logger: new Logger({
-            ctx: {
+    // Default context
+    app.context.db = db;
+
+    // Attach state for handlers
+    app.use(async (ctx, next) => {
+        ctx.state = {
+            ...ctx.state,
+            logger: logger.push({
                 request: {
-                    // TODO (use randomphrase internal lib): id: ctx.request.id,
+                    id: randomphrase(),
                     path: ctx.path,
                     method: ctx.method,
                 },
-            },
-            transports: [transports.stdout],
-        }),
-        db: new Database(dbConfig),
-    };
-    await next();
-});
+            }),
+        };
+        await next();
+    });
 
-// Load handlers here, before post-processing
-const reportHandlers = handlers.createReportHandlers(reportsConfig);
-const routeHandlers = { ...handlers.handlerMap, ...reportHandlers }
-app.use(router(routeHandlers));
+    // Log request receipt
+    app.use(async (ctx, next) => {
+        ctx.state.logger.log('Received request');
+        try {
+            await next();
+        } catch (err) {
+            ctx.state.logger.push(err).log('Error handling request');
+            ctx.response.status = err.statusCode || err.status || 500;
+            ctx.response.body = JSON.stringify(err);
+        }
+        ctx.state.logger.log('Handled request');
+    });
 
-app.use(async (ctx, next) => {
-    // This is strictly a JSON api, so only return application/json
-    ctx.response.headers = {
-        'content-type': 'application/json',
-    }
-    // Koa automatically json stringifies our response body and sets the response status to 200/204
-    // if we haven't set it
-    await next();
-});
+    // Load handlers here, before post-processing
+    const reportHandlers = handlers.createReportHandlers(reportsConfig);
+    const routeHandlers = { ...handlers.handlerMap, ...reportHandlers }
+    logger.push({ routes: Object.keys(routeHandlers) }).log('Serving routes');
+    app.use(router(routeHandlers));
 
-module.exports = {
-    app,
-};
+    app.use(async (ctx, next) => {
+        // This is strictly a JSON api, so only return application/json
+        ctx.response.headers = {
+            'content-type': 'application/json',
+        }
+        // Koa automatically json stringifies our response body and sets the response status to 200/204
+        // if we haven't set it
+        await next();
+    });
+
+    return app;
+}
+
+module.exports = create;

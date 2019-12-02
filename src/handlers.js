@@ -15,9 +15,10 @@ const createReportHandlers = (reportsConfig) => {
 
     const createReportHandler = ([route, query]) => {
         // Check that the report route doesn't replace any static routes
-        assert(!handlerMapRoutes.includes(route));
+        assert(!handlerMapRoutes.includes(route),
+            `Configured report route "${route}" would override static route with same path`);
         // Check that the report route does not have a trailing slash
-        assert(route.substr(-1) !== '/');
+        assert(route.substr(-1) !== '/', `Report route ${route} cannot contain a trailing slash`);
 
         const paramRegex = /\$P{([^}{]*)}/g;
         const params = [...matchAll(query, paramRegex)];
@@ -39,14 +40,14 @@ const createReportHandlers = (reportsConfig) => {
                     // User provided a querystring with duplicated params/args, such as ?q=a&q=b
                     ...paramNames
                         .filter(pn => ctx.request.URL.searchParams.getAll(pn).length > 1)
-                        .map(pn => `Only one argument allowed for query param ${pn}`),
+                        .map(pn => `Only one argument allowed for queryparam ${pn}`),
                     // User provided a querystring parameter not in our allowed list
                     ...[...ctx.request.URL.searchParams.keys()]
                         .filter(pn => !paramNames.includes(pn))
                         .map(pn => `queryparam ${pn} not supported by this report`),
                     // User did not provide a value for a query parameter
                     ...[...ctx.request.URL.searchParams.entries()]
-                        .filter(([, arg]) => !arg)
+                        .filter(([pn, arg]) => !arg && paramNames.includes(pn))
                         .map(([param, ]) => `queryparam ${param} must have a value supplied`),
                 ]
 

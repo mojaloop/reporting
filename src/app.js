@@ -34,6 +34,7 @@ const create = ({ db, reportsConfig, logger }) => {
             ctx.state.logger.push(err).log('Error handling request');
             ctx.response.status = err.statusCode || err.status || 500;
             ctx.response.body = JSON.stringify(err);
+            ctx.response.set('content-type', 'application/json');
         }
         ctx.state.logger.log('Handled request');
     });
@@ -46,9 +47,7 @@ const create = ({ db, reportsConfig, logger }) => {
 
     app.use(async (ctx, next) => {
         // This is strictly a JSON api, so only return application/json
-        ctx.response.headers = {
-            'content-type': 'application/json',
-        }
+        ctx.response.set('content-type', 'application/json');
         // Koa automatically json stringifies our response body and sets the response status to 200/204
         // if we haven't set it
         await next();

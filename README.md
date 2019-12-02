@@ -17,3 +17,4 @@
     single default global templating engine, and then a per-report override.
 - OpenAPI validation on requests and responses (optionally for reports)
 - Streaming. The DB lib supports streaming, so does koa.
+- Streams in the logger.

@@ -79,7 +79,7 @@ test('query failure results in 500', async () => {
     testResponseInvariants(res);
 });
 
-test.only('default mock report - correct query and bindings received by database', async () => {
+test('default mock report - correct query and bindings received by database', async () => {
     expect.assertions(4);
     const reportsConfig = {
         '/t': '$P{arg0}$P{arg1}$P{arg2}'
@@ -88,7 +88,7 @@ test.only('default mock report - correct query and bindings received by database
         reportsConfig,
         db: {
             query: (query, bindings) => {
-                expect(qArg).toEqual(':arg0:arg1:arg2');
+                expect(query).toEqual(':arg0:arg1:arg2');
                 expect(bindings).toStrictEqual({
                     arg0: 'a',
                     arg1: 'b',

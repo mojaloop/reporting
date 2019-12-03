@@ -32,7 +32,7 @@
   "dependencies": {
     "@internal/randomphrase": "file:src/lib/randomphrase",
     "@internal/router": "file:src/lib/router",
-    "el-logger": "file:src/lib/el-logger",
+    "el-logger": "github:msk-/el-logger",
     "knex": "^0.20.2",
     "koa": "^2.7.0",
     "mysql2": "^2.0.1",

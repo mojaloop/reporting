@@ -14,7 +14,7 @@ const createDbMock = (result) => ({
     query: async (qStr, bindings) => [result]
 });
 
-const logger = new Logger({ transports: [transports.stdout()] });
+const logger = new Logger({ transports: [ /* transports.stdout() */] });
 const db = createDbMock('result');
 const reportsConfig = {
     '/test': 'SELECT * FROM user WHERE id = $P{userId}',

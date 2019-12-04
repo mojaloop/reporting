@@ -1,9 +1,10 @@
 # Mojaloop Reporting Service
-- Load reports into `config/reports.json`.
+- Map SQL queries to HTTP routes in `config/reports.json`.
 - The format is
     ```json
     {
-        "/route/to/serve/report/on": "SELECT some, data FROM some_table WHERE some_parameter = $P{url_query_string_param}"
+        "/route/to/serve/report/on": "SELECT some, data FROM some_table WHERE some_parameter = $P{url_query_string_param}",
+        "/other/route": "SELECT more, stuff FROM another_table WHERE whatever = $P{some_different_param}"
     }
     ```
 - Make requests as follows:

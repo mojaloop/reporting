@@ -61,6 +61,7 @@ const createReportHandlers = (reportsConfig) => {
                 );
 
                 const queryArgs = fromEntries(ctx.request.URL.searchParams.entries());
+                ctx.state.logger.push({ dbQuery, queryArgs }).log('Executing query');
                 const result = await ctx.db.query(dbQuery, queryArgs);
                 ctx.response.body = result;
             },

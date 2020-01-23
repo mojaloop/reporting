@@ -26,7 +26,7 @@ const create = ({ db, reportsConfig, logger }) => {
         await next();
     });
 
-    // Log request receipt, handle exceptions
+    // Log request receipt and response, handle exceptions
     app.use(async (ctx, next) => {
         ctx.state.logger.log('Received request');
         try {
@@ -37,7 +37,7 @@ const create = ({ db, reportsConfig, logger }) => {
             ctx.response.body = JSON.stringify(err);
             ctx.response.set('content-type', 'application/json');
         }
-        ctx.state.logger.log('Handled request');
+        ctx.state.logger.push({ response: ctx.response.body }).log('Handled request');
     });
 
     // Load handlers here, before post-processing

@@ -71,6 +71,11 @@ test('default mock report - correct request', async () => {
     testResponseInvariants(res);
 });
 
+test('report query missing parameter name results in handler build failure', async () => {
+    const t = () => createMockServer({ reportsConfig: { '/blah': '$P{}' } });
+    expect(t).toThrow(/^Loading report config: report parameter \$P\{\} for route \/blah did not contain a name$/);
+});
+
 test('query failure results in 500', async () => {
     const res = await createMockServer({ db: { query: () => { throw new Error() } } })
         .get('/test?userId=1');
@@ -143,4 +148,73 @@ test('default mock report - extra queryparam', async () => {
         errors: ['queryparam hello not supported by this report'],
     });
     testResponseInvariants(res);
+});
+
+test('default mock report - optional query parameter provided - correct query and bindings received by database', async () => {
+    expect.assertions(4);
+    const reportsConfig = {
+        '/t': '$P{arg0}$P{arg1}$O{arg2}'
+    };
+    const res = await createMockServer({
+        reportsConfig,
+        db: {
+            query: (query, bindings) => {
+                expect(query).toEqual(':arg0:arg1:arg2');
+                expect(bindings).toStrictEqual({
+                    arg0: 'a',
+                    arg1: 'b',
+                    arg2: 'c',
+                });
+                return ['blah'];
+            },
+        },
+    }).get('/t?arg0=a&arg1=b&arg2=c');
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toStrictEqual(['blah']);
+});
+
+test('default mock report - optional query parameter omitted - correct query and bindings received by database', async () => {
+    expect.assertions(4);
+    const reportsConfig = {
+        '/t': '$P{arg0}$P{arg1}$O{arg2}'
+    };
+    const res = await createMockServer({
+        reportsConfig,
+        db: {
+            query: (query, bindings) => {
+                expect(query).toEqual(':arg0:arg1:arg2');
+                expect(bindings).toStrictEqual({
+                    arg0: 'a',
+                    arg1: 'b',
+                    arg2: null,
+                });
+                return ['blah'];
+            },
+        },
+    }).get('/t?arg0=a&arg1=b');
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toStrictEqual(['blah']);
+});
+
+test('default mock report - optional query parameter value omitted - correct query and bindings received by database', async () => {
+    expect.assertions(4);
+    const reportsConfig = {
+        '/t': '$P{arg0}$P{arg1}$O{arg2}'
+    };
+    const res = await createMockServer({
+        reportsConfig,
+        db: {
+            query: (query, bindings) => {
+                expect(query).toEqual(':arg0:arg1:arg2');
+                expect(bindings).toStrictEqual({
+                    arg0: 'a',
+                    arg1: 'b',
+                    arg2: null,
+                });
+                return ['blah'];
+            },
+        },
+    }).get('/t?arg0=a&arg1=b&arg2=');
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toStrictEqual(['blah']);
 });

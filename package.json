@@ -25,17 +25,17 @@
   "devDependencies": {
     "eslint": "6.1.0",
     "eslint-config-airbnb-base": "14.0.0",
-    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-import": "^2.20.0",
     "jest": "^24.8.0",
     "supertest": "^4.0.2"
   },
   "dependencies": {
     "@internal/randomphrase": "file:src/lib/randomphrase",
     "@internal/router": "file:src/lib/router",
-    "el-logger": "msk-/el-logger",
-    "knex": "^0.20.2",
+    "el-logger": "github:msk-/el-logger",
+    "knex": "^0.20.8",
     "koa": "^2.7.0",
-    "mysql2": "^2.0.1",
+    "mysql2": "^2.1.0",
     "object.fromentries": "github:es-shims/Object.fromEntries#v2.0.1",
     "string.prototype.matchall": "github:es-shims/String.prototype.matchAll#v4.0.0"
   }

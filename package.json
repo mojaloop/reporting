@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/casablanca-project/reports#readme",
   "devDependencies": {
+    "csv-parse": "^4.8.8",
     "eslint": "6.1.0",
     "eslint-config-airbnb-base": "14.0.0",
     "eslint-plugin-import": "^2.20.0",

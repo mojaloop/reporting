@@ -33,7 +33,7 @@
   "dependencies": {
     "@internal/randomphrase": "file:src/lib/randomphrase",
     "@internal/router": "file:src/lib/router",
-    "csv-generate": "^3.2.4",
+    "csv-stringify": "^5.3.6",
     "el-logger": "github:msk-/el-logger",
     "knex": "^0.20.8",
     "koa": "^2.7.0",

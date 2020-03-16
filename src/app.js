@@ -1,8 +1,9 @@
 
 const Koa = require('koa');
 const router = require('@internal/router');
-const handlers = require('./handlers');
+const { validateReportHandlers, createReportHandlers, handlerMap } = require('./handlers');
 const randomphrase = require('@internal/randomphrase');
+const fromEntries = require('object.fromentries');
 
 const create = ({ db, reportsConfig, logger }) => {
     const app = new Koa();
@@ -41,10 +42,31 @@ const create = ({ db, reportsConfig, logger }) => {
     });
 
     // Load handlers here, before post-processing
-    const reportHandlers = handlers.createReportHandlers(reportsConfig);
-    const routeHandlers = { ...handlers.handlerMap, ...reportHandlers }
+    const reportsConfigWithSuffixes = fromEntries(
+        Object.entries(reportsConfig)
+            .reduce((pv, [key, val]) => [...pv, [`${key}.json`, val], [`${key}.csv`, val]], [])
+    );
+    validateReportHandlers(reportsConfigWithSuffixes);
+    const reportHandlers = createReportHandlers(reportsConfigWithSuffixes);
+    const routeHandlers = { ...handlerMap, ...reportHandlers }
     logger.push({ routes: Object.keys(routeHandlers) }).log('Serving routes');
     app.use(router(routeHandlers));
+
+    // Serialise the body to the type we're interested in
+    app.use(async (ctx, next) => {
+        const suffix = ctx.request.path.split('.').pop();
+        switch (suffix) {
+            case 'csv':
+
+                break;
+            case 'json':
+
+                break;
+            default:
+                // Do nothing
+        }
+        await next();
+    });
 
     app.use(async (ctx, next) => {
         // This is strictly a JSON api, so only return application/json

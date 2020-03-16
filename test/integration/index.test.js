@@ -47,11 +47,6 @@ test('able to create server without any reports configured', () => {
     createMockServer({ reportsConfig: {} });
 });
 
-test('report route overriding healthcheck fails assertion', () => {
-    const t = () => createMockServer({ reportsConfig: { '/': 'test' } });
-    expect(t).toThrow(/^Configured report route .* would override static route with same path$/);
-});
-
 test('report route containing trailing slash fails assertion', () => {
     const t = () => createMockServer({ reportsConfig: { '/blah/': 'test' } });
     expect(t).toThrow(/^Report route .* cannot contain a trailing slash$/);
@@ -65,7 +60,7 @@ test('healthcheck passes', async () => {
 });
 
 test('default mock report - correct request', async () => {
-    const res = await createMockServer().get('/test?userId=1');
+    const res = await createMockServer().get('/test.json?userId=1');
     expect(res.statusCode).toEqual(200);
     expect(res.body).toStrictEqual([ 'result' ]);
     testResponseInvariants(res);
@@ -73,12 +68,12 @@ test('default mock report - correct request', async () => {
 
 test('report query missing parameter name results in handler build failure', async () => {
     const t = () => createMockServer({ reportsConfig: { '/blah': '$P{}' } });
-    expect(t).toThrow(/^Loading report config: report parameter \$P\{\} for route \/blah did not contain a name$/);
+    expect(t).toThrow(/^Loading report config: report parameter \$P\{\} for route \/blah\.(json|csv) did not contain a name$/);
 });
 
 test('query failure results in 500', async () => {
     const res = await createMockServer({ db: { query: () => { throw new Error() } } })
-        .get('/test?userId=1');
+        .get('/test.json?userId=1');
     expect(res.statusCode).toEqual(500);
     expect(res.body).toStrictEqual({});
     testResponseInvariants(res);
@@ -102,13 +97,13 @@ test('default mock report - correct query and bindings received by database', as
                 return ['blah'];
             },
         },
-    }).get('/t?arg0=a&arg1=b&arg2=c');
+    }).get('/t.json?arg0=a&arg1=b&arg2=c');
     expect(res.statusCode).toEqual(200);
     expect(res.body).toStrictEqual(['blah']);
 });
 
 test('default mock report - missing queryparam', async () => {
-    const res = await createMockServer().get('/test');
+    const res = await createMockServer().get('/test.json');
     expect(res.statusCode).toEqual(400);
     expect(res.body).toStrictEqual({
         message: 'Errors in request',
@@ -118,7 +113,7 @@ test('default mock report - missing queryparam', async () => {
 });
 
 test('default mock report - missing queryparam value', async () => {
-    const res = await createMockServer().get('/test?userId=');
+    const res = await createMockServer().get('/test.json?userId=');
     expect(res.statusCode).toEqual(400);
     expect(res.body).toStrictEqual({
         message: 'Errors in request',
@@ -128,7 +123,7 @@ test('default mock report - missing queryparam value', async () => {
 });
 
 test('default mock report - duplicated queryparam', async () => {
-    const res = await createMockServer().get('/test?userId&userId=1');
+    const res = await createMockServer().get('/test.json?userId&userId=1');
     expect(res.statusCode).toEqual(400);
     expect(res.body).toStrictEqual({
         message: 'Errors in request',
@@ -141,7 +136,7 @@ test('default mock report - duplicated queryparam', async () => {
 });
 
 test('default mock report - extra queryparam', async () => {
-    const res = await createMockServer().get('/test?hello&userId=1');
+    const res = await createMockServer().get('/test.json?hello&userId=1');
     expect(res.statusCode).toEqual(400);
     expect(res.body).toStrictEqual({
         message: 'Errors in request',
@@ -168,7 +163,7 @@ test('default mock report - optional query parameter provided - correct query an
                 return ['blah'];
             },
         },
-    }).get('/t?arg0=a&arg1=b&arg2=c');
+    }).get('/t.json?arg0=a&arg1=b&arg2=c');
     expect(res.statusCode).toEqual(200);
     expect(res.body).toStrictEqual(['blah']);
 });
@@ -191,7 +186,7 @@ test('default mock report - optional query parameter omitted - correct query and
                 return ['blah'];
             },
         },
-    }).get('/t?arg0=a&arg1=b');
+    }).get('/t.json?arg0=a&arg1=b');
     expect(res.statusCode).toEqual(200);
     expect(res.body).toStrictEqual(['blah']);
 });
@@ -214,7 +209,7 @@ test('default mock report - optional query parameter value omitted - correct que
                 return ['blah'];
             },
         },
-    }).get('/t?arg0=a&arg1=b&arg2=');
+    }).get('/t.json?arg0=a&arg1=b&arg2=');
     expect(res.statusCode).toEqual(200);
     expect(res.body).toStrictEqual(['blah']);
 });

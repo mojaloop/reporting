@@ -10,29 +10,49 @@ const healthCheck = async (ctx) => {
     ctx.response.body = { status: 'ok' };
 };
 
-const createReportHandlers = (reportsConfig) => {
+const getParams = (query) => {
+    const requiredParamRegex = /\$P{([^}{]*)}/g;
+    const requiredParams = [...matchAll(query, requiredParamRegex)];
+
+    const optionalParamRegex = /\$O{([^}{]*)}/g;
+    const optionalParams = [...matchAll(query, optionalParamRegex)];
+
+    return { requiredParams, optionalParams };
+};
+
+const validateHandler = ([route, query]) => {
+    // Check that the report route doesn't replace any static routes
     const handlerMapRoutes = Object.keys(module.exports.handlerMap);
+    assert(!handlerMapRoutes.includes(route),
+        `Configured report route "${route}" would override static route with same path`);
+    // Check that the report route does not have a trailing slash
+    const splitRoute = route.split('.');
+    assert(
+        splitRoute[splitRoute.length - 2].substr(-1) !== '/',
+        `Report route ${route} cannot contain a trailing slash`
+    );
 
+    const { requiredParams, optionalParams } = getParams(query);
+
+    const params = [...requiredParams, ...optionalParams];
+
+    // Ensure that every parameter has a name inside the curly braces of $P{}
+    params.forEach(p => assert(
+        p[1].length > 0,
+        `Loading report config: report parameter ${p[0]} for route ${route} did not contain a name`
+    ));
+};
+
+const validateReportHandlers = (reportsConfig) => {
+    Object.entries(reportsConfig).map(validateHandler);
+};
+
+const createReportHandlers = (reportsConfig) => {
     const createReportHandler = ([route, query]) => {
-        // Check that the report route doesn't replace any static routes
-        assert(!handlerMapRoutes.includes(route),
-            `Configured report route "${route}" would override static route with same path`);
-        // Check that the report route does not have a trailing slash
-        assert(route.substr(-1) !== '/', `Report route ${route} cannot contain a trailing slash`);
+        // validateHandler(handlerMapRoutes, route, query)
 
-        const requiredParamRegex = /\$P{([^}{]*)}/g;
-        const requiredParams = [...matchAll(query, requiredParamRegex)];
-
-        const optionalParamRegex = /\$O{([^}{]*)}/g;
-        const optionalParams = [...matchAll(query, optionalParamRegex)];
-
+        const { requiredParams, optionalParams } = getParams(query);
         const params = [...requiredParams, ...optionalParams];
-
-        // Ensure that every parameter has a name inside the curly braces of $P{}
-        params.forEach(p => assert(
-            p[1].length > 0,
-            `Loading report config: report parameter ${p[0]} for route ${route} did not contain a name`
-        ));
 
         // Build the optional param default object here (once) for later use
         const optionalParamDefaults = Object.assign({}, ...optionalParams.map(p => ({ [p[1]]: null })));
@@ -79,6 +99,7 @@ const createReportHandlers = (reportsConfig) => {
                 };
                 ctx.state.logger.push({ dbQuery, queryArgs }).log('Executing query');
                 const result = await ctx.db.query(dbQuery, queryArgs);
+
                 ctx.response.body = result;
             },
         };
@@ -89,6 +110,7 @@ const createReportHandlers = (reportsConfig) => {
 }
 
 module.exports = {
+    validateReportHandlers,
     createReportHandlers,
     handlerMap: {
         '/': {

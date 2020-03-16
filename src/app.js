@@ -4,6 +4,7 @@ const router = require('@internal/router');
 const { validateReportHandlers, createReportHandlers, handlerMap } = require('./handlers');
 const randomphrase = require('@internal/randomphrase');
 const fromEntries = require('object.fromentries');
+const csvGenerate = require('csv-generate');
 
 const create = ({ db, reportsConfig, logger }) => {
     const app = new Koa();
@@ -48,7 +49,7 @@ const create = ({ db, reportsConfig, logger }) => {
     );
     validateReportHandlers(reportsConfigWithSuffixes);
     const reportHandlers = createReportHandlers(reportsConfigWithSuffixes);
-    const routeHandlers = { ...handlerMap, ...reportHandlers }
+    const routeHandlers = { ...handlerMap, ...reportHandlers };
     logger.push({ routes: Object.keys(routeHandlers) }).log('Serving routes');
     app.use(router(routeHandlers));
 
@@ -57,13 +58,13 @@ const create = ({ db, reportsConfig, logger }) => {
         const suffix = ctx.request.path.split('.').pop();
         switch (suffix) {
             case 'csv':
-
+                ctx.response.set('content-type', 'application/csv');
+                ctx.response.body = csvGenerate(ctx.response.body);
                 break;
             case 'json':
-
+                ctx.response.set('content-type', 'application/json');
+                ctx.response.body = JSON.stringify(ctx.response.body);
                 break;
-            default:
-                // Do nothing
         }
         await next();
     });

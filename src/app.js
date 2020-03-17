@@ -4,7 +4,7 @@ const router = require('@internal/router');
 const { validateReportHandlers, createReportHandlers, handlerMap } = require('./handlers');
 const randomphrase = require('@internal/randomphrase');
 const fromEntries = require('object.fromentries');
-const csvGenerate = require('csv-generate');
+const csvStringify = require('csv-stringify/lib/sync');
 
 const create = ({ db, reportsConfig, logger }) => {
     const app = new Koa();
@@ -58,22 +58,21 @@ const create = ({ db, reportsConfig, logger }) => {
         const suffix = ctx.request.path.split('.').pop();
         switch (suffix) {
             case 'csv':
+                ctx.state.logger.log('Setting CSV response');
+                // TODO: try to use the streaming API
+                const body = csvStringify(ctx.response.body, {
+                    columns: Object.keys(ctx.response.body[0]),
+                    header: true,
+                });
+                ctx.response.body = body;
                 ctx.response.set('content-type', 'application/csv');
-                ctx.response.body = csvGenerate(ctx.response.body);
                 break;
             case 'json':
-                ctx.response.set('content-type', 'application/json');
+                ctx.state.logger.log('Setting JSON response');
                 ctx.response.body = JSON.stringify(ctx.response.body);
+                ctx.response.set('content-type', 'application/json');
                 break;
         }
-        await next();
-    });
-
-    app.use(async (ctx, next) => {
-        // This is strictly a JSON api, so only return application/json
-        ctx.response.set('content-type', 'application/json');
-        // Koa automatically json stringifies our response body and sets the response status to 200/204
-        // if we haven't set it
         await next();
     });
 

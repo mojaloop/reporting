@@ -2,6 +2,7 @@
 const { Logger, transports } = require('el-logger');
 const supertest = require('supertest');
 const App = require(`${__ROOT__}/src/app`);
+const csvParse = require('csv-parse/lib/sync');
 
 // TO TEST
 // - bad settings provided to the app, e.g. bad reports
@@ -14,8 +15,9 @@ const createDbMock = (result) => ({
     query: async (qStr, bindings) => [result]
 });
 
-const logger = new Logger({ transports: [ /* transports.stdout() */] });
-const db = createDbMock('result');
+// uncomment the stdout transport to see logs during your test run
+const logger = new Logger({ transports: [ /* transports.stdout() */ ] });
+const db = createDbMock({ colName: 'result' });
 const reportsConfig = {
     '/test': 'SELECT * FROM user WHERE id = $P{userId}',
 };
@@ -29,14 +31,14 @@ const createMockServer = (opts) => {
     return supertest(App({ ...mockDefaults, ...opts }).callback());
 };
 
-const testResponseInvariants = (res) => {
+const testResponse = (res, { contentType = 'json' } = {}) => {
     expect(Object.keys(res.headers)).toStrictEqual([
         'content-type',
         'content-length',
         'date',
         'connection'
     ]);
-    expect(res.headers['content-type']).toEqual('application/json');
+    expect(res.headers['content-type']).toEqual(`application/${contentType}`);
 };
 
 test('able to create server', () => {
@@ -56,14 +58,22 @@ test('healthcheck passes', async () => {
     const res = await createMockServer().get('/');
     expect(res.statusCode).toEqual(200);
     expect(res.body).toStrictEqual({ status: 'ok' });
-    testResponseInvariants(res);
+    testResponse(res);
 });
 
-test('default mock report - correct request', async () => {
+test('default mock report - CSV - correct response', async () => {
+    const res = await createMockServer().get('/test.csv?userId=1');
+    expect(res.statusCode).toEqual(200);
+    console.log(res.text);
+    expect(csvParse(res.text, { columns: true })).toStrictEqual([{ colName: 'result' }]);
+    testResponse(res, { contentType: 'csv' });
+});
+
+test('default mock report - JSON - correct response', async () => {
     const res = await createMockServer().get('/test.json?userId=1');
     expect(res.statusCode).toEqual(200);
-    expect(res.body).toStrictEqual([ 'result' ]);
-    testResponseInvariants(res);
+    expect(res.body).toStrictEqual([{ colName: 'result' }]);
+    testResponse(res);
 });
 
 test('report query missing parameter name results in handler build failure', async () => {
@@ -76,7 +86,7 @@ test('query failure results in 500', async () => {
         .get('/test.json?userId=1');
     expect(res.statusCode).toEqual(500);
     expect(res.body).toStrictEqual({});
-    testResponseInvariants(res);
+    testResponse(res);
 });
 
 test('default mock report - correct query and bindings received by database', async () => {
@@ -109,7 +119,7 @@ test('default mock report - missing queryparam', async () => {
         message: 'Errors in request',
         errors: ['Missing parameter in querystring: userId'],
     });
-    testResponseInvariants(res);
+    testResponse(res);
 });
 
 test('default mock report - missing queryparam value', async () => {
@@ -119,7 +129,7 @@ test('default mock report - missing queryparam value', async () => {
         message: 'Errors in request',
         errors: ['queryparam userId must have a value supplied'],
     });
-    testResponseInvariants(res);
+    testResponse(res);
 });
 
 test('default mock report - duplicated queryparam', async () => {
@@ -132,7 +142,7 @@ test('default mock report - duplicated queryparam', async () => {
             'queryparam userId must have a value supplied'
         ],
     });
-    testResponseInvariants(res);
+    testResponse(res);
 });
 
 test('default mock report - extra queryparam', async () => {
@@ -142,7 +152,7 @@ test('default mock report - extra queryparam', async () => {
         message: 'Errors in request',
         errors: ['queryparam hello not supported by this report'],
     });
-    testResponseInvariants(res);
+    testResponse(res);
 });
 
 test('default mock report - optional query parameter provided - correct query and bindings received by database', async () => {

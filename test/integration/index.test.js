@@ -1,6 +1,7 @@
 
 const { Logger, transports } = require('el-logger');
 const supertest = require('supertest');
+
 const App = require(`${__ROOT__}/src/app`);
 const csvParse = require('csv-parse/lib/sync');
 
@@ -12,7 +13,7 @@ const csvParse = require('csv-parse/lib/sync');
 // - generate some 500s
 
 const createDbMock = (result) => ({
-    query: async (qStr, bindings) => [result]
+    query: async (qStr, bindings) => [result],
 });
 
 // uncomment the stdout transport to see logs during your test run
@@ -27,16 +28,14 @@ const mockDefaults = {
     logger,
 };
 
-const createMockServer = (opts) => {
-    return supertest(App({ ...mockDefaults, ...opts }).callback());
-};
+const createMockServer = (opts) => supertest(App({ ...mockDefaults, ...opts }).callback());
 
 const testResponse = (res, { contentType = 'json' } = {}) => {
     expect(Object.keys(res.headers)).toStrictEqual([
         'content-type',
         'content-length',
         'date',
-        'connection'
+        'connection',
     ]);
     expect(res.headers['content-type']).toEqual(`application/${contentType}`);
 };
@@ -82,7 +81,7 @@ test('report query missing parameter name results in handler build failure', asy
 });
 
 test('query failure results in 500', async () => {
-    const res = await createMockServer({ db: { query: () => { throw new Error() } } })
+    const res = await createMockServer({ db: { query: () => { throw new Error(); } } })
         .get('/test.json?userId=1');
     expect(res.statusCode).toEqual(500);
     expect(res.body).toStrictEqual({});
@@ -92,7 +91,7 @@ test('query failure results in 500', async () => {
 test('default mock report - correct query and bindings received by database', async () => {
     expect.assertions(4);
     const reportsConfig = {
-        '/t': '$P{arg0}$P{arg1}$P{arg2}'
+        '/t': '$P{arg0}$P{arg1}$P{arg2}',
     };
     const res = await createMockServer({
         reportsConfig,
@@ -139,7 +138,7 @@ test('default mock report - duplicated queryparam', async () => {
         message: 'Errors in request',
         errors: [
             'Only one argument allowed for queryparam userId',
-            'queryparam userId must have a value supplied'
+            'queryparam userId must have a value supplied',
         ],
     });
     testResponse(res);
@@ -158,7 +157,7 @@ test('default mock report - extra queryparam', async () => {
 test('default mock report - optional query parameter provided - correct query and bindings received by database', async () => {
     expect.assertions(4);
     const reportsConfig = {
-        '/t': '$P{arg0}$P{arg1}$O{arg2}'
+        '/t': '$P{arg0}$P{arg1}$O{arg2}',
     };
     const res = await createMockServer({
         reportsConfig,
@@ -181,7 +180,7 @@ test('default mock report - optional query parameter provided - correct query an
 test('default mock report - optional query parameter omitted - correct query and bindings received by database', async () => {
     expect.assertions(4);
     const reportsConfig = {
-        '/t': '$P{arg0}$P{arg1}$O{arg2}'
+        '/t': '$P{arg0}$P{arg1}$O{arg2}',
     };
     const res = await createMockServer({
         reportsConfig,
@@ -204,7 +203,7 @@ test('default mock report - optional query parameter omitted - correct query and
 test('default mock report - optional query parameter value omitted - correct query and bindings received by database', async () => {
     expect.assertions(4);
     const reportsConfig = {
-        '/t': '$P{arg0}$P{arg1}$O{arg2}'
+        '/t': '$P{arg0}$P{arg1}$O{arg2}',
     };
     const res = await createMockServer({
         reportsConfig,

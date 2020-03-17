@@ -25,9 +25,9 @@ class Database {
             },
             pool: {
                 min,
-                max
+                max,
             },
-        })
+        });
     }
 
     async query(query, bindings) {

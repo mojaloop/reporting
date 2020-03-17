@@ -1,10 +1,10 @@
 
 const Koa = require('koa');
 const router = require('@internal/router');
-const { validateReportHandlers, createReportHandlers, handlerMap } = require('./handlers');
 const randomphrase = require('@internal/randomphrase');
 const fromEntries = require('object.fromentries');
 const csvStringify = require('csv-stringify/lib/sync');
+const { validateReportHandlers, createReportHandlers, handlerMap } = require('./handlers');
 
 const create = ({ db, reportsConfig, logger }) => {
     const app = new Koa();
@@ -45,7 +45,7 @@ const create = ({ db, reportsConfig, logger }) => {
     // Load handlers here, before post-processing
     const reportsConfigWithSuffixes = fromEntries(
         Object.entries(reportsConfig)
-            .reduce((pv, [key, val]) => [...pv, [`${key}.json`, val], [`${key}.csv`, val]], [])
+            .reduce((pv, [key, val]) => [...pv, [`${key}.json`, val], [`${key}.csv`, val]], []),
     );
     validateReportHandlers(reportsConfigWithSuffixes);
     const reportHandlers = createReportHandlers(reportsConfigWithSuffixes);
@@ -77,6 +77,6 @@ const create = ({ db, reportsConfig, logger }) => {
     });
 
     return app;
-}
+};
 
 module.exports = create;

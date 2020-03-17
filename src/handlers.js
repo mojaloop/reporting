@@ -8,6 +8,7 @@ const fromEntries = require('object.fromentries');
 const healthCheck = async (ctx) => {
     ctx.response.status = 200;
     ctx.response.body = { status: 'ok' };
+    ctx.response.set('content-type', 'application/json');
 };
 
 const getParams = (query) => {
@@ -99,6 +100,7 @@ const createReportHandlers = (reportsConfig) => {
                 };
                 ctx.state.logger.push({ dbQuery, queryArgs }).log('Executing query');
                 const result = await ctx.db.query(dbQuery, queryArgs);
+                ctx.state.logger.push({ dbQuery, queryArgs, result }).log('Query result');
 
                 ctx.response.body = result;
             },

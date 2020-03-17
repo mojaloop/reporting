@@ -61,7 +61,7 @@ const create = ({ db, reportsConfig, logger }) => {
                 ctx.state.logger.log('Setting CSV response');
                 // TODO: try to use the streaming API
                 const body = csvStringify(ctx.response.body, {
-                    columns: Object.keys(ctx.response.body[0]),
+                    columns: Object.keys(ctx.response.body[0] || {}),
                     header: true,
                 });
                 ctx.response.body = body;

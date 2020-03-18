@@ -22,12 +22,13 @@ class Database {
                 user,
                 password,
                 database,
+                port,
             },
             pool: {
                 min,
-                max
+                max,
             },
-        })
+        });
     }
 
     async query(query, bindings) {

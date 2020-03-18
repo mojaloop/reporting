@@ -1,8 +1,10 @@
 
 const Koa = require('koa');
 const router = require('@internal/router');
-const handlers = require('./handlers');
 const randomphrase = require('@internal/randomphrase');
+const fromEntries = require('object.fromentries');
+const csvStringify = require('csv-stringify/lib/sync');
+const { validateReportHandlers, createReportHandlers, handlerMap } = require('./handlers');
 
 const create = ({ db, reportsConfig, logger }) => {
     const app = new Koa();
@@ -41,20 +43,42 @@ const create = ({ db, reportsConfig, logger }) => {
     });
 
     // Load handlers here, before post-processing
-    const reportHandlers = handlers.createReportHandlers(reportsConfig);
-    const routeHandlers = { ...handlers.handlerMap, ...reportHandlers }
+    const reportsConfigWithSuffixes = fromEntries(
+        Object.entries(reportsConfig)
+            .reduce((pv, [key, val]) => [...pv, [`${key}.json`, val], [`${key}.csv`, val]], []),
+    );
+    validateReportHandlers(reportsConfigWithSuffixes);
+    const reportHandlers = createReportHandlers(reportsConfigWithSuffixes);
+    const routeHandlers = { ...handlerMap, ...reportHandlers };
     logger.push({ routes: Object.keys(routeHandlers) }).log('Serving routes');
     app.use(router(routeHandlers));
 
+    // Serialise the body to the type we're interested in
     app.use(async (ctx, next) => {
-        // This is strictly a JSON api, so only return application/json
-        ctx.response.set('content-type', 'application/json');
-        // Koa automatically json stringifies our response body and sets the response status to 200/204
-        // if we haven't set it
+        const suffix = ctx.request.path.split('.').pop();
+        switch (suffix) {
+            case 'csv':
+                ctx.state.logger.log('Setting CSV response');
+                // TODO: try to use the streaming API
+                const body = csvStringify(ctx.response.body, {
+                    columns: Object.keys(ctx.response.body[0] || {}),
+                    header: true,
+                });
+                ctx.response.body = body;
+                ctx.response.set('content-type', 'application/csv');
+                break;
+            case 'json':
+                ctx.state.logger.log('Setting JSON response');
+                ctx.response.body = JSON.stringify(ctx.response.body);
+                ctx.response.set('content-type', 'application/json');
+                break;
+            default:
+                // ignore
+        }
         await next();
     });
 
     return app;
-}
+};
 
 module.exports = create;

@@ -57,7 +57,7 @@ const create = ({ db, reportsConfig, logger }) => {
     app.use(async (ctx, next) => {
         const suffix = ctx.request.path.split('.').pop();
         switch (suffix) {
-            case 'csv':
+            case 'csv': {
                 ctx.state.logger.log('Setting CSV response');
                 // TODO: try to use the streaming API
                 const body = csvStringify(ctx.response.body, {
@@ -67,11 +67,13 @@ const create = ({ db, reportsConfig, logger }) => {
                 ctx.response.body = body;
                 ctx.response.set('content-type', 'application/csv');
                 break;
-            case 'json':
+            }
+            case 'json': {
                 ctx.state.logger.log('Setting JSON response');
                 ctx.response.body = JSON.stringify(ctx.response.body);
                 ctx.response.set('content-type', 'application/json');
                 break;
+            }
             default:
                 // ignore
         }

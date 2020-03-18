@@ -72,6 +72,8 @@ const create = ({ db, reportsConfig, logger }) => {
                 ctx.response.body = JSON.stringify(ctx.response.body);
                 ctx.response.set('content-type', 'application/json');
                 break;
+            default:
+                // ignore
         }
         await next();
     });

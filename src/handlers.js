@@ -1,6 +1,5 @@
 
 const assert = require('assert').strict;
-const qs = require('querystring');
 
 const matchAll = require('string.prototype.matchall');
 const fromEntries = require('object.fromentries');
@@ -56,7 +55,9 @@ const createReportHandlers = (reportsConfig) => {
         const params = [...requiredParams, ...optionalParams];
 
         // Build the optional param default object here (once) for later use
-        const optionalParamDefaults = Object.assign({}, ...optionalParams.map((p) => ({ [p[1]]: null })));
+        const optionalParamDefaults = Object.assign(
+            {}, ...optionalParams.map((p) => ({ [p[1]]: null })),
+        );
 
         // Convert the query in the config into a database query template containing named bindings
         const dbQuery = params.reduce((q, param) => q.replace(param[0], `:${param[1]}`), query);
@@ -96,7 +97,7 @@ const createReportHandlers = (reportsConfig) => {
                     ...optionalParamDefaults,
                     // Filter out empty strings as these are optional parameters with no supplied
                     // value. We'll treat these as null, rather than an empty string.
-                    ...fromEntries(Array.from(ctx.request.URL.searchParams.entries()).filter(([k, v]) => v !== '')),
+                    ...fromEntries(Array.from(ctx.request.URL.searchParams.entries()).filter(([, v]) => v !== '')),
                 };
                 ctx.state.logger.push({ dbQuery, queryArgs }).log('Executing query');
                 const result = await ctx.db.query(dbQuery, queryArgs);

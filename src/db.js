@@ -22,6 +22,7 @@ class Database {
                 user,
                 password,
                 database,
+                port,
             },
             pool: {
                 min,

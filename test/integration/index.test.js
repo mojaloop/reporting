@@ -1,8 +1,8 @@
 
-const { Logger, transports } = require('el-logger');
+const { Logger, transports } = require('el-logger'); // eslint-disable-line no-unused-vars
 const supertest = require('supertest');
 
-const App = require(`${__ROOT__}/src/app`);
+const App = require(`${__ROOT__}/src/app`); // eslint-disable-line import/no-dynamic-require
 const csvParse = require('csv-parse/lib/sync');
 
 // TO TEST
@@ -13,17 +13,16 @@ const csvParse = require('csv-parse/lib/sync');
 // - generate some 500s
 
 const createDbMock = (result) => ({
-    query: async (qStr, bindings) => [result],
+    query: async (/* qStr, bindings */) => [result],
 });
 
 // uncomment the stdout transport to see logs during your test run
-const logger = new Logger({ transports: [ /* transports.stdout() */ ] });
+const logger = new Logger({ transports: [/* transports.stdout() */] });
 const db = createDbMock({ colName: 'result' });
-const reportsConfig = {
-    '/test': 'SELECT * FROM user WHERE id = $P{userId}',
-};
 const mockDefaults = {
-    reportsConfig,
+    reportsConfig: {
+        '/test': 'SELECT * FROM user WHERE id = $P{userId}',
+    },
     db,
     logger,
 };
@@ -63,7 +62,6 @@ test('healthcheck passes', async () => {
 test('default mock report - CSV - correct response', async () => {
     const res = await createMockServer().get('/test.csv?userId=1');
     expect(res.statusCode).toEqual(200);
-    console.log(res.text);
     expect(csvParse(res.text, { columns: true })).toStrictEqual([{ colName: 'result' }]);
     testResponse(res, { contentType: 'csv' });
 });

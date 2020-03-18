@@ -20,17 +20,17 @@ defaults_build_docker_test: &defaults_build_docker_test
   name: Build Docker test image
   command: |
     echo "Building Docker image: test"
-    docker build --pull --build-arg NPMRC_B64="$AZURE_NPM_REGISTRY_NPMRC_B64" -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:test .
+    docker build --pull -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:test .
 defaults_build_docker_build: &defaults_build_docker_build
   name: Build Docker $CIRCLE_TAG image
   command: |
     echo "Building Docker image: $CIRCLE_TAG"
-    docker build --pull --build-arg NPMRC_B64="$AZURE_NPM_REGISTRY_NPMRC_B64" -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG .
+    docker build --pull -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG .
 defaults_build_docker_build_release: &defaults_build_docker_build_release
   name: Build Docker $RELEASE_TAG image
   command: |
     echo "Building Docker image: $RELEASE_TAG"
-    docker build --pull --build-arg NPMRC_B64="$AZURE_NPM_REGISTRY_NPMRC_B64" -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG .
+    docker build --pull -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$RELEASE_TAG .
 defaults_build_docker_publish: &defaults_build_docker_publish
   name: Publish Docker image $CIRCLE_TAG & Latest tag to Docker Hub
   command: |
@@ -52,23 +52,17 @@ jobs:
     steps:
       - checkout
       - run:
-          name: create-npmrc
-          command: cd src && echo $AZURE_NPM_REGISTRY_NPMRC_B64 | base64 -d > .npmrc
-      - run:
           name: install-npm-dependencies
-          command: cd src && yarn install --frozen-lockfile
-      - run:
-          name: check-yarn-lock
-          command: cd src && yarn check --offline --integrity
+          command: cd src && npm ci
       - run:
           name: audit-dependencies
-          command: cd src && yarn audit
+          command: cd src && npm audit
       - run:
           name: lint
-          command: cd src && yarn lint
+          command: cd src && npm run lint
       - run:
           name: test
-          command: cd src && yarn test
+          command: cd src && npm run test
   build_docker:
     machine: true
     # <<: *default_env
@@ -124,30 +118,6 @@ jobs:
       - run:
           name: upload to helm repo
           command: cd helm && curl -u$DOCKER_USER:$DOCKER_PASS -T $CIRCLE_PROJECT_REPONAME-$CIRCLE_TAG.tgz "https://casablanca.jfrog.io/casablanca/helm/$CIRCLE_PROJECT_REPONAME-$CIRCLE_TAG.tgz"
-
-  deploy_to_dev:
-    docker:
-      - image: circleci/python
-    steps:
-      - add_ssh_keys: # Add the deploy key for casa-backend-cm-dev.
-          fingerprints:
-            - "6c:49:a2:9f:75:60:ff:6f:2b:d5:83:80:a4:6d:b6:00"
-      - run:
-          name: trust-github-com
-          command: |
-            mkdir -p ~/.ssh/
-            echo 'github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==' >> ~/.ssh/known_hosts
-      - run:
-          name: Clone casa-backend-cm-dev
-          command: |
-            git clone ssh://git@github.com/casablanca-project/casa-backend-cm-dev
-      - run:
-          name: Modify deployed chart version
-          command: |
-            sudo pip install yq
-            cd casa-backend-cm-dev
-            chmod +x trigger_release.sh
-            ./trigger_release.sh $CIRCLE_TAG $CIRCLE_PROJECT_REPONAME
 
 workflows:
   version: 2

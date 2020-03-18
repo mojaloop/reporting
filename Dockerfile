@@ -1,4 +1,4 @@
-FROM node:10.15.3-alpine as builder
+FROM node:12.16.1-alpine as builder
 
 RUN apk add --no-cache git
 
@@ -9,7 +9,7 @@ COPY src /opt/reports/src
 
 RUN npm ci --production
 
-FROM node:10.15.3-alpine
+FROM node:12.16.1-alpine
 
 WORKDIR /opt/reports
 

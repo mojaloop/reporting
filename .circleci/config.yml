@@ -91,33 +91,6 @@ jobs:
           <<: *defaults_build_docker_publish
       - run:
           <<: *defaults_build_docker_publish_release
-  build_helm:
-    docker:
-      - image: hypnoglow/kubernetes-helm:2.9.1
-    steps:
-      - checkout
-      - run:
-          name: package helm chart
-          command: cd helm && helm package $CIRCLE_PROJECT_REPONAME
-  build_and_publish_helm:
-    docker:
-      - image: hypnoglow/kubernetes-helm:2.9.1
-    steps:
-      - checkout
-      - run:
-          name: update values.yaml file with $CIRCLE_TAG that matches docker version
-          command: |
-            cd helm/$CIRCLE_PROJECT_REPONAME && sed -i.bak "s/tag.*/tag\: $CIRCLE_TAG/" values.yaml
-      - run:
-          name: Update Chart.yaml version with the verison that matches $CIRCLE_TAG
-          command: |
-            cd helm/$CIRCLE_PROJECT_REPONAME && sed -i.bak "s/version.*/version\: $CIRCLE_TAG/" Chart.yaml
-      - run:
-          name: package helm chart
-          command: cd helm && helm package --version $CIRCLE_TAG $CIRCLE_PROJECT_REPONAME
-      - run:
-          name: upload to helm repo
-          command: cd helm && curl -u$DOCKER_USER:$DOCKER_PASS -T $CIRCLE_PROJECT_REPONAME-$CIRCLE_TAG.tgz "https://casablanca.jfrog.io/casablanca/helm/$CIRCLE_PROJECT_REPONAME-$CIRCLE_TAG.tgz"
 
 workflows:
   version: 2
@@ -133,34 +106,11 @@ workflows:
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*/
-      - build_helm:
-          context: org-global
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*/
       - build_and_publish_docker:
           context: org-global
           requires:
             - test_unit
             - build_docker
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*/
-            branches:
-              ignore: /.*/
-      - build_and_publish_helm:
-          context: org-global
-          requires:
-            - build_and_publish_docker
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*/
-            branches:
-              ignore: /.*/
-      - deploy_to_dev:
-          context: org-global
-          requires:
-            - build_and_publish_helm
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*/

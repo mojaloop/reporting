@@ -22,4 +22,6 @@ const db = new Database(dbConfig);
 const logger = new Logger({ transports: [transports.stdout()] });
 const app = require('./app')({ db, reportsConfig, logger });
 
-app.listen(3000, logger.log('Listening on port 3000...'));
+const port = 3000;
+const host = '0.0.0.0';
+app.listen(port, host, () => ( logger.log(`Listening on ${host}:${port}`) ));

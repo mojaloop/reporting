@@ -30,7 +30,7 @@
 #### Build
 From the repo root:
 ```sh
-docker build .
+docker build reports
 ```
 
 #### Run
@@ -43,9 +43,9 @@ DB_PASSWORD="password"
 DB_DATABASE="central_ledger"
 EOF
 ```
-Where `$image` is the image name from the build stage:
+Where `reports` is the image name from the build stage:
 ```sh
-docker run -v $PWD/config:/opt/reports/config --env-file=./.my.env $image
+docker run -v $PWD/config:/opt/reports/config -p 3000:3000 --env-file=./.my.env reports
 ```
 
 #### TODO
@@ -53,9 +53,13 @@ docker run -v $PWD/config:/opt/reports/config --env-file=./.my.env $image
     mind. Optionally use different templating engines. Parametrise this in the config. Perhaps a
     single default global templating engine, and then a per-report override.
 - OpenAPI validation on requests and responses (optionally for reports)
-- Streaming. The DB lib supports streaming, so does koa.
+- Streaming. The DB lib supports streaming, so does koa. This will be especially important for
+    large reports.
 - Streams in the logger.
 - Default values in query templates. This would be much better supported by using an existing,
     well-tested, proven templating engine and porting existing queries to said templating engine.
     (And perhaps phasing out support for the custom templates here). Also consider finding out
     whether Jaspersoft Studio uses an existing engine that we can replace our implementation with.
+- Measure test coverage
+- Logger: enable printing of requests as cURL- perhaps by providing a custom handler thingie
+- Eslint. Side-note: make sure 'no-floating-promises' is enabled.

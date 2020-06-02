@@ -63,7 +63,7 @@ const create = ({ db, reportsConfig, logger }) => {
         switch (suffix) {
             case 'xlsx': {
                 ctx.state.logger.log('Setting XLSX response');
-                const reportName = ctx.request.path.replace('/', '').replace('.xlsx', '');
+                const reportName = ctx.request.path.substr(ctx.request.path.lastIndexOf('/'), ctx.request.path.length).replace('/', '').replace('.xlsx', '');
                 const fileName = `${reportName}_${Date.now()}.xlsx`;
 
                 const body = json2xls(ctx.response.body);

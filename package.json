@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/casablanca-project/reports.git"
+    "url": "git+https://github.com/mojaloop/reporting.git"
   },
   "author": "Matt Kingston <matt.kingston@modusbox.com>",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/casablanca-project/reports/issues"
+    "url": "https://github.com/mojaloop/reporting/issues"
   },
-  "homepage": "https://github.com/casablanca-project/reports#readme",
+  "homepage": "https://github.com/mojaloop/reporting#readme",
   "devDependencies": {
     "csv-parse": "^4.10.1",
     "eslint": "^6.8.0",

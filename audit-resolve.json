@@ -1,0 +1,10 @@
+{
+  "decisions": {
+    "1500|npm-audit-resolver>audit-resolve-core>yargs-parser": {
+      "decision": "postpone",
+      "madeAt": 1591187905445
+    }
+  },
+  "rules": {},
+  "version": 1
+}

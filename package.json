@@ -28,6 +28,7 @@
     "eslint-config-airbnb-base": "^14.1.0",
     "eslint-plugin-import": "^2.20.2",
     "jest": "^25.5.4",
+    "npm-audit-resolver": "2.2.0",
     "supertest": "^4.0.2"
   },
   "dependencies": {
@@ -41,7 +42,6 @@
     "koa": "^2.12.0",
     "koa-sendfile": "^2.0.1",
     "mysql2": "^2.1.0",
-    "npm-audit-resolver": "^2.2.0",
     "object.fromentries": "github:es-shims/Object.fromEntries#v2.0.2",
     "string.prototype.matchall": "github:es-shims/String.prototype.matchAll#v4.0.2"
   }

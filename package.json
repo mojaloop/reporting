@@ -4,8 +4,8 @@
   "description": "",
   "main": "src/server.js",
   "scripts": {
-    "docker:build": "docker build -t \"casablanca-casa-docker-release.jfrog.io/${PWD##*/}-$(git rev-parse HEAD)-local\" .",
-    "docker:push": "docker push -t  \"casablanca-casa-docker-release.jfrog.io/${PWD##*/}-$(git rev-parse HEAD)-local\"",
+    "audit:resolve": "SHELL=sh resolve-audit",
+    "audit:check": "SHELL=sh check-audit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "start": "node src/server.js",

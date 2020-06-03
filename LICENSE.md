@@ -1,6 +1,6 @@
 # LICENSE
 
-Copyright © 2017 Bill & Melinda Gates Foundation
+Copyright © 2017-2020 Bill & Melinda Gates Foundation
 
 The Mojaloop files are made available by the Bill & Melinda Gates Foundation under the Apache License, Version 2.0
 (the "License") and you may not use these files except in compliance with the [License](http://www.apache.org/licenses/LICENSE-2.0). You may obtain a copy of the License at

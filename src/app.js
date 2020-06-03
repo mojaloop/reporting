@@ -4,6 +4,10 @@ const router = require('@internal/router');
 const randomphrase = require('@internal/randomphrase');
 const fromEntries = require('object.fromentries');
 const csvStringify = require('csv-stringify/lib/sync');
+const json2xls = require('json2xls');
+const sendFile = require('koa-sendfile');
+const fs = require('fs');
+
 const { validateReportHandlers, createReportHandlers, handlerMap } = require('./handlers');
 
 const create = ({ db, reportsConfig, logger }) => {
@@ -45,7 +49,7 @@ const create = ({ db, reportsConfig, logger }) => {
     // Load handlers here, before post-processing
     const reportsConfigWithSuffixes = fromEntries(
         Object.entries(reportsConfig)
-            .reduce((pv, [key, val]) => [...pv, [`${key}.json`, val], [`${key}.csv`, val]], []),
+            .reduce((pv, [key, val]) => [...pv, [`${key}.json`, val], [`${key}.csv`, val], [`${key}.xlsx`, val]], []),
     );
     validateReportHandlers(reportsConfigWithSuffixes);
     const reportHandlers = createReportHandlers(reportsConfigWithSuffixes);
@@ -57,6 +61,20 @@ const create = ({ db, reportsConfig, logger }) => {
     app.use(async (ctx, next) => {
         const suffix = ctx.request.path.split('.').pop();
         switch (suffix) {
+            case 'xlsx': {
+                ctx.state.logger.log('Setting XLSX response');
+                const reportName = ctx.request.path.substr(ctx.request.path.lastIndexOf('/'), ctx.request.path.length).replace('/', '').replace('.xlsx', '');
+                const fileName = `${reportName}_${Date.now()}.xlsx`;
+
+                const body = json2xls(ctx.response.body);
+                fs.writeFileSync(fileName, body, 'binary');
+                ctx.response.status = 200;
+                await sendFile(ctx, fileName);
+                fs.unlink(fileName, (err) => {
+                    if (err) throw err;
+                });
+                break;
+            }
             case 'csv': {
                 ctx.state.logger.log('Setting CSV response');
                 // TODO: try to use the streaming API

@@ -39,6 +39,18 @@ const testResponse = (res, { contentType = 'json' } = {}) => {
     expect(res.headers['content-type']).toEqual(`application/${contentType}`);
 };
 
+const testResponseXlsx = (res) => {
+    expect(Object.keys(res.headers)).toStrictEqual([
+        'content-type',
+        'last-modified',
+        'etag',
+        'date',
+        'connection',
+        'transfer-encoding',
+    ]);
+    expect(res.headers['content-type']).toEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+};
+
 test('able to create server', () => {
     createMockServer();
 });
@@ -71,6 +83,13 @@ test('default mock report - JSON - correct response', async () => {
     expect(res.statusCode).toEqual(200);
     expect(res.body).toStrictEqual([{ colName: 'result' }]);
     testResponse(res);
+});
+
+test('default mock report - XLSX - correct response', async () => {
+    const res = await createMockServer().get('/test.xlsx?userId=1');
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toStrictEqual({});
+    testResponseXlsx(res, { contentType: 'xlsx' });
 });
 
 test('report query missing parameter name results in handler build failure', async () => {

@@ -16,23 +16,23 @@ orbs:
 # YAML defaults templates, in alphabetical order
 ##
 defaults_Dependencies: &defaults_Dependencies |
-  apk --no-cache add git
-  apk --no-cache add ca-certificates
-  apk --no-cache add curl
-  apk --no-cache add openssh-client
-  apk add --no-cache -t build-dependencies make gcc g++ python libtool autoconf automake
+  apk --update --no-cache add \
+    git \
+    ca-certificates \
+    curl \
+    openssh-client \
+    -t build-dependencies make gcc g++ python3 libtool autoconf automake
   npm config set unsafe-perm true
   npm install -g node-gyp
 
 defaults_awsCliDependencies: &defaults_awsCliDependencies |
-  apk --no-cache add \
-          python \
-          py-pip \
+  apk --update --no-cache add \
+          python3 \
+          py3-pip \
           groff \
           less \
           mailcap
   pip install --upgrade awscli==1.14.5 s3cmd==2.0.1 python-magic
-  apk -v --purge del py-pip
 
 defaults_license_scanner: &defaults_license_scanner
   name: Install and set up license-scanner
@@ -197,22 +197,22 @@ jobs:
           paths:
             - ./docker-image.tar
 
-  license-scan:
-    executor: default-machine
-    steps:
-      - attach_workspace:
-          at: /tmp
-      - run:
-          name: Load the pre-built docker image from workspace
-          command: docker load -i /tmp/docker-image.tar
-      - run:
-          <<: *defaults_license_scanner
-      - run:
-          name: Run the license-scanner
-          command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG make run
-      - store_artifacts:
-          path: /tmp/license-scanner/results
-          prefix: licenses
+#  license-scan:
+#    executor: default-machine
+#    steps:
+#      - attach_workspace:
+#          at: /tmp
+#      - run:
+#          name: Load the pre-built docker image from workspace
+#          command: docker load -i /tmp/docker-image.tar
+#      - run:
+#          <<: *defaults_license_scanner
+#      - run:
+#          name: Run the license-scanner
+#          command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG make run
+#      - store_artifacts:
+#          path: /tmp/license-scanner/results
+#          prefix: licenses
 
   image-scan:
     executor: anchore/anchore_engine
@@ -392,16 +392,16 @@ workflows:
             branches:
               ignore:
                 - /.*/
-      - license-scan:
-          context: org-global
-          requires:
-            - build
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
-            branches:
-              ignore:
-                - /.*/
+#      - license-scan:
+#          context: org-global
+#          requires:
+#            - build
+#          filters:
+#            tags:
+#              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
+#            branches:
+#              ignore:
+#                - /.*/
       - image-scan:
           context: org-global
           requires:
@@ -415,7 +415,7 @@ workflows:
       - publish:
           context: org-global
           requires:
-            - license-scan
+#            - license-scan
             - image-scan
           filters:
             tags:

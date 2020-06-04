@@ -48,6 +48,12 @@ Where `reports` is the image name from the build stage:
 docker run -v $PWD/config:/opt/reports/config -p 3000:3000 --env-file=./.my.env reports
 ```
 
+#### Audit Issues
+ This repository uses [npm-audit-resolver](https://github.com/naugtur/npm-audit-resolver#readme) to check for security vulnerabilities. Basic troubleshooting of a failed security check is as follows:
+ 1. Run `npm audit` to show the current issues.
+ 2. Run `npm audit fix` to attempt to automatically fix the current issues.
+ 3. If an issue must be ignored, and **it is absolutely safe to do so**, run `npm run audit:resolve` and select "remind me in 24h"
+
 #### TODO
 - The initial implementation was developed with compatibility for Jaspersoft Studio queries in
     mind. Optionally use different templating engines. Parametrise this in the config. Perhaps a

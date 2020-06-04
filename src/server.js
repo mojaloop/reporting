@@ -24,4 +24,4 @@ const app = require('./app')({ db, reportsConfig, logger });
 
 const port = 3000;
 const host = '0.0.0.0';
-app.listen(port, host, () => ( logger.log(`Listening on ${host}:${port}`) ));
+app.listen(port, host, () => (logger.log(`Listening on ${host}:${port}`)));

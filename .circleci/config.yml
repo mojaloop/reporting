@@ -27,7 +27,7 @@ defaults_Dependencies: &defaults_Dependencies |
 defaults_awsCliDependencies: &defaults_awsCliDependencies |
   apk --update --no-cache add \
           python3 \
-          py-pip \
+          py3-pip \
           groff \
           less \
           mailcap

@@ -1,5 +1,5 @@
 
-const { Logger, transports } = require('el-logger'); // eslint-disable-line no-unused-vars
+const { Logger } = require('@mojaloop/sdk-standard-components').Logger; // eslint-disable-line no-unused-vars
 const supertest = require('supertest');
 
 const App = require(`${__ROOT__}/src/app`); // eslint-disable-line import/no-dynamic-require
@@ -16,8 +16,8 @@ const createDbMock = (result) => ({
     query: async (/* qStr, bindings */) => [result],
 });
 
-// uncomment the stdout transport to see logs during your test run
-const logger = new Logger({ transports: [/* transports.stdout() */] });
+// Silent logger- remove the `stringify` option to print logs
+const logger = new Logger({ stringify: () => '' });
 const db = createDbMock({ colName: 'result' });
 const mockDefaults = {
     reportsConfig: {

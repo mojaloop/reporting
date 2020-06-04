@@ -7,6 +7,9 @@ const csvStringify = require('csv-stringify/lib/sync');
 const json2xls = require('json2xls');
 const sendFile = require('koa-sendfile');
 const fs = require('fs');
+const { promisify } = require('util');
+
+const writeFileAsync = promisify(fs.writeFile);
 
 const { validateReportHandlers, createReportHandlers, handlerMap } = require('./handlers');
 
@@ -67,7 +70,7 @@ const create = ({ db, reportsConfig, logger }) => {
                 const fileName = `${reportName}_${Date.now()}.xlsx`;
 
                 const body = json2xls(ctx.response.body);
-                fs.writeFileSync(fileName, body, 'binary');
+                await writeFileAsync(fileName, body, 'binary');
                 ctx.response.status = 200;
                 await sendFile(ctx, fileName);
                 fs.unlink(fileName, (err) => {

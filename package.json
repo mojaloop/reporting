@@ -1,6 +1,6 @@
 {
   "name": "mojaloop-reporting-service",
-  "version": "10.3.1",
+  "version": "10.3.2",
   "description": "",
   "main": "src/server.js",
   "scripts": {
@@ -34,9 +34,8 @@
   "dependencies": {
     "@internal/randomphrase": "file:src/lib/randomphrase",
     "@internal/router": "file:src/lib/router",
+    "@mojaloop/sdk-standard-components": "^10.3.2",
     "csv-stringify": "^5.5.0",
-    "el-logger": "github:msk-/el-logger#7346362a47048ff4930659c5ff0ab33f005654c5",
-    "fs": "0.0.1-security",
     "json2xls": "^0.1.2",
     "knex": "^0.20.15",
     "koa": "^2.12.0",

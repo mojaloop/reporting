@@ -55,6 +55,7 @@ docker run -v $PWD/config:/opt/reports/config -p 3000:3000 --env-file=./.my.env 
  3. If an issue must be ignored, and **it is absolutely safe to do so**, run `npm run audit:resolve` and select "remind me in 24h"
 
 #### TODO
+- Probably get rid of knex in favour of plain mysql2?
 - The initial implementation was developed with compatibility for Jaspersoft Studio queries in
     mind. Optionally use different templating engines. Parametrise this in the config. Perhaps a
     single default global templating engine, and then a per-report override.

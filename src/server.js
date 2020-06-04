@@ -1,5 +1,5 @@
 
-const { Logger, transports } = require('el-logger');
+const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
 
 const Database = require('./db');
 const reportsConfig = require('../config/reports.json');
@@ -19,7 +19,7 @@ const dbConfig = {
 
 const db = new Database(dbConfig);
 
-const logger = new Logger({ transports: [transports.stdout()] });
+const logger = new Logger();
 const app = require('./app')({ db, reportsConfig, logger });
 
 const port = 3000;

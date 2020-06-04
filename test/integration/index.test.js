@@ -1,5 +1,5 @@
 
-const { Logger } = require('@mojaloop/sdk-standard-components').Logger; // eslint-disable-line no-unused-vars
+const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
 const supertest = require('supertest');
 
 const App = require(`${__ROOT__}/src/app`); // eslint-disable-line import/no-dynamic-require

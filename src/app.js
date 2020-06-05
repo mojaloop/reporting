@@ -6,10 +6,7 @@ const fromEntries = require('object.fromentries');
 const csvStringify = require('csv-stringify/lib/sync');
 const json2xls = require('json2xls');
 const sendFile = require('koa-sendfile');
-const fs = require('fs');
-const { promisify } = require('util');
-
-const writeFileAsync = promisify(fs.writeFile);
+const fs = require('fs').promises;
 
 const { validateReportHandlers, createReportHandlers, handlerMap } = require('./handlers');
 
@@ -68,14 +65,11 @@ const create = ({ db, reportsConfig, logger }) => {
                 ctx.state.logger.log('Setting XLSX response');
                 const reportName = ctx.request.path.substr(ctx.request.path.lastIndexOf('/'), ctx.request.path.length).replace('/', '').replace('.xlsx', '');
                 const fileName = `${reportName}_${Date.now()}.xlsx`;
-
                 const body = json2xls(ctx.response.body);
-                await writeFileAsync(fileName, body, 'binary');
+                await fs.writeFile(fileName, body, 'binary');
                 ctx.response.status = 200;
                 await sendFile(ctx, fileName);
-                fs.unlink(fileName, (err) => {
-                    if (err) throw err;
-                });
+                await fs.unlink(fileName);
                 break;
             }
             case 'csv': {

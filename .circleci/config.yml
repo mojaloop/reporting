@@ -197,22 +197,22 @@ jobs:
           paths:
             - ./docker-image.tar
 
-#  license-scan:
-#    executor: default-machine
-#    steps:
-#      - attach_workspace:
-#          at: /tmp
-#      - run:
-#          name: Load the pre-built docker image from workspace
-#          command: docker load -i /tmp/docker-image.tar
-#      - run:
-#          <<: *defaults_license_scanner
-#      - run:
-#          name: Run the license-scanner
-#          command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG make run
-#      - store_artifacts:
-#          path: /tmp/license-scanner/results
-#          prefix: licenses
+  license-scan:
+    executor: default-machine
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Load the pre-built docker image from workspace
+          command: docker load -i /tmp/docker-image.tar
+      - run:
+          <<: *defaults_license_scanner
+      - run:
+          name: Run the license-scanner
+          command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG make run
+      - store_artifacts:
+          path: /tmp/license-scanner/results
+          prefix: licenses
 
   image-scan:
     executor: anchore/anchore_engine
@@ -388,20 +388,22 @@ workflows:
             - audit-licenses
           filters:
             tags:
-              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
+              only: /.*/
             branches:
               ignore:
-                - /.*/
-#      - license-scan:
-#          context: org-global
-#          requires:
-#            - build
-#          filters:
-#            tags:
-#              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
-#            branches:
-#              ignore:
-#                - /.*/
+                - /feature*/
+                - /bugfix*/
+      - license-scan:
+          context: org-global
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore:
+                - /feature*/
+                - /bugfix*/
       - image-scan:
           context: org-global
           requires:

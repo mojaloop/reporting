@@ -389,7 +389,7 @@ workflows:
           requires:
             - setup
             - test-unit
-            - test-build
+#            - test-build
             - vulnerability-check
             - audit-licenses
           filters:

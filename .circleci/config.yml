@@ -129,14 +129,6 @@ jobs:
       - store_test_results:
           path: ./test/results
 
-#  test-build:
-#    executor: default-machine
-#    steps:
-#      - checkout
-#      - run:
-#          name: Docker Build
-#          command: docker build .
-
   vulnerability-check:
     executor: default-docker
     steps:
@@ -174,6 +166,29 @@ jobs:
           path: /tmp/license-scanner/results
           prefix: licenses
 
+  build-untagged:
+    executor: default-machine
+    steps:
+      - checkout
+      - run:
+          name: Build Docker $CIRCLE_TAG image
+          command: >
+            echo "Building Docker image: $CIRCLE_TAG"
+
+            docker build
+            --build-arg=BUILD_DATE="$(date -u --iso-8601=seconds)"
+            --build-arg=VERSION="$RELEASE_TAG"
+            --build-arg=VCS_URL="$CIRCLE_REPOSITORY_URL"
+            --build-arg=VCS_REF="$CIRCLE_SHA1"
+            -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG .
+      - run:
+          name: Save docker image to workspace
+          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - ./docker-image.tar
+
   build:
     executor: default-machine
     steps:
@@ -209,7 +224,7 @@ jobs:
           <<: *defaults_license_scanner
       - run:
           name: Run the license-scanner
-          command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG make run
+          command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local make run
       - store_artifacts:
           path: /tmp/license-scanner/results
           prefix: licenses
@@ -229,7 +244,7 @@ jobs:
           command: docker load -i /tmp/docker-image.tar
       - anchore/analyze_local_image:
           dockerfile_path: ./Dockerfile
-          image_name: ${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_TAG}
+          image_name: ${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:local
           # Anchore bug: if policy_failure is `true`, reports don't get written - we manually check for failures below
           policy_failure: false
           timeout: '500'
@@ -329,8 +344,6 @@ workflows:
           requires:
             - setup
           filters:
-            tags:
-              only: /.*/
             branches:
               ignore:
                 - /feature*/
@@ -341,32 +354,16 @@ workflows:
           requires:
             - setup
           filters:
-            tags:
-              only: /.*/
             branches:
               ignore:
                 - /feature*/
                 - /bugfix*/
                 - /hotfix*/
-#      - test-build:
-#          context: org-global
-#          requires:
-#            - setup
-#          filters:
-#            tags:
-#              only: /.*/
-#            branches:
-#              ignore:
-#                - /feature*/
-#                - /bugfix*/
-#                - /hotfix*/
       - vulnerability-check:
           context: org-global
           requires:
             - setup
           filters:
-            tags:
-              only: /.*/
             branches:
               ignore:
                 - /feature*/
@@ -377,8 +374,39 @@ workflows:
           requires:
             - setup
           filters:
-            tags:
-              only: /.*/
+            branches:
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
+      - build-untagged:
+          context: org-global
+          requires:
+            - setup
+            - test-unit
+            - vulnerability-check
+            - audit-licenses
+          filters:
+            branches:
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
+      - license-scan:
+          context: org-global
+          requires:
+            - build-untagged
+          filters:
+            branches:
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
+      - image-scan:
+          context: org-global
+          requires:
+            - build-untagged
+          filters:
             branches:
               ignore:
                 - /feature*/
@@ -388,37 +416,9 @@ workflows:
           context: org-global
           requires:
             - setup
-            - test-unit
-#            - test-build
-            - vulnerability-check
-            - audit-licenses
           filters:
             tags:
-              only: /.*/
-            branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
-                - /hotfix*/
-      - license-scan:
-          context: org-global
-          requires:
-            - build
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
-                - /hotfix*/
-      - image-scan:
-          context: org-global
-          requires:
-            - build
-          filters:
-            tags:
-              only: /.*/
+              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
             branches:
               ignore:
                 - /feature*/
@@ -427,8 +427,7 @@ workflows:
       - publish:
           context: org-global
           requires:
-            - license-scan
-            - image-scan
+            - build
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/

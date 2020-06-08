@@ -167,7 +167,7 @@ jobs:
           prefix: licenses
 
   build-untagged:
-    executor: default-machine
+    executor: default-docker
     steps:
       - checkout
       - run:
@@ -190,7 +190,7 @@ jobs:
             - ./docker-image.tar
 
   build:
-    executor: default-machine
+    executor: default-docker
     steps:
       - checkout
       - run:
@@ -213,7 +213,7 @@ jobs:
             - ./docker-image.tar
 
   license-scan:
-    executor: default-machine
+    executor: anchore/anchore_engine
     steps:
       - attach_workspace:
           at: /tmp
@@ -280,7 +280,7 @@ jobs:
           path: anchore-reports
 
   publish:
-    executor: default-machine
+    executor: default-docker
     steps:
       - checkout
       - attach_workspace:

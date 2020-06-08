@@ -171,16 +171,16 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Build Docker $CIRCLE_TAG image
+          name: Build Docker local image for testing
           command: >
-            echo "Building Docker image: $CIRCLE_TAG"
+            echo "Building Docker image: local"
 
             docker build
             --build-arg=BUILD_DATE="$(date -u --iso-8601=seconds)"
-            --build-arg=VERSION="$RELEASE_TAG"
+            --build-arg=VERSION="local"
             --build-arg=VCS_URL="$CIRCLE_REPOSITORY_URL"
             --build-arg=VCS_REF="$CIRCLE_SHA1"
-            -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG .
+            -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local .
       - run:
           name: Save docker image to workspace
           command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local

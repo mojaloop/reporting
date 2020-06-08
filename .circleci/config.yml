@@ -315,6 +315,7 @@ jobs:
 ##
 workflows:
   version: 2
+  test_and_build:
     jobs:
       - setup:
           context: org-global

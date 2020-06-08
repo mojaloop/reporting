@@ -318,10 +318,10 @@ workflows:
   test_and_build:
     triggers:
       - schedule:
-        filters:
-          branches:
-            only:
-              - master
+          filters:
+            branches:
+              only:
+                - master
     jobs:
       - setup:
           context: org-global
@@ -427,9 +427,9 @@ workflows:
   publish_and_deploy:
     triggers:
       - schedule:
-        filters:
-          tags:
-            only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
     jobs:
       - publish:
           context: org-global

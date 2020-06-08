@@ -136,6 +136,9 @@ jobs:
       - run:
           name: Docker Build
           command: docker build .
+      - run:
+          name: Save Docker image to workspace
+          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
 
   vulnerability-check:
     executor: default-docker
@@ -312,7 +315,7 @@ jobs:
 ##
 workflows:
   version: 2
-  build_and_test:
+  test_and_build:
     jobs:
       - setup:
           context: org-global
@@ -415,24 +418,19 @@ workflows:
               ignore:
                 - /feature*/
                 - /bugfix*/
+  publish_and_deploy:
+    filters:
+      tags:
+        only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
+    requires:
+      - test_and_build
+    jobs:
       - publish:
           context: org-global
           requires:
 #            - license-scan
             - image-scan
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
-            branches:
-              ignore:
-                - /.*/
       - deploy:
           context: org-global
           requires:
             - publish
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?/
-            branches:
-              ignore:
-                - /.*/

@@ -315,78 +315,53 @@ jobs:
 ##
 workflows:
   version: 2
-  test_and_build:
-    triggers:
-      - schedule:
-          filters:
-            branches:
-              only:
-                - master
     jobs:
       - setup:
           context: org-global
           filters:
-            tags:
-              only: /.*/
             branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
+              only:
+                - master
       - test-unit:
           context: org-global
           requires:
             - setup
           filters:
-            tags:
-              only: /.*/
             branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
+              only:
+                - master
       - test-integration:
           context: org-global
           requires:
             - setup
           filters:
-            tags:
-              only: /.*/
             branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
+              only:
+                - master
       - test-build:
           context: org-global
           requires:
             - setup
           filters:
-            tags:
-              only: /.*/
             branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
+              only:
+                - master
       - vulnerability-check:
           context: org-global
           requires:
             - setup
           filters:
-            tags:
-              only: /.*/
             branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
+              only:
+                - master
       - audit-licenses:
           context: org-global
           requires:
             - setup
           filters:
-            tags:
-              only: /.*/
             branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
+              only:
+                - master
       - build:
           context: org-global
           requires:
@@ -396,40 +371,26 @@ workflows:
             - vulnerability-check
             - audit-licenses
           filters:
-            tags:
-              only: /.*/
             branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
+              only:
+                - master
       - license-scan:
           context: org-global
           requires:
             - build
           filters:
-            tags:
-              only: /.*/
             branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
+              only:
+                - master
       - image-scan:
           context: org-global
           requires:
             - build
           filters:
-            tags:
-              only: /.*/
             branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
+              only:
+                - master
   publish_and_deploy:
-    triggers:
-      - schedule:
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
     jobs:
       - publish:
           context: org-global

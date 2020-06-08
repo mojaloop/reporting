@@ -315,54 +315,78 @@ jobs:
 ##
 workflows:
   version: 2
-  test_and_build:
+  build_and_test:
     jobs:
       - setup:
           context: org-global
           filters:
+            tags:
+              only: /.*/
             branches:
-              only:
-                - master
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
       - test-unit:
           context: org-global
           requires:
             - setup
           filters:
+            tags:
+              only: /.*/
             branches:
-              only:
-                - master
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
       - test-integration:
           context: org-global
           requires:
             - setup
           filters:
+            tags:
+              only: /.*/
             branches:
-              only:
-                - master
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
       - test-build:
           context: org-global
           requires:
             - setup
           filters:
+            tags:
+              only: /.*/
             branches:
-              only:
-                - master
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
       - vulnerability-check:
           context: org-global
           requires:
             - setup
           filters:
+            tags:
+              only: /.*/
             branches:
-              only:
-                - master
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
       - audit-licenses:
           context: org-global
           requires:
             - setup
           filters:
+            tags:
+              only: /.*/
             branches:
-              only:
-                - master
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
       - build:
           context: org-global
           requires:
@@ -372,39 +396,49 @@ workflows:
             - vulnerability-check
             - audit-licenses
           filters:
+            tags:
+              only: /.*/
             branches:
-              only:
-                - master
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
       - license-scan:
           context: org-global
           requires:
             - build
           filters:
+            tags:
+              only: /.*/
             branches:
-              only:
-                - master
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
       - image-scan:
           context: org-global
           requires:
             - build
           filters:
+            tags:
+              only: /.*/
             branches:
-              only:
-                - master
-  publish_and_deploy:
-    jobs:
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
       - publish:
           context: org-global
+          requires:
+            - license-scan
+            - image-scan
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
-#          requires:
-#            - license-scan
-#            - image-scan
       - deploy:
           context: org-global
+          requires:
+            - publish
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
-#          requires:
-#            - publish

@@ -395,8 +395,6 @@ workflows:
     jobs:
       - publish:
           context: org-global
-          requires:
-            - test_and_build
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
@@ -405,8 +403,6 @@ workflows:
 #            - image-scan
       - deploy:
           context: org-global
-          requires:
-            - test_and_build
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/

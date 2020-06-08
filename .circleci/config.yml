@@ -316,6 +316,11 @@ jobs:
 workflows:
   version: 2
   test_and_build:
+    triggers:
+      - filters:
+          branches:
+            only:
+              - master
     jobs:
       - setup:
           context: org-global
@@ -419,6 +424,10 @@ workflows:
                 - /feature*/
                 - /bugfix*/
   publish_and_deploy:
+    triggers:
+      - filters:
+          tags:
+            only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
     jobs:
       - publish:
           context: org-global

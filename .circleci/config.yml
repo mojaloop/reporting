@@ -46,12 +46,12 @@ defaults_license_scanner: &defaults_license_scanner
 # CircleCI Executors
 ##
 executors:
-  default-docker:
+  default-node:
     working_directory: /home/circleci/project
     docker:
       - image: node:12.18.0-alpine
 
-  default-machine:
+  default-ubuntu:
     machine:
       image: ubuntu-1604:201903-01
 
@@ -62,7 +62,7 @@ executors:
 ##
 jobs:
   setup:
-    executor: default-docker
+    executor: default-node
     steps:
       - checkout
       - run:
@@ -83,7 +83,7 @@ jobs:
             - node_modules
 
   test-unit:
-    executor: default-docker
+    executor: default-node
     steps:
       - checkout
       - run:
@@ -108,7 +108,7 @@ jobs:
           path: ./test/results
 
   test-integration:
-    executor: default-docker
+    executor: default-node
     steps:
       - checkout
       - run:
@@ -130,7 +130,7 @@ jobs:
           path: ./test/results
 
   vulnerability-check:
-    executor: default-docker
+    executor: default-node
     steps:
       - checkout
       - run:
@@ -149,7 +149,7 @@ jobs:
           prefix: audit
 
   audit-licenses:
-    executor: default-docker
+    executor: default-node
     steps:
       - checkout
       - run:
@@ -167,7 +167,7 @@ jobs:
           prefix: licenses
 
   build-untagged:
-    executor: default-docker
+    executor: default-ubuntu
     steps:
       - checkout
       - run:
@@ -190,7 +190,7 @@ jobs:
             - ./docker-image.tar
 
   build:
-    executor: default-docker
+    executor: default-ubuntu
     steps:
       - checkout
       - run:
@@ -213,7 +213,7 @@ jobs:
             - ./docker-image.tar
 
   license-scan:
-    executor: anchore/anchore_engine
+    executor: default-ubuntu
     steps:
       - attach_workspace:
           at: /tmp
@@ -280,7 +280,7 @@ jobs:
           path: anchore-reports
 
   publish:
-    executor: default-docker
+    executor: default-ubuntu
     steps:
       - checkout
       - attach_workspace:

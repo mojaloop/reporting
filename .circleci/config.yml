@@ -129,16 +129,13 @@ jobs:
       - store_test_results:
           path: ./test/results
 
-  test-build:
-    executor: default-machine
-    steps:
-      - checkout
-      - run:
-          name: Docker Build
-          command: docker build .
-      - run:
-          name: Save Docker image to workspace
-          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
+#  test-build:
+#    executor: default-machine
+#    steps:
+#      - checkout
+#      - run:
+#          name: Docker Build
+#          command: docker build .
 
   vulnerability-check:
     executor: default-docker
@@ -351,18 +348,18 @@ workflows:
                 - /feature*/
                 - /bugfix*/
                 - /hotfix*/
-      - test-build:
-          context: org-global
-          requires:
-            - setup
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
-                - /hotfix*/
+#      - test-build:
+#          context: org-global
+#          requires:
+#            - setup
+#          filters:
+#            tags:
+#              only: /.*/
+#            branches:
+#              ignore:
+#                - /feature*/
+#                - /bugfix*/
+#                - /hotfix*/
       - vulnerability-check:
           context: org-global
           requires:

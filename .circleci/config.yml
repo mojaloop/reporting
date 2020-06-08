@@ -427,10 +427,10 @@ workflows:
     jobs:
       - publish:
           context: org-global
-          requires:
+#          requires:
 #            - license-scan
-            - image-scan
+#            - image-scan
       - deploy:
           context: org-global
-          requires:
-            - publish
+#          requires:
+#            - publish

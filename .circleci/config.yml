@@ -213,8 +213,10 @@ jobs:
             - ./docker-image.tar
 
   license-scan:
-    executor: default-ubuntu
+    executor: anchore/anchore_engine
     steps:
+      - setup_remote_docker
+      - checkout
       - attach_workspace:
           at: /tmp
       - run:

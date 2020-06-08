@@ -38,7 +38,7 @@ defaults_license_scanner: &defaults_license_scanner
   name: Install and set up license-scanner
   command: |
     git clone https://github.com/mojaloop/license-scanner /tmp/license-scanner
-    cd /tmp/license-scanner && make build default-files set-up
+    cd /tmp/license-scanner && make build default-files
 
 ##
 # Executors
@@ -50,7 +50,6 @@ executors:
     working_directory: /home/circleci/project
     docker:
       - image: node:12.18.0-alpine
-
   default-ubuntu:
     machine:
       image: ubuntu-1604:201903-01
@@ -180,40 +179,17 @@ jobs:
             --build-arg=VERSION="local"
             --build-arg=VCS_URL="$CIRCLE_REPOSITORY_URL"
             --build-arg=VCS_REF="$CIRCLE_SHA1"
-            -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local .
+            -t "${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:local" .
       - run:
           name: Save docker image to workspace
-          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-            - ./docker-image.tar
-
-  build:
-    executor: default-ubuntu
-    steps:
-      - checkout
-      - run:
-          name: Build Docker $CIRCLE_TAG image
-          command: >
-            echo "Building Docker image: $CIRCLE_TAG"
-
-            docker build
-            --build-arg=BUILD_DATE="$(date -u --iso-8601=seconds)"
-            --build-arg=VERSION="$RELEASE_TAG"
-            --build-arg=VCS_URL="$CIRCLE_REPOSITORY_URL"
-            --build-arg=VCS_REF="$CIRCLE_SHA1"
-            -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG .
-      - run:
-          name: Save docker image to workspace
-          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
+          command: docker save -o /tmp/docker-image.tar "${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:local"
       - persist_to_workspace:
           root: /tmp
           paths:
             - ./docker-image.tar
 
   license-scan:
-    executor: anchore/anchore_engine
+    executor: default-ubuntu
     steps:
       - setup_remote_docker
       - checkout
@@ -225,8 +201,11 @@ jobs:
       - run:
           <<: *defaults_license_scanner
       - run:
+          name: Set up the license-scanner
+          command: cd /tmp/license-scanner && make set-up
+      - run:
           name: Run the license-scanner
-          command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local make run
+          command: cd /tmp/license-scanner && mode=docker dockerImages="${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:local" make run
       - store_artifacts:
           path: /tmp/license-scanner/results
           prefix: licenses
@@ -280,6 +259,29 @@ jobs:
             # fi
       - store_artifacts:
           path: anchore-reports
+
+  build:
+    executor: default-ubuntu
+    steps:
+      - checkout
+      - run:
+          name: Build Docker $CIRCLE_TAG image
+          command: >
+            echo "Building Docker image: $CIRCLE_TAG"
+
+            docker build
+            --build-arg=BUILD_DATE="$(date -u --iso-8601=seconds)"
+            --build-arg=VERSION="$RELEASE_TAG"
+            --build-arg=VCS_URL="$CIRCLE_REPOSITORY_URL"
+            --build-arg=VCS_REF="$CIRCLE_SHA1"
+            -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG .
+      - run:
+          name: Save docker image to workspace
+          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - ./docker-image.tar
 
   publish:
     executor: default-ubuntu
@@ -407,7 +409,7 @@ workflows:
       - image-scan:
           context: org-global
           requires:
-            - build-untagged
+            - license-scan
           filters:
             branches:
               ignore:

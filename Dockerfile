@@ -11,7 +11,7 @@ RUN npm ci --production
 
 FROM node:12.18.0-alpine
 
-WORKDIR /opt/reports
+WORKDIR /opt/reporting
 
 COPY --from=builder /opt/reporting .
 

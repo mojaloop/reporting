@@ -46,12 +46,11 @@ defaults_license_scanner: &defaults_license_scanner
 # CircleCI Executors
 ##
 executors:
-  default-docker:
+  docker-alpine-with-nodejs:
     working_directory: /home/circleci/project
     docker:
       - image: node:12.18.0-alpine
-
-  default-machine:
+  machine-ubuntu-with-docker:
     machine:
       image: ubuntu-1604:201903-01
 
@@ -62,7 +61,7 @@ executors:
 ##
 jobs:
   setup:
-    executor: default-docker
+    executor: docker-alpine-with-nodejs
     steps:
       - checkout
       - run:
@@ -83,7 +82,7 @@ jobs:
             - node_modules
 
   test-unit:
-    executor: default-docker
+    executor: docker-alpine-with-nodejs
     steps:
       - checkout
       - run:
@@ -108,7 +107,7 @@ jobs:
           path: ./test/results
 
   test-integration:
-    executor: default-docker
+    executor: docker-alpine-with-nodejs
     steps:
       - checkout
       - run:
@@ -129,16 +128,8 @@ jobs:
       - store_test_results:
           path: ./test/results
 
-  test-build:
-    executor: default-machine
-    steps:
-      - checkout
-      - run:
-          name: Docker Build
-          command: docker build .
-
   vulnerability-check:
-    executor: default-docker
+    executor: docker-alpine-with-nodejs
     steps:
       - checkout
       - run:
@@ -157,7 +148,7 @@ jobs:
           prefix: audit
 
   audit-licenses:
-    executor: default-docker
+    executor: docker-alpine-with-nodejs
     steps:
       - checkout
       - run:
@@ -175,7 +166,7 @@ jobs:
           prefix: licenses
 
   build:
-    executor: default-machine
+    executor: machine-ubuntu-with-docker
     steps:
       - checkout
       - run:
@@ -197,22 +188,46 @@ jobs:
           paths:
             - ./docker-image.tar
 
-#  license-scan:
-#    executor: default-machine
-#    steps:
-#      - attach_workspace:
-#          at: /tmp
-#      - run:
-#          name: Load the pre-built docker image from workspace
-#          command: docker load -i /tmp/docker-image.tar
-#      - run:
-#          <<: *defaults_license_scanner
-#      - run:
-#          name: Run the license-scanner
-#          command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG make run
-#      - store_artifacts:
-#          path: /tmp/license-scanner/results
-#          prefix: licenses
+  build-local:
+    executor: machine-ubuntu-with-docker
+    steps:
+      - checkout
+      - run:
+          name: Build Docker local image for testing
+          command: >
+            echo "Building Docker image: local"
+
+            docker build
+            --build-arg=BUILD_DATE="$(date -u --iso-8601=seconds)"
+            --build-arg=VERSION="local"
+            --build-arg=VCS_URL="$CIRCLE_REPOSITORY_URL"
+            --build-arg=VCS_REF="$CIRCLE_SHA1"
+            -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local .
+      - run:
+          name: Save docker image to workspace
+          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - ./docker-image.tar
+
+  license-scan:
+    executor: machine-ubuntu-with-docker
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Load the pre-built docker image from workspace
+          command: docker load -i /tmp/docker-image.tar
+      - run:
+          <<: *defaults_license_scanner
+      - run:
+          name: Run the license-scanner
+          command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local make run
+      - store_artifacts:
+          path: /tmp/license-scanner/results
+          prefix: licenses
 
   image-scan:
     executor: anchore/anchore_engine
@@ -229,7 +244,7 @@ jobs:
           command: docker load -i /tmp/docker-image.tar
       - anchore/analyze_local_image:
           dockerfile_path: ./Dockerfile
-          image_name: ${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_TAG}
+          image_name: ${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:local
           # Anchore bug: if policy_failure is `true`, reports don't get written - we manually check for failures below
           policy_failure: false
           timeout: '500'
@@ -265,7 +280,7 @@ jobs:
           path: anchore-reports
 
   publish:
-    executor: default-machine
+    executor: machine-ubuntu-with-docker
     steps:
       - checkout
       - attach_workspace:
@@ -323,89 +338,81 @@ workflows:
               ignore:
                 - /feature*/
                 - /bugfix*/
+                - /hotfix*/
       - test-unit:
           context: org-global
           requires:
             - setup
           filters:
-            tags:
-              only: /.*/
             branches:
               ignore:
                 - /feature*/
                 - /bugfix*/
+                - /hotfix*/
       - test-integration:
           context: org-global
           requires:
             - setup
           filters:
-            tags:
-              only: /.*/
             branches:
               ignore:
                 - /feature*/
                 - /bugfix*/
-      - test-build:
-          context: org-global
-          requires:
-            - setup
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore:
-                - /feature*/
-                - /bugfix*/
+                - /hotfix*/
       - vulnerability-check:
           context: org-global
           requires:
             - setup
           filters:
-            tags:
-              only: /.*/
             branches:
               ignore:
                 - /feature*/
                 - /bugfix*/
+                - /hotfix*/
       - audit-licenses:
           context: org-global
           requires:
             - setup
           filters:
-            tags:
-              only: /.*/
             branches:
               ignore:
                 - /feature*/
                 - /bugfix*/
-      - build:
+                - /hotfix*/
+      - build-local:
           context: org-global
           requires:
-            - setup
             - test-unit
-            - test-build
             - vulnerability-check
             - audit-licenses
           filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
             branches:
               ignore:
-                - /.*/
-#      - license-scan:
-#          context: org-global
-#          requires:
-#            - build
-#          filters:
-#            tags:
-#              only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
-#            branches:
-#              ignore:
-#                - /.*/
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
+      - license-scan:
+          context: org-global
+          requires:
+            - build-local
+          filters:
+            branches:
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
       - image-scan:
           context: org-global
           requires:
-            - build
+            - build-local
+          filters:
+            branches:
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
+      - build:
+          context: org-global
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/
@@ -415,8 +422,7 @@ workflows:
       - publish:
           context: org-global
           requires:
-#            - license-scan
-            - image-scan
+            - build
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/

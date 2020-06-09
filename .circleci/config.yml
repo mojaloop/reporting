@@ -189,9 +189,8 @@ jobs:
             - ./docker-image.tar
 
   license-scan:
-    executor: anchore/anchore_engine
+    executor: default-ubuntu
     steps:
-      - setup_remote_docker
       - checkout
       - run:
           name: Install general dependencies
@@ -412,7 +411,7 @@ workflows:
       - image-scan:
           context: org-global
           requires:
-            - license-scan
+            - build-untagged
           filters:
             branches:
               ignore:

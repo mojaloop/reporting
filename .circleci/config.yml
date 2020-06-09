@@ -391,16 +391,16 @@ workflows:
                 - /feature*/
                 - /bugfix*/
                 - /hotfix*/
-            - license-scan:
-                context: org-global
-                requires:
-                  - build-local
-                filters:
-                  branches:
-                    ignore:
-                      - /feature*/
-                      - /bugfix*/
-                      - /hotfix*/
+      - license-scan:
+          context: org-global
+          requires:
+            - build-local
+          filters:
+            branches:
+              ignore:
+                - /feature*/
+                - /bugfix*/
+                - /hotfix*/
       - image-scan:
           context: org-global
           requires:

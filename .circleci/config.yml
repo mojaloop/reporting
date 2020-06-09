@@ -46,11 +46,11 @@ defaults_license_scanner: &defaults_license_scanner
 # CircleCI Executors
 ##
 executors:
-  default-node:
+  docker-alpine-with-nodejs:
     working_directory: /home/circleci/project
     docker:
       - image: node:12.18.0-alpine
-  default-ubuntu:
+  machine-ubuntu-with-docker:
     machine:
       image: ubuntu-1604:201903-01
 
@@ -61,7 +61,7 @@ executors:
 ##
 jobs:
   setup:
-    executor: default-node
+    executor: docker-alpine-with-nodejs
     steps:
       - checkout
       - run:
@@ -82,7 +82,7 @@ jobs:
             - node_modules
 
   test-unit:
-    executor: default-node
+    executor: docker-alpine-with-nodejs
     steps:
       - checkout
       - run:
@@ -107,7 +107,7 @@ jobs:
           path: ./test/results
 
   test-integration:
-    executor: default-node
+    executor: docker-alpine-with-nodejs
     steps:
       - checkout
       - run:
@@ -129,7 +129,7 @@ jobs:
           path: ./test/results
 
   vulnerability-check:
-    executor: default-node
+    executor: docker-alpine-with-nodejs
     steps:
       - checkout
       - run:
@@ -148,7 +148,7 @@ jobs:
           prefix: audit
 
   audit-licenses:
-    executor: default-node
+    executor: docker-alpine-with-nodejs
     steps:
       - checkout
       - run:
@@ -166,7 +166,7 @@ jobs:
           prefix: licenses
 
   build:
-    executor: default-ubuntu
+    executor: machine-ubuntu-with-docker
     steps:
       - checkout
       - run:
@@ -189,7 +189,7 @@ jobs:
             - ./docker-image.tar
 
   build-local:
-    executor: default-ubuntu
+    executor: machine-ubuntu-with-docker
     steps:
       - checkout
       - run:
@@ -212,7 +212,7 @@ jobs:
             - ./docker-image.tar
 
   license-scan:
-    executor: default-ubuntu
+    executor: machine-ubuntu-with-docker
     steps:
       - checkout
       - attach_workspace:
@@ -280,7 +280,7 @@ jobs:
           path: anchore-reports
 
   publish:
-    executor: default-ubuntu
+    executor: machine-ubuntu-with-docker
     steps:
       - checkout
       - attach_workspace:

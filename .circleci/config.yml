@@ -189,9 +189,12 @@ jobs:
             - ./docker-image.tar
 
   license-scan:
-    executor: default-ubuntu
+    executor: anchore/anchore_engine
     steps:
+      - setup_remote_docker
       - checkout
+      - run:
+          <<: *defaults_Dependencies
       - attach_workspace:
           at: /tmp
       - run:
@@ -204,7 +207,7 @@ jobs:
           command: cd /tmp/license-scanner && make set-up
       - run:
           name: Run the license-scanner
-          command: cd /tmp/license-scanner && mode=docker dockerImages="${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:local" make run
+          command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local make run
       - store_artifacts:
           path: /tmp/license-scanner/results
           prefix: licenses

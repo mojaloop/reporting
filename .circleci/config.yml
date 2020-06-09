@@ -194,7 +194,8 @@ jobs:
       - setup_remote_docker
       - checkout
       - run:
-          <<: *defaults_Dependencies
+          name: Install general dependencies
+          command: *defaults_Dependencies
       - attach_workspace:
           at: /tmp
       - run:

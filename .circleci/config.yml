@@ -165,6 +165,29 @@ jobs:
           path: /tmp/license-scanner/results
           prefix: licenses
 
+  build:
+    executor: default-ubuntu
+    steps:
+      - checkout
+      - run:
+          name: Build Docker $CIRCLE_TAG image
+          command: >
+            echo "Building Docker image: $CIRCLE_TAG"
+
+            docker build
+            --build-arg=BUILD_DATE="$(date -u --iso-8601=seconds)"
+            --build-arg=VERSION="$RELEASE_TAG"
+            --build-arg=VCS_URL="$CIRCLE_REPOSITORY_URL"
+            --build-arg=VCS_REF="$CIRCLE_SHA1"
+            -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG .
+      - run:
+          name: Save docker image to workspace
+          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - ./docker-image.tar
+
   build-local:
     executor: default-ubuntu
     steps:
@@ -255,29 +278,6 @@ jobs:
             # fi
       - store_artifacts:
           path: anchore-reports
-
-  build:
-    executor: default-ubuntu
-    steps:
-      - checkout
-      - run:
-          name: Build Docker $CIRCLE_TAG image
-          command: >
-            echo "Building Docker image: $CIRCLE_TAG"
-
-            docker build
-            --build-arg=BUILD_DATE="$(date -u --iso-8601=seconds)"
-            --build-arg=VERSION="$RELEASE_TAG"
-            --build-arg=VCS_URL="$CIRCLE_REPOSITORY_URL"
-            --build-arg=VCS_REF="$CIRCLE_SHA1"
-            -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG .
-      - run:
-          name: Save docker image to workspace
-          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-            - ./docker-image.tar
 
   publish:
     executor: default-ubuntu

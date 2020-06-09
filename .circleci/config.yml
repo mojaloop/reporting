@@ -165,7 +165,7 @@ jobs:
           path: /tmp/license-scanner/results
           prefix: licenses
 
-  build-untagged:
+  build-local:
     executor: default-ubuntu
     steps:
       - checkout
@@ -189,13 +189,9 @@ jobs:
             - ./docker-image.tar
 
   license-scan:
-    executor: default-node
+    executor: default-ubuntu
     steps:
-      - setup_remote_docker
       - checkout
-      - run:
-          name: Install general dependencies
-          command: *defaults_Dependencies
       - attach_workspace:
           at: /tmp
       - run:
@@ -386,10 +382,9 @@ workflows:
                 - /feature*/
                 - /bugfix*/
                 - /hotfix*/
-      - build-untagged:
+      - build-local:
           context: org-global
           requires:
-            - setup
             - test-unit
             - vulnerability-check
             - audit-licenses
@@ -402,7 +397,7 @@ workflows:
       - license-scan:
           context: org-global
           requires:
-            - build-untagged
+            - build-local
           filters:
             branches:
               ignore:
@@ -412,7 +407,7 @@ workflows:
       - image-scan:
           context: org-global
           requires:
-            - build-untagged
+            - build-local
           filters:
             branches:
               ignore:
@@ -421,8 +416,6 @@ workflows:
                 - /hotfix*/
       - build:
           context: org-global
-          requires:
-            - setup
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(\-snapshot)?(\-hotfix(\.[0-9]+))?/

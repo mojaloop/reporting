@@ -189,8 +189,9 @@ jobs:
             - ./docker-image.tar
 
   license-scan:
-    executor: default-ubuntu
+    executor: default-node
     steps:
+      - setup_remote_docker
       - checkout
       - run:
           name: Install general dependencies

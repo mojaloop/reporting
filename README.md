@@ -43,7 +43,7 @@ DB_PASSWORD="password"
 DB_DATABASE="central_ledger"
 EOF
 ```
-Where `reports` is the image name from the build stage:
+Where `reporting` is the image name from the build stage:
 ```sh
 docker run -v $PWD/config:/opt/reporting/config -p 3000:3000 --env-file=./.my.env reporting
 ```

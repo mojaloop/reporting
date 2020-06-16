@@ -381,10 +381,6 @@ workflows:
                 - /hotfix*/
       - build-local:
           context: org-global
-          requires:
-            - test-unit
-            - vulnerability-check
-            - audit-licenses
           filters:
             branches:
               ignore:

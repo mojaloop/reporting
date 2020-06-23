@@ -8,7 +8,7 @@ class Database {
             port = 3306,
             user = 'root',
             password = '',
-            database = 'root',
+            database = 'central_ledger',
         } = {},
         pool: {
             min = 0,
@@ -32,7 +32,9 @@ class Database {
     }
 
     async query(query, bindings) {
-        return (await this.conn.raw(query, bindings))[0];
+        const isSPCall = query.match(/^call\s/ig);
+        const result = await this.conn.raw(query, bindings);
+        return (isSPCall === null ? result[0] : result[0][0]);
     }
 }
 

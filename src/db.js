@@ -1,7 +1,7 @@
 const mysql = require('mysql2');
 
 class Database {
-    async init({
+    constructor({
         connection: {
             host = '127.0.0.1',
             port = 3306,
@@ -31,7 +31,7 @@ class Database {
     }
 
     async query(query, bindings) {
-        const isSPCall = null !== query.match(/^call\s/ig);
+        const isSPCall = (query.match(/^call\s/ig) !== null);
         const result = await this.conn.execute(query, bindings);
         return (isSPCall ? result[0][0] : result[0]);
     }

@@ -16,10 +16,8 @@ const dbConfig = {
     },
 };
 
-const db = new Database();
-(async () => {
-    await db.init(dbConfig);
-})();
+const db = new Database(dbConfig);
+
 const logger = new Logger();
 const app = require('./app')({ db, reportsConfig, logger });
 

@@ -1,4 +1,3 @@
-
 const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
 
 const Database = require('./db');
@@ -7,13 +6,13 @@ const reportsConfig = require('../config/reports.json');
 const dbConfig = {
     connection: {
         host: process.env.DB_HOST || 'localhost',
-        user: process.env.DB_USER || 'root',
-        password: process.env.DB_PASSWORD || 'root',
+        user: process.env.DB_USER || 'central_ledger',
+        password: process.env.DB_PASSWORD || 'password',
         database: process.env.DB_DATABASE || 'central_ledger',
     },
     pool: {
-        min: 1,
-        max: 10,
+        connectionLimit: 10,
+        queueLimit: 0,
     },
 };
 

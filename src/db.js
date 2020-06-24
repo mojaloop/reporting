@@ -1,38 +1,39 @@
-
-const knex = require('knex');
+const mysql = require('mysql2');
 
 class Database {
     constructor({
         connection: {
             host = '127.0.0.1',
             port = 3306,
-            user = 'root',
+            user = 'central_ledger',
             password = '',
-            database = 'root',
+            database = 'central_ledger',
         } = {},
         pool: {
-            min = 0,
-            max = 10,
+            queueLimit = 0,
+            connectionLimit = 10,
         } = {},
     }) {
-        this.conn = knex({
-            client: 'mysql2',
-            connection: {
+        const connPool = mysql.createPool(
+            {
                 host,
                 user,
-                password,
                 database,
+                password,
                 port,
+                connectionLimit,
+                namedPlaceholders: true,
+                waitForConnections: true,
+                queueLimit,
             },
-            pool: {
-                min,
-                max,
-            },
-        });
+        );
+        this.conn = connPool.promise();
     }
 
     async query(query, bindings) {
-        return (await this.conn.raw(query, bindings))[0];
+        const isSPCall = (query.match(/^call\s/ig) !== null);
+        const result = await this.conn.execute(query, bindings);
+        return (isSPCall ? result[0][0] : result[0]);
     }
 }
 

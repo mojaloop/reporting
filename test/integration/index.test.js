@@ -1,4 +1,3 @@
-
 const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
 const supertest = require('supertest');
 
@@ -22,6 +21,7 @@ const db = createDbMock({ colName: 'result' });
 const mockDefaults = {
     reportsConfig: {
         '/test': 'SELECT * FROM user WHERE id = $P{userId}',
+        '/storedProcReport': 'call getUser($P{userId})',
     },
     db,
     logger,
@@ -87,6 +87,27 @@ test('default mock report - JSON - correct response', async () => {
 
 test('default mock report - XLSX - correct response', async () => {
     const res = await createMockServer().get('/test.xlsx?userId=1');
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toStrictEqual({});
+    testResponseXlsx(res, { contentType: 'xlsx' });
+});
+
+test('default mock report - CSV - correct response stored proc', async () => {
+    const res = await createMockServer().get('/storedProcReport.csv?userId=1');
+    expect(res.statusCode).toEqual(200);
+    expect(csvParse(res.text, { columns: true })).toStrictEqual([{ colName: 'result' }]);
+    testResponse(res, { contentType: 'csv' });
+});
+
+test('default mock report - JSON - correct response stored proc', async () => {
+    const res = await createMockServer().get('/storedProcReport.json?userId=1');
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toStrictEqual([{ colName: 'result' }]);
+    testResponse(res);
+});
+
+test('default mock report - XLSX - correct response stored proc', async () => {
+    const res = await createMockServer().get('/storedProcReport.xlsx?userId=1');
     expect(res.statusCode).toEqual(200);
     expect(res.body).toStrictEqual({});
     testResponseXlsx(res, { contentType: 'xlsx' });

@@ -1,3 +1,4 @@
 {
-    "/participant": "select * from participant where name = $P{JIMMYS_NAME}"
+    "/participant": "select * from participant where name = $P{JIMMYS_NAME}",
+    "/311": "call getDailyTransactionReport('2020-06-23', '2020-06-24', 'testfsp3')"
 }

@@ -1,4 +1,3 @@
-
 const Koa = require('koa');
 const router = require('@internal/router');
 const randomphrase = require('@internal/randomphrase');

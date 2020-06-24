@@ -1,4 +1,3 @@
-
 const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
 const supertest = require('supertest');
 

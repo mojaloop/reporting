@@ -8,7 +8,6 @@
  *       James Bush - james.bush@modusbox.com                             *
  ************************************************************************* */
 
-
 module.exports = (handlerMap) => async (ctx, next) => {
     const handlers = handlerMap[ctx.request.URL.pathname];
     const handler = handlers ? handlers[ctx.method.toLowerCase()] : undefined;

@@ -8,7 +8,6 @@
  *       James Bush - james.bush@modusbox.com                             *
  ************************************************************************* */
 
-
 const words = require('./words.json');
 
 const randomEl = (arr) => arr[Math.floor(Math.random() * arr.length)];

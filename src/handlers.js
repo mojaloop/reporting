@@ -1,4 +1,3 @@
-
 const assert = require('assert').strict;
 
 const matchAll = require('string.prototype.matchall');

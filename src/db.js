@@ -31,9 +31,9 @@ class Database {
     }
 
     async query(query, bindings) {
-        const isSPCall = query.match(/^call\s/ig);
+        const isSPCall = null !== query.match(/^call\s/ig);
         const result = await this.conn.execute(query, bindings);
-        return (isSPCall === null ? result[0] : result[0][0]);
+        return (isSPCall ? result[0][0] : result[0]);
     }
 }
 

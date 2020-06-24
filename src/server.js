@@ -7,7 +7,7 @@ const dbConfig = {
     connection: {
         host: process.env.DB_HOST || 'localhost',
         user: process.env.DB_USER || 'central_ledger',
-        password: process.env.DB_PASSWORD || 'LzL7uDH5ea85',
+        password: process.env.DB_PASSWORD || 'password',
         database: process.env.DB_DATABASE || 'central_ledger',
     },
     pool: {

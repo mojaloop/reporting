@@ -1,5 +1,6 @@
 # Mojaloop Reporting Service
 - Map SQL queries to HTTP routes in `config/reports.json`.
+- See architecture diagram in /docs [here](docs/Mojaloop Reporting Service Architecture.png) .
 - The format is
     ```json
     {

@@ -49,10 +49,10 @@ executors:
   docker-alpine-with-nodejs:
     working_directory: /home/circleci/project
     docker:
-      - image: node:12.18.0-alpine
+      - image: node:lts-alpine
   machine-ubuntu-with-docker:
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202010-01
 
 ##
 # Jobs

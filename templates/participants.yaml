@@ -1,0 +1,7 @@
+params:
+  active:
+    required: false
+    default: 1
+
+data:
+  participants: SELECT name, isActive FROM participant WHERE isActive = :active ORDER BY name

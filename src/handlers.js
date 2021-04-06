@@ -1,7 +1,16 @@
 const assert = require('assert').strict;
+const { readdirSync, readFileSync } = require('fs');
+const path = require('path');
+const yaml = require('js-yaml');
+const ejs = require('ejs');
+const Handlebars = require('handlebars');
+const HandlebarHelpers = require('handlebars-helpers');
 
 const matchAll = require('string.prototype.matchall');
 const fromEntries = require('object.fromentries');
+const helper = require('./helper');
+
+HandlebarHelpers();
 
 const healthCheck = async (ctx) => {
     ctx.response.status = 200;
@@ -9,13 +18,31 @@ const healthCheck = async (ctx) => {
     ctx.response.set('content-type', 'application/json');
 };
 
-const getParams = (query) => {
-    const requiredParamRegex = /\$P{([^}{]*)}/g;
-    const requiredParams = [...matchAll(query, requiredParamRegex)];
+const readTemplates = () => {
+    const templateDir = path.join(__dirname, '..', 'templates');
+    const files = readdirSync(templateDir);
+    return files.reduce((acc, curr) => {
+        if (path.extname(curr) === '.yaml') {
+            const name = path.basename(curr, '.yaml');
+            const absPath = path.join(templateDir, curr);
+            acc[name] = acc[name] || {};
+            acc[name].dataSource = yaml.load(readFileSync(absPath));
+        }
+        if (path.extname(curr) === '.ejs') {
+            const name = path.basename(curr, '.ejs');
+            const absPath = path.join(templateDir, curr);
+            acc[name] = acc[name] || {};
+            // acc[name].render = Handlebars.compile(readFileSync(absPath).toString());
+            acc[name].render = ejs.compile(readFileSync(absPath).toString());
+        }
+        return acc;
+    }, {});
+};
 
-    const optionalParamRegex = /\$O{([^}{]*)}/g;
-    const optionalParams = [...matchAll(query, optionalParamRegex)];
-
+const getParams = (template) => {
+    const { params } = template;
+    const requiredParams = Object.keys(params).filter((name) => params[name].required);
+    const optionalParams = Object.keys(params).filter((name) => !params[name].required);
     return { requiredParams, optionalParams };
 };
 
@@ -46,40 +73,36 @@ const validateReportHandlers = (reportsConfig) => {
     Object.entries(reportsConfig).map(validateHandler);
 };
 
-const createReportHandlers = (reportsConfig) => {
-    const createReportHandler = ([route, query]) => {
+const createReportHandlers = (reportTemplates) => {
+    const createReportHandler = ([route, template]) => {
         // validateHandler(handlerMapRoutes, route, query)
 
-        const { requiredParams, optionalParams } = getParams(query);
+        const { requiredParams, optionalParams } = getParams(template.dataSource);
         const params = [...requiredParams, ...optionalParams];
 
         // Build the optional param default object here (once) for later use
         const optionalParamDefaults = Object.assign(
-            {}, ...optionalParams.map((p) => ({ [p[1]]: null })),
+            {}, ...optionalParams.map((p) => ({ [p]: template.dataSource.params[p].default })),
         );
 
-        // Convert the query in the config into a database query template containing named bindings
-        const dbQuery = params.reduce((q, param) => q.replace(param[0], `:${param[1]}`), query);
-        const paramNames = params.map((p) => p[1]);
-        const requiredParamNames = requiredParams.map((p) => p[1]);
         const handler = {
             get: async (ctx) => {
                 const requestErrors = [
                     // User did not provide all necessary query parameters
-                    ...requiredParamNames
+                    ...requiredParams
                         .filter((pn) => !ctx.request.URL.searchParams.has(pn))
                         .map((pn) => `Missing parameter in querystring: ${pn}`),
                     // User provided a querystring with duplicated params/args, such as ?q=a&q=b
-                    ...paramNames
+                    ...params
                         .filter((pn) => ctx.request.URL.searchParams.getAll(pn).length > 1)
                         .map((pn) => `Only one argument allowed for queryparam ${pn}`),
                     // User provided a querystring parameter not in our allowed list
                     ...[...ctx.request.URL.searchParams.keys()]
-                        .filter((pn) => !paramNames.includes(pn))
+                        .filter((pn) => !params.includes(pn))
                         .map((pn) => `queryparam ${pn} not supported by this report`),
                     // User did not provide a value for a required query parameter
                     ...[...ctx.request.URL.searchParams.entries()]
-                        .filter(([pn, arg]) => !arg && requiredParamNames.includes(pn))
+                        .filter(([pn, arg]) => !arg && requiredParams.includes(pn))
                         .map(([param]) => `queryparam ${param} must have a value supplied`),
                 ];
 
@@ -98,22 +121,24 @@ const createReportHandlers = (reportsConfig) => {
                     // value. We'll treat these as null, rather than an empty string.
                     ...fromEntries(Array.from(ctx.request.URL.searchParams.entries()).filter(([, v]) => v !== '')),
                 };
-                ctx.state.logger.push({ dbQuery, queryArgs }).log('Executing query');
-                const result = await ctx.db.query(dbQuery, queryArgs);
-                ctx.state.logger.push({ dbQuery, queryArgs, result }).log('Query result');
 
-                ctx.response.body = result;
+                const queries = Object.entries(template.dataSource.data)
+                    .map(([k, v]) => ctx.db.query(v, queryArgs)
+                        .then((result) => ({ [k]: result })));
+                const result = await Promise.all(queries);
+                ctx.response.html = template.render(Object.assign({}, ...result));
             },
         };
-        return [route, handler];
+        return [`/${route}`, handler];
     };
 
-    return fromEntries(Object.entries(reportsConfig).map(createReportHandler));
+    return fromEntries(Object.entries(reportTemplates).map(createReportHandler));
 };
 
 module.exports = {
     validateReportHandlers,
     createReportHandlers,
+    readTemplates,
     handlerMap: {
         '/': {
             get: healthCheck,

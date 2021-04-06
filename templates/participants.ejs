@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+            border: 1px solid #efefef;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #efefef;
+        }
+
+        td > span {
+            font-weight: bold;
+        }
+    </style>
+    <title>Participants</title>
+</head>
+<body>
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Active</th>
+    </tr>
+    <% for(let p of participants) { %>
+        <tr>
+
+            <td><%= p.name %></td>
+            <td><%= p.isActive %></td>
+        </tr>
+    <% } %>
+</table>
+
+</body>
+</html>

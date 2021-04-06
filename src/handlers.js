@@ -3,14 +3,7 @@ const { readdirSync, readFileSync } = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 const ejs = require('ejs');
-const Handlebars = require('handlebars');
-const HandlebarHelpers = require('handlebars-helpers');
-
-const matchAll = require('string.prototype.matchall');
 const fromEntries = require('object.fromentries');
-const helper = require('./helper');
-
-HandlebarHelpers();
 
 const healthCheck = async (ctx) => {
     ctx.response.status = 200;

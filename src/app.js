@@ -76,11 +76,9 @@ const create = ({ db, logger }) => {
             case 'xlsx': {
                 ctx.state.logger.log('Setting XLSX response');
 
-
                 const reportName = ctx.request.path.substr(ctx.request.path.lastIndexOf('/'), ctx.request.path.length).replace('/', '').replace('.xlsx', '');
                 const conversion = conversionFactory({
                     extract: async ({ html, ...restOptions }) => {
-
                         const tmpHtmlPath = `/tmp/${reportName}_${Date.now()}.html`;
 
                         await fs.writeFile(tmpHtmlPath, html);

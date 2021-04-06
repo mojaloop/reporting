@@ -14,5 +14,5 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: mojaloop/reporting-api
+          repository: mojaloop/reporting-service
           tag_with_ref: true

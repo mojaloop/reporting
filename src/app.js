@@ -86,60 +86,50 @@ const create = ({ templatesDir, db, logger }) => {
         const suffix = ctx.request.path.split('.').pop();
         switch (suffix) {
             case 'xlsx': {
-                try {
-                    ctx.state.logger.log('Setting XLSX response');
+                ctx.state.logger.log('Setting XLSX response');
 
-                    const reportName = ctx.request.path.substr(ctx.request.path.lastIndexOf('/'), ctx.request.path.length).replace('/', '').replace('.xlsx', '');
-                    const conversion = conversionFactory({
-                        extract: async ({ html, ...restOptions }) => {
-                            const tmpHtmlPath = `/tmp/${reportName}_${Date.now()}.html`;
+                const reportName = ctx.request.path.substr(ctx.request.path.lastIndexOf('/'), ctx.request.path.length).replace('/', '').replace('.xlsx', '');
+                const conversion = conversionFactory({
+                    extract: async ({ html, ...restOptions }) => {
+                        const tmpHtmlPath = `/tmp/${reportName}_${Date.now()}.html`;
 
-                            await fs.writeFile(tmpHtmlPath, html);
+                        await fs.writeFile(tmpHtmlPath, html);
 
-                            const result = await chromeEval({
-                                ...restOptions,
-                                html: tmpHtmlPath,
-                                scriptFn: conversionFactory.getScriptFn(),
-                            });
+                        const result = await chromeEval({
+                            ...restOptions,
+                            html: tmpHtmlPath,
+                            scriptFn: conversionFactory.getScriptFn(),
+                        });
 
-                            const tables = Array.isArray(result) ? result : [result];
+                        const tables = Array.isArray(result) ? result : [result];
 
-                            return tables.map((table) => ({
-                                name: table.name,
-                                getRows: async (rowCb) => {
-                                    table.rows.forEach((row) => {
-                                        rowCb(row);
-                                    });
-                                },
-                                rowsCount: table.rows.length,
-                            }));
-                        },
-                    });
+                        return tables.map((table) => ({
+                            name: table.name,
+                            getRows: async (rowCb) => {
+                                table.rows.forEach((row) => {
+                                    rowCb(row);
+                                });
+                            },
+                            rowsCount: table.rows.length,
+                        }));
+                    },
+                });
 
-                    const stream = await conversion(ctx.response.html);
+                const stream = await conversion(ctx.response.html);
 
-                    const fileName = `${reportName}_${Date.now()}.xlsx`;
-                    stream.pipe(fsSync.createWriteStream(fileName));
+                const fileName = `${reportName}_${Date.now()}.xlsx`;
+                stream.pipe(fsSync.createWriteStream(fileName));
 
-                    await new Promise((resolve) => stream.on('end', resolve));
-                    ctx.response.status = 200;
-                    await sendFile(ctx, fileName);
-                    await fs.unlink(fileName);
-                    break;
-                } catch (e) {
-                    console.log(e);
-                    throw e;
-                }
+                await new Promise((resolve) => stream.on('end', resolve));
+                ctx.response.status = 200;
+                await sendFile(ctx, fileName);
+                await fs.unlink(fileName);
+                break;
             }
             case 'csv': {
-                try {
-                    ctx.state.logger.log('Setting CSV response');
-                    ctx.response.body = tableToCsv(ctx.response.html);
-                    ctx.response.set('content-type', 'application/csv');
-                } catch (e) {
-                    console.log(e);
-                    throw e;
-                }
+                ctx.state.logger.log('Setting CSV response');
+                ctx.response.body = tableToCsv(ctx.response.html);
+                ctx.response.set('content-type', 'application/csv');
                 break;
             }
             case 'html': {

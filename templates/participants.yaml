@@ -1,7 +1,29 @@
 params:
-  active:
+  name:
     required: false
-    default: 1
+    default: null
+  currency:
+    required: true
+  limit:
+    required: false
+    default: 100
 
 data:
-  participants: SELECT name, isActive FROM participant WHERE isActive = :active ORDER BY name
+  totalSent: |
+    SELECT p.name, SUM(amount) as total, currencyId
+    FROM participant p
+      INNER JOIN participantCurrency pC on pC.participantId = p.participantId
+      INNER JOIN transferParticipant tP ON pC.participantCurrencyId = tP.participantCurrencyId
+    WHERE amount > 0 AND currencyId = :currency
+      AND CASE WHEN :name IS NOT NULL THEN p.name = :name ELSE TRUE END
+    GROUP BY p.name, currencyId
+    LIMIT :limit
+  totalReceived: |
+    SELECT p.name, -SUM(amount) as total, currencyId
+    FROM participant p
+      INNER JOIN participantCurrency pC on pC.participantId = p.participantId
+      INNER JOIN transferParticipant tP ON pC.participantCurrencyId = tP.participantCurrencyId
+    WHERE amount < 0 AND currencyId = :currency
+      AND CASE WHEN :name IS NOT NULL THEN p.name = :name ELSE TRUE END
+    GROUP BY p.name, currencyId
+    LIMIT :limit

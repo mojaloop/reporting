@@ -18,6 +18,9 @@
     "url": "git+https://github.com/mojaloop/reporting.git"
   },
   "author": "Matt Kingston <matt.kingston@modusbox.com>",
+  "contributors": [
+    "Yevhen Kyriukha <yevhen.kyriukha@modusbox.com>"
+  ],
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/mojaloop/reporting/issues"

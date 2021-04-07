@@ -1,31 +1,18 @@
 # Mojaloop Reporting Service
-- Map SQL queries to HTTP routes in `config/reports.json`.
+
+The Reporting Service allows to create HTTP API endpoints using SQL queries and EJS templates.
+
+- Create API endpoint description file in `templates/ENDPOINT_NAME.yaml`
+- Create render template in `templates/ENDPOINT_NAME.ejs`
+- See examples in `templates` directory
 - See architecture diagram in docs [here](docs/Mojaloop%20Reporting%20Service%20Architecture.png) .
-- The format is
-    ```json
-    {
-        "/route/to/serve/report/on": "SELECT some, data FROM some_table WHERE some_parameter = $P{url_query_string_param}",
-        "/other/route": "SELECT more, stuff FROM another_table WHERE whatever = $P{some_different_param}",
-        "/route/with/optional/param": "SELECT even, more, stuff FROM another_table WHERE whatever = $O{optional_param} OR $O{optional_param} IS NULL"
-    }
-    ```
 - Make requests as follows:
     ```
-    curl localhost:3000/route/to/serve/report/on?url_query_string_param=foobar
+    curl localhost:3000/ENDPOINT_NAME?PARAM_NAME=VALUE
     ```
-- At the time of writing, the value of optional parameters will be `NULL` where omitted. Therefore,
-    it is up to the query author to supply a query that functions correctly when the supplied
-    parameter is `NULL`. In this example, the query will succeed whether `optional_param` is equal
-    to `whatever` or `NULL`.
-    ```sql
-    SELECT
-        even, more, stuff
-    FROM
-        another_table
-    WHERE
-        whatever = $O{optional_param}
-    OR
-        $O{optional_param} IS NULL
+  Example:
+    ```
+    curl localhost:3000/participants?currency=USD
     ```
 
 #### Build
@@ -56,7 +43,6 @@ docker run -v $PWD/config:/opt/reporting/config -p 3000:3000 --env-file=./.my.en
  3. If an issue must be ignored, and **it is absolutely safe to do so**, run `npm run audit:resolve` and select "remind me in 24h"
 
 #### TODO
-- Probably get rid of knex in favour of plain mysql2?
 - The initial implementation was developed with compatibility for Jaspersoft Studio queries in
     mind. Optionally use different templating engines. Parametrise this in the config. Perhaps a
     single default global templating engine, and then a per-report override.
@@ -64,10 +50,6 @@ docker run -v $PWD/config:/opt/reporting/config -p 3000:3000 --env-file=./.my.en
 - Streaming. The DB lib supports streaming, so does koa. This will be especially important for
     large reports.
 - Streams in the logger.
-- Default values in query templates. This would be much better supported by using an existing,
-    well-tested, proven templating engine and porting existing queries to said templating engine.
-    (And perhaps phasing out support for the custom templates here). Also consider finding out
-    whether Jaspersoft Studio uses an existing engine that we can replace our implementation with.
 - Measure test coverage
 - Logger: enable printing of requests as cURL- perhaps by providing a custom handler thingie
 - Eslint. Side-note: make sure 'no-floating-promises' is enabled.

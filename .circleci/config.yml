@@ -25,7 +25,7 @@ defaults_Dependencies: &defaults_Dependencies |
     build-essential \
     python3 \
     libtool \
-    libdrm2 libgtk-3-0 libgbm1 libasound2 libxshmfence1 libnss3
+    libdrm2 libgtk-3-0 libgbm1 libasound2 libxshmfence1 libnss3 libx11-xcb1
   npm config set unsafe-perm true
   npm install -g node-gyp
 

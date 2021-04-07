@@ -5,7 +5,20 @@ const fromEntries = require('object.fromentries');
 const sendFile = require('koa-sendfile');
 const conversionFactory = require('html-to-xlsx');
 const puppeteer = require('puppeteer');
-const chromeEval = require('chrome-page-eval')({ puppeteer });
+const chromeEval = require('chrome-page-eval')({
+    puppeteer,
+    launchOptions: {
+        headless: true,
+        args: [
+            // Required for Docker version of Puppeteer
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            // This will write shared memory files into /tmp instead of /dev/shm,
+            // because Docker default for /dev/shm is 64MB
+            '--disable-dev-shm-usage',
+        ],
+    },
+});
 const tableToCsv = require('node-table-to-csv');
 
 const fs = require('fs').promises;

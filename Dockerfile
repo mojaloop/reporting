@@ -16,7 +16,7 @@ FROM node:lts-buster-slim
 WORKDIR /opt/reporting
 
 RUN apt-get update \
- && apt-get install -y libdrm2 libgtk-3-0 libgbm1 libasound2 libxshmfence1 libnss3
+ && apt-get install -y libdrm2 libgtk-3-0 libgbm1 libasound2 libxshmfence1 libnss3 libx11-xcb1
 
 COPY --from=builder /opt/reporting .
 

@@ -1,6 +1,6 @@
 {
   "name": "mojaloop-reporting-service",
-  "version": "10.4.1",
+  "version": "10.4.2",
   "description": "",
   "main": "src/server.js",
   "scripts": {
@@ -10,7 +10,8 @@
     "lint:fix": "eslint . --fix",
     "start": "node src/server.js",
     "test": "jest test/**/*.test.js",
-    "test:integration": "jest test/integration"
+    "test:integration": "jest test/integration",
+    "postinstall": "patch-package"
   },
   "repository": {
     "type": "git",
@@ -46,6 +47,7 @@
     "mysql2": "^2.2.5",
     "node-table-to-csv": "^0.1.0",
     "object.fromentries": "github:es-shims/Object.fromEntries#v2.0.4",
+    "patch-package": "^6.4.7",
     "puppeteer": "^8.0.0",
     "string.prototype.matchall": "github:es-shims/String.prototype.matchAll#v4.0.4"
   }

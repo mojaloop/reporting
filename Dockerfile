@@ -8,7 +8,7 @@ COPY package.json package-lock.json* /opt/reporting/
 COPY patches /opt/reporting/patches
 COPY src /opt/reporting/src
 
-RUN npm ci --production
+RUN npm ci --production --unsafe-perm
 
 FROM node:lts-alpine
 

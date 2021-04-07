@@ -1,4 +1,3 @@
-const assert = require('assert').strict;
 const { readdirSync, readFileSync } = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');

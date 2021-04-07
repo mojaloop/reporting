@@ -1,6 +1,6 @@
 # Mojaloop Reporting Service
 
-The Reporting Service allows to create HTTP API endpoints using SQL queries and EJS templates.
+The Reporting Service allows to create HTTP API endpoints using SQL queries and EJS templates and output the result in different formats.
 
 - Create API endpoint description file in `templates/ENDPOINT_NAME.yaml`
 - Create render template in `templates/ENDPOINT_NAME.ejs`
@@ -8,11 +8,12 @@ The Reporting Service allows to create HTTP API endpoints using SQL queries and 
 - See architecture diagram in docs [here](docs/Mojaloop%20Reporting%20Service%20Architecture.png) .
 - Make requests as follows:
     ```
-    curl localhost:3000/ENDPOINT_NAME?PARAM_NAME=VALUE
+    curl localhost:3000/ENDPOINT_NAME.FORMAT?PARAM_NAME=VALUE
     ```
+  `FORMAT` can be `xlsx`, `html` or `csv`
   Example:
     ```
-    curl localhost:3000/participants?currency=USD
+    curl localhost:3000/participants.html?currency=USD
     ```
 
 #### Build

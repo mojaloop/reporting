@@ -1,0 +1,11 @@
+params:
+  currency:
+    required: true
+  active:
+    required: false
+    default: 1
+
+data:
+  participants: |
+    SELECT name, currency FROM participant
+    WHERE currency = :currency AND active = :active

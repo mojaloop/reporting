@@ -11,19 +11,18 @@ const healthCheck = async (ctx) => {
     ctx.response.set('content-type', 'application/json');
 };
 
-const readTemplates = () => {
-    const templateDir = path.join(__dirname, '..', 'templates');
-    const files = readdirSync(templateDir);
+const readTemplates = (templatesDir) => {
+    const files = readdirSync(templatesDir);
     return files.reduce((acc, curr) => {
         if (path.extname(curr) === '.yaml') {
             const name = path.basename(curr, '.yaml');
-            const absPath = path.join(templateDir, curr);
+            const absPath = path.join(templatesDir, curr);
             acc[name] = acc[name] || {};
             acc[name].dataSource = yaml.load(readFileSync(absPath));
         }
         if (path.extname(curr) === '.ejs') {
             const name = path.basename(curr, '.ejs');
-            const absPath = path.join(templateDir, curr);
+            const absPath = path.join(templatesDir, curr);
             acc[name] = acc[name] || {};
             // acc[name].render = Handlebars.compile(readFileSync(absPath).toString());
             acc[name].render = ejs.compile(readFileSync(absPath).toString());
@@ -39,37 +38,8 @@ const getParams = (template) => {
     return { requiredParams, optionalParams };
 };
 
-const validateHandler = ([route, query]) => {
-    // Check that the report route doesn't replace any static routes
-    const handlerMapRoutes = Object.keys(module.exports.handlerMap);
-    assert(!handlerMapRoutes.includes(route),
-        `Configured report route "${route}" would override static route with same path`);
-    // Check that the report route does not have a trailing slash
-    const splitRoute = route.split('.');
-    assert(
-        splitRoute[splitRoute.length - 2].substr(-1) !== '/',
-        `Report route ${route} cannot contain a trailing slash`,
-    );
-
-    const { requiredParams, optionalParams } = getParams(query);
-
-    const params = [...requiredParams, ...optionalParams];
-
-    // Ensure that every parameter has a name inside the curly braces of $P{}
-    params.forEach((p) => assert(
-        p[1].length > 0,
-        `Loading report config: report parameter ${p[0]} for route ${route} did not contain a name`,
-    ));
-};
-
-const validateReportHandlers = (reportsConfig) => {
-    Object.entries(reportsConfig).map(validateHandler);
-};
-
 const createReportHandlers = (reportTemplates) => {
     const createReportHandler = ([route, template]) => {
-        // validateHandler(handlerMapRoutes, route, query)
-
         const { requiredParams, optionalParams } = getParams(template.dataSource);
         const params = [...requiredParams, ...optionalParams];
 
@@ -129,7 +99,6 @@ const createReportHandlers = (reportTemplates) => {
 };
 
 module.exports = {
-    validateReportHandlers,
     createReportHandlers,
     readTemplates,
     handlerMap: {

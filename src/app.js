@@ -17,12 +17,11 @@ const {
     readTemplates,
 } = require('./handlers');
 
-const create = ({ db, logger }) => {
+const create = ({ templatesDir, db, logger }) => {
     const app = new Koa();
 
     // Default context
     app.context.db = db;
-    app.context.templates = readTemplates();
 
     // Attach state for handlers
     app.use(async (ctx, next) => {
@@ -54,7 +53,7 @@ const create = ({ db, logger }) => {
         ctx.state.logger.push({ response: ctx.response.body }).log('Handled request');
     });
 
-    const templates = readTemplates();
+    const templates = readTemplates(templatesDir);
     const reportHandlers = createReportHandlers(templates);
     const reportHandlersWithSuffixes = fromEntries(
         Object.entries(reportHandlers)

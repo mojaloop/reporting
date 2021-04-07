@@ -23,7 +23,6 @@ const readTemplates = (templatesDir) => {
             const name = path.basename(curr, '.ejs');
             const absPath = path.join(templatesDir, curr);
             acc[name] = acc[name] || {};
-            // acc[name].render = Handlebars.compile(readFileSync(absPath).toString());
             acc[name].render = ejs.compile(readFileSync(absPath).toString());
         }
         return acc;

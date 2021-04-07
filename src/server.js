@@ -22,6 +22,6 @@ const logger = new Logger();
 const templatesDir = process.env.TEMPLATES_DIR || path.join(__dirname, '..', 'templates');
 const app = require('./app')({ templatesDir, db, logger });
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 const host = '0.0.0.0';
 app.listen(port, host, () => (logger.log(`Listening on ${host}:${port}`)));

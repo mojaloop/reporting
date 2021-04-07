@@ -15,6 +15,9 @@ FROM node:lts-buster-slim
 
 WORKDIR /opt/reporting
 
+RUN apt-get update \
+ && apt-get install -y libdrm2 libgtk-3-0 libgbm1 libasound2 libxshmfence1 libnss3
+
 COPY --from=builder /opt/reporting .
 
 EXPOSE 3000

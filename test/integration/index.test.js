@@ -76,13 +76,6 @@ test('default mock report - CSV - correct response', async () => {
     testResponse(res, { contentType: 'csv' });
 });
 
-test('default mock report - XLSX - correct response', async () => {
-    const res = await createMockServer().get('/test.xlsx?currency=MMK');
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toStrictEqual({});
-    testResponseXlsx(res, { contentType: 'xlsx' });
-});
-
 test('query failure results in 500', async () => {
     const res = await createMockServer({ db: { query: () => { throw new Error(); } } })
         .get('/test.csv?currency=MMK');

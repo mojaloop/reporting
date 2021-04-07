@@ -1,6 +1,7 @@
-FROM node:lts-alpine as builder
+FROM node:lts-buster-slim as builder
 
-RUN apk add --no-cache git
+RUN apt-get update \
+ && apt-get install -y git
 
 WORKDIR /opt/reporting
 
@@ -10,7 +11,7 @@ COPY src /opt/reporting/src
 
 RUN npm ci --production --unsafe-perm
 
-FROM node:lts-alpine
+FROM node:lts-buster-slim
 
 WORKDIR /opt/reporting
 

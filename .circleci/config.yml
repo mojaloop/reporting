@@ -16,23 +16,26 @@ orbs:
 # YAML defaults templates, in alphabetical order
 ##
 defaults_Dependencies: &defaults_Dependencies |
-  apk --update --no-cache add \
+  apt-get update
+  apt-get install -y \
     git \
     ca-certificates \
     curl \
     openssh-client \
-    -t build-dependencies make gcc g++ python3 libtool autoconf automake
+    build-essential \
+    python3 \
+    libtool
   npm config set unsafe-perm true
   npm install -g node-gyp
 
 defaults_awsCliDependencies: &defaults_awsCliDependencies |
-  apk --update --no-cache add \
+  apt-get update
+  apt-get install -y \
           python3 \
-          py3-pip \
+          python3-pip \
           groff \
-          less \
-          mailcap
-  pip install --upgrade awscli==1.14.5 s3cmd==2.0.1 python-magic
+          less
+  pip3 install --upgrade awscli==1.14.5 s3cmd==2.0.1 python-magic
 
 defaults_license_scanner: &defaults_license_scanner
   name: Install and set up license-scanner
@@ -46,10 +49,10 @@ defaults_license_scanner: &defaults_license_scanner
 # CircleCI Executors
 ##
 executors:
-  docker-alpine-with-nodejs:
+  docker-debian-with-nodejs:
     working_directory: /home/circleci/project
     docker:
-      - image: node:lts-alpine
+      - image: node:lts-buster-slim
   machine-ubuntu-with-docker:
     machine:
       image: ubuntu-2004:202010-01
@@ -61,7 +64,7 @@ executors:
 ##
 jobs:
   setup:
-    executor: docker-alpine-with-nodejs
+    executor: docker-debian-with-nodejs
     steps:
       - checkout
       - run:
@@ -78,14 +81,14 @@ jobs:
           command: npm ci
       - run:
           name: Delete build dependencies
-          command: apk del build-dependencies
+          command: apt-get autoremove -y build-essential python3 libtool
       - save_cache:
           key: dependency-cache-{{ checksum "package-lock.json.orig" }}
           paths:
             - node_modules
 
   test-unit:
-    executor: docker-alpine-with-nodejs
+    executor: docker-debian-with-nodejs
     steps:
       - checkout
       - run:
@@ -110,7 +113,7 @@ jobs:
           path: ./test/results
 
   test-integration:
-    executor: docker-alpine-with-nodejs
+    executor: docker-debian-with-nodejs
     steps:
       - checkout
       - run:
@@ -132,7 +135,7 @@ jobs:
           path: ./test/results
 
   vulnerability-check:
-    executor: docker-alpine-with-nodejs
+    executor: docker-debian-with-nodejs
     steps:
       - checkout
       - run:
@@ -151,7 +154,7 @@ jobs:
           prefix: audit
 
   audit-licenses:
-    executor: docker-alpine-with-nodejs
+    executor: docker-debian-with-nodejs
     steps:
       - checkout
       - run:

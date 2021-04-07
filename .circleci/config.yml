@@ -71,13 +71,16 @@ jobs:
           name: Access npm folder as root
           command: cd $(npm root -g)/npm
       - run:
+          name: Backup original package-lock.json
+          command: cp package-lock.json package-lock.json.orig
+      - run:
           name: Update NPM install (using `npm ci`)
           command: npm ci
       - run:
           name: Delete build dependencies
           command: apk del build-dependencies
       - save_cache:
-          key: dependency-cache-{{ checksum "package-lock.json" }}
+          key: dependency-cache-{{ checksum "package-lock.json.orig" }}
           paths:
             - node_modules
 

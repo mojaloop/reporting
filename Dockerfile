@@ -5,6 +5,7 @@ RUN apk add --no-cache git
 WORKDIR /opt/reporting
 
 COPY package.json package-lock.json* /opt/reporting/
+COPY patches /opt/reporting/patches
 COPY src /opt/reporting/src
 
 RUN npm ci --production

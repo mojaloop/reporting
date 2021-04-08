@@ -57,9 +57,7 @@
     "koa-sendfile": "^3.0.0",
     "mysql2": "^2.2.5",
     "node-table-to-csv": "^0.1.0",
-    "object.fromentries": "github:es-shims/Object.fromEntries#v2.0.4",
     "patch-package": "^6.4.7",
-    "puppeteer": "^8.0.0",
-    "string.prototype.matchall": "github:es-shims/String.prototype.matchAll#v4.0.4"
+    "puppeteer": "^8.0.0"
   }
 }

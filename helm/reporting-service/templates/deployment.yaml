@@ -38,18 +38,28 @@ spec:
               containerPort: 80
               protocol: TCP
           env:
+            - name: "PORT"
+              value: "80"
             - name: "DB_HOST"
               value: "{{ .Values.dbHost }}"
             - name: "DB_USER"
               valueFrom:
                 secretKeyRef:
                   key: dbUser
-                  name: "{{ .Release.Name }}-auth"
+                  name: "{{ include "reporting-service.fullname" . }}-auth"
             - name: "DB_PASSWORD"
               valueFrom:
                 secretKeyRef:
                   key:  dbPassword
-                  name: "{{ .Release.Name }}-auth"
+                  name: "{{ include "reporting-service.fullname" . }}-auth"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

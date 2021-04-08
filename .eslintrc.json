@@ -8,7 +8,6 @@
       "error",
       4,
       { "SwitchCase": 1 }
-    ],
-    "no-restricted-syntax": "off"
+    ]
   }
 }

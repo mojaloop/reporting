@@ -2,7 +2,6 @@ const { readdirSync, readFileSync } = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 const ejs = require('ejs');
-const fromEntries = require('object.fromentries');
 
 const healthCheck = async (ctx) => {
     ctx.response.status = 200;
@@ -80,20 +79,20 @@ const createReportHandlers = (reportTemplates) => {
                     ...optionalParamDefaults,
                     // Filter out empty strings as these are optional parameters with no supplied
                     // value. We'll treat these as null, rather than an empty string.
-                    ...fromEntries(Array.from(ctx.request.URL.searchParams.entries()).filter(([, v]) => v !== '')),
+                    ...Object.fromEntries(Array.from(ctx.request.URL.searchParams.entries()).filter(([, v]) => v !== '')),
                 };
 
                 const queries = Object.entries(template.dataSource.data)
                     .map(([k, v]) => ctx.db.query(v, queryArgs)
                         .then((result) => ({ [k]: result })));
                 const result = await Promise.all(queries);
-                ctx.response.html = template.render(Object.assign({}, ...result));
+                ctx.state.html = template.render(Object.assign({}, ...result));
             },
         };
         return [`/${route}`, handler];
     };
 
-    return fromEntries(Object.entries(reportTemplates).map(createReportHandler));
+    return Object.fromEntries(Object.entries(reportTemplates).map(createReportHandler));
 };
 
 module.exports = {

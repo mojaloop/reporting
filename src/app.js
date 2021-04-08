@@ -1,7 +1,6 @@
 const Koa = require('koa');
 const router = require('@internal/router');
 const randomphrase = require('@internal/randomphrase');
-const fromEntries = require('object.fromentries');
 const sendFile = require('koa-sendfile');
 const conversionFactory = require('html-to-xlsx');
 const puppeteer = require('puppeteer');
@@ -68,7 +67,7 @@ const create = ({ templatesDir, db, logger }) => {
 
     const templates = readTemplates(templatesDir);
     const reportHandlers = createReportHandlers(templates);
-    const reportHandlersWithSuffixes = fromEntries(
+    const reportHandlersWithSuffixes = Object.fromEntries(
         Object.entries(reportHandlers)
             .reduce((pv, [key, val]) => [
                 ...pv,
@@ -115,7 +114,7 @@ const create = ({ templatesDir, db, logger }) => {
                     },
                 });
 
-                const stream = await conversion(ctx.response.html);
+                const stream = await conversion(ctx.state.html);
 
                 const fileName = `${reportName}_${Date.now()}.xlsx`;
                 stream.pipe(fsSync.createWriteStream(fileName));
@@ -128,13 +127,13 @@ const create = ({ templatesDir, db, logger }) => {
             }
             case 'csv': {
                 ctx.state.logger.log('Setting CSV response');
-                ctx.response.body = tableToCsv(ctx.response.html);
+                ctx.response.body = tableToCsv(ctx.state.html);
                 ctx.response.set('content-type', 'application/csv');
                 break;
             }
             case 'html': {
                 ctx.state.logger.log('Setting HTML response');
-                ctx.response.body = ctx.response.html;
+                ctx.response.body = ctx.state.html;
                 ctx.response.set('content-type', 'text/html');
                 break;
             }

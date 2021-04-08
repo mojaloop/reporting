@@ -44,9 +44,6 @@ docker run -v $PWD/config:/opt/reporting/config -p 3000:3000 --env-file=./.my.en
  3. If an issue must be ignored, and **it is absolutely safe to do so**, run `npm run audit:resolve` and select "remind me in 24h"
 
 #### TODO
-- The initial implementation was developed with compatibility for Jaspersoft Studio queries in
-    mind. Optionally use different templating engines. Parametrise this in the config. Perhaps a
-    single default global templating engine, and then a per-report override.
 - OpenAPI validation on requests and responses (optionally for reports)
 - Streaming. The DB lib supports streaming, so does koa. This will be especially important for
     large reports.

@@ -1,17 +1,22 @@
-FROM node:12.18.0-alpine as builder
+FROM node:lts-buster-slim as builder
 
-RUN apk add --no-cache git
+RUN apt-get update \
+ && apt-get install -y git
 
 WORKDIR /opt/reporting
 
 COPY package.json package-lock.json* /opt/reporting/
+COPY patches /opt/reporting/patches
 COPY src /opt/reporting/src
 
-RUN npm ci --production
+RUN npm ci --production --unsafe-perm
 
-FROM node:12.18.0-alpine
+FROM node:lts-buster-slim
 
 WORKDIR /opt/reporting
+
+RUN apt-get update \
+ && apt-get install -y libdrm2 libgtk-3-0 libgbm1 libasound2 libxshmfence1 libnss3 libx11-xcb1
 
 COPY --from=builder /opt/reporting .
 

@@ -24,24 +24,24 @@ const mockDefaults = {
 const createMockServer = (opts) => supertest(App({ ...mockDefaults, ...opts }).callback());
 
 const testResponse = (res, { contentType = 'json' } = {}) => {
-    expect(Object.keys(res.headers)).toStrictEqual([
+    expect(Object.keys(res.headers).sort()).toStrictEqual([
         'content-type',
         'content-length',
         'date',
         'connection',
-    ]);
+    ].sort());
     expect(res.headers['content-type']).toEqual(`application/${contentType}`);
 };
 
 const testResponseXlsx = (res) => {
-    expect(Object.keys(res.headers)).toStrictEqual([
+    expect(Object.keys(res.headers).sort()).toStrictEqual([
         'last-modified',
         'content-length',
         'content-type',
         'etag',
         'date',
         'connection',
-    ]);
+    ].sort());
     expect(res.headers['content-type']).toEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 };
 

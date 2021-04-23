@@ -62,7 +62,7 @@ const create = ({ templatesDir, db, logger }) => {
             ctx.response.body = JSON.stringify(err);
             ctx.response.set('content-type', 'application/json');
         }
-        ctx.state.logger.push({ response: ctx.response.body }).log('Handled request');
+        ctx.state.logger.push({}).log('Handled request');
     });
 
     const templates = readTemplates(templatesDir);

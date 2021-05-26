@@ -1,0 +1,16 @@
+name: Validate chart
+
+on: [pull_request, push]
+
+jobs:
+  manifest_validation:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cachix/install-nix-action@v13
+      with:
+        nix_path: nixpkgs=https://github.com/NixOS/nixpkgs/archive/8e4fe32876ca15e3d5eb3ecd3ca0b224417f5f17.tar.gz
+    - name: Install dependencies
+      run: nix-env -if test/ci_helpers/default.nix
+    - name: Run manifest validation
+      run: helm template testname helm/finance-portal-settlements | kubeconform -strict -kubernetes-version 1.17.9

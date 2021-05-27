@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+            border: 1px solid #efefef;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #efefef;
+        }
+
+        td > span {
+            font-weight: bold;
+        }
+
+        .amount {
+            text-align: right;
+        }
+    </style>
+    <title>Participants Summary</title>
+</head>
+<body>
+
+<%
+const amountFormat = (amount) => parseFloat(amount).toFixed(4).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+%>
+
+<h2>Total Sent</h2>
+<table>
+    <tr>
+        <th>Name</th>
+        <th class="amount">Amount</th>
+        <th>Currency</th>
+    </tr>
+    <% for(let t of totalSent) { %>
+        <tr>
+            <td><%= t.name %></td>
+            <td class="amount"><%= amountFormat(t.total) %></td>
+            <td><%= t.currencyId %></td>
+        </tr>
+    <% } %>
+</table>
+
+<br>
+<h2>Total Received</h2>
+<table>
+    <tr>
+        <th>Name</th>
+        <th class="amount">Amount</th>
+        <th>Currency</th>
+    </tr>
+    <% for(let t of totalReceived) { %>
+        <tr>
+            <td><%= t.name %></td>
+            <td class="amount"><%= amountFormat(t.total) %></td>
+            <td><%= t.currencyId %></td>
+        </tr>
+    <% } %>
+</table>
+
+</body>
+</html>

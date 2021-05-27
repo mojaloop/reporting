@@ -1,15 +1,35 @@
 const Koa = require('koa');
 const router = require('@internal/router');
 const randomphrase = require('@internal/randomphrase');
-const fromEntries = require('object.fromentries');
-const csvStringify = require('csv-stringify/lib/sync');
-const json2xls = require('json2xls');
 const sendFile = require('koa-sendfile');
+const conversionFactory = require('html-to-xlsx');
+const puppeteer = require('puppeteer');
+const chromeEval = require('chrome-page-eval')({
+    puppeteer,
+    launchOptions: {
+        headless: true,
+        args: [
+            // Required for Docker version of Puppeteer
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            // This will write shared memory files into /tmp instead of /dev/shm,
+            // because Docker default for /dev/shm is 64MB
+            '--disable-dev-shm-usage',
+        ],
+    },
+});
+const tableToCsv = require('node-table-to-csv');
+
 const fs = require('fs').promises;
+const fsSync = require('fs');
 
-const { validateReportHandlers, createReportHandlers, handlerMap } = require('./handlers');
+const {
+    createReportHandlers,
+    handlerMap,
+    readTemplates,
+} = require('./handlers');
 
-const create = ({ db, reportsConfig, logger }) => {
+const create = ({ templatesDir, db, logger }) => {
     const app = new Koa();
 
     // Default context
@@ -42,17 +62,21 @@ const create = ({ db, reportsConfig, logger }) => {
             ctx.response.body = JSON.stringify(err);
             ctx.response.set('content-type', 'application/json');
         }
-        ctx.state.logger.push({ response: ctx.response.body }).log('Handled request');
+        ctx.state.logger.log('Handled request');
     });
 
-    // Load handlers here, before post-processing
-    const reportsConfigWithSuffixes = fromEntries(
-        Object.entries(reportsConfig)
-            .reduce((pv, [key, val]) => [...pv, [`${key}.json`, val], [`${key}.csv`, val], [`${key}.xlsx`, val]], []),
+    const templates = readTemplates(templatesDir);
+    const reportHandlers = createReportHandlers(templates);
+    const reportHandlersWithSuffixes = Object.fromEntries(
+        Object.entries(reportHandlers)
+            .reduce((pv, [key, val]) => [
+                ...pv,
+                [`${key}.csv`, val],
+                [`${key}.xlsx`, val],
+                [`${key}.html`, val],
+            ], []),
     );
-    validateReportHandlers(reportsConfigWithSuffixes);
-    const reportHandlers = createReportHandlers(reportsConfigWithSuffixes);
-    const routeHandlers = { ...handlerMap, ...reportHandlers };
+    const routeHandlers = { ...handlerMap, ...reportHandlersWithSuffixes };
     logger.push({ routes: Object.keys(routeHandlers) }).log('Serving routes');
     app.use(router(routeHandlers));
 
@@ -62,10 +86,40 @@ const create = ({ db, reportsConfig, logger }) => {
         switch (suffix) {
             case 'xlsx': {
                 ctx.state.logger.log('Setting XLSX response');
+
                 const reportName = ctx.request.path.substr(ctx.request.path.lastIndexOf('/'), ctx.request.path.length).replace('/', '').replace('.xlsx', '');
+                const conversion = conversionFactory({
+                    extract: async ({ html, ...restOptions }) => {
+                        const tmpHtmlPath = `/tmp/${reportName}_${Date.now()}.html`;
+
+                        await fs.writeFile(tmpHtmlPath, html);
+
+                        const result = await chromeEval({
+                            ...restOptions,
+                            html: tmpHtmlPath,
+                            scriptFn: conversionFactory.getScriptFn(),
+                        });
+
+                        const tables = Array.isArray(result) ? result : [result];
+
+                        return tables.map((table) => ({
+                            name: table.name,
+                            getRows: async (rowCb) => {
+                                table.rows.forEach((row) => {
+                                    rowCb(row);
+                                });
+                            },
+                            rowsCount: table.rows.length,
+                        }));
+                    },
+                });
+
+                const stream = await conversion(ctx.state.html);
+
                 const fileName = `${reportName}_${Date.now()}.xlsx`;
-                const body = json2xls(ctx.response.body);
-                await fs.writeFile(fileName, body, 'binary');
+                stream.pipe(fsSync.createWriteStream(fileName));
+
+                await new Promise((resolve) => stream.on('end', resolve));
                 ctx.response.status = 200;
                 await sendFile(ctx, fileName);
                 await fs.unlink(fileName);
@@ -73,19 +127,14 @@ const create = ({ db, reportsConfig, logger }) => {
             }
             case 'csv': {
                 ctx.state.logger.log('Setting CSV response');
-                // TODO: try to use the streaming API
-                const body = csvStringify(ctx.response.body, {
-                    columns: Object.keys(ctx.response.body[0] || {}),
-                    header: true,
-                });
-                ctx.response.body = body;
+                ctx.response.body = tableToCsv(ctx.state.html);
                 ctx.response.set('content-type', 'application/csv');
                 break;
             }
-            case 'json': {
-                ctx.state.logger.log('Setting JSON response');
-                ctx.response.body = JSON.stringify(ctx.response.body);
-                ctx.response.set('content-type', 'application/json');
+            case 'html': {
+                ctx.state.logger.log('Setting HTML response');
+                ctx.response.body = ctx.state.html;
+                ctx.response.set('content-type', 'text/html');
                 break;
             }
             default:

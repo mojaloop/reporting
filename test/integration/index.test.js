@@ -1,28 +1,22 @@
 const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
 const supertest = require('supertest');
+const path = require('path');
 
 const App = require(`${__ROOT__}/src/app`); // eslint-disable-line import/no-dynamic-require
 const csvParse = require('csv-parse/lib/sync');
 
-// TO TEST
-// - bad settings provided to the app, e.g. bad reports
-// - reports with zero parameters
-// - reports with duplicated parameters
-// - multiple problems with querystring
-// - generate some 500s
-
 const createDbMock = (result) => ({
-    query: async (/* qStr, bindings */) => [result],
+    query: async (/* qStr, bindings */) => result,
 });
 
 // Silent logger- remove the `stringify` option to print logs
 const logger = new Logger({ stringify: () => '' });
-const db = createDbMock({ colName: 'result' });
+const db = createDbMock([
+    { name: 'fsp1', currency: 'MMK' },
+    { name: 'fsp3', currency: 'MMK' },
+]);
 const mockDefaults = {
-    reportsConfig: {
-        '/test': 'SELECT * FROM user WHERE id = $P{userId}',
-        '/storedProcReport': 'call getUser($P{userId})',
-    },
+    templatesDir: path.join(__dirname, 'templates'),
     db,
     logger,
 };
@@ -30,24 +24,24 @@ const mockDefaults = {
 const createMockServer = (opts) => supertest(App({ ...mockDefaults, ...opts }).callback());
 
 const testResponse = (res, { contentType = 'json' } = {}) => {
-    expect(Object.keys(res.headers)).toStrictEqual([
+    expect(Object.keys(res.headers).sort()).toStrictEqual([
         'content-type',
         'content-length',
         'date',
         'connection',
-    ]);
+    ].sort());
     expect(res.headers['content-type']).toEqual(`application/${contentType}`);
 };
 
 const testResponseXlsx = (res) => {
-    expect(Object.keys(res.headers)).toStrictEqual([
-        'content-type',
+    expect(Object.keys(res.headers).sort()).toStrictEqual([
         'last-modified',
+        'content-length',
+        'content-type',
         'etag',
         'date',
         'connection',
-        'transfer-encoding',
-    ]);
+    ].sort());
     expect(res.headers['content-type']).toEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 };
 
@@ -56,12 +50,7 @@ test('able to create server', () => {
 });
 
 test('able to create server without any reports configured', () => {
-    createMockServer({ reportsConfig: {} });
-});
-
-test('report route containing trailing slash fails assertion', () => {
-    const t = () => createMockServer({ reportsConfig: { '/blah/': 'test' } });
-    expect(t).toThrow(/^Report route .* cannot contain a trailing slash$/);
+    createMockServer({ templatesDir: path.join(__dirname, 'emptyDir') });
 });
 
 test('healthcheck passes', async () => {
@@ -72,191 +61,32 @@ test('healthcheck passes', async () => {
 });
 
 test('default mock report - CSV - correct response', async () => {
-    const res = await createMockServer().get('/test.csv?userId=1');
+    const res = await createMockServer().get('/test.csv?currency=MMK');
     expect(res.statusCode).toEqual(200);
-    expect(csvParse(res.text, { columns: true })).toStrictEqual([{ colName: 'result' }]);
+    expect(csvParse(res.text, { columns: true })).toStrictEqual([
+        {
+            Currency: 'MMK',
+            Name: 'fsp1',
+        },
+        {
+            Currency: 'MMK',
+            Name: 'fsp3',
+        },
+    ]);
     testResponse(res, { contentType: 'csv' });
-});
-
-test('default mock report - JSON - correct response', async () => {
-    const res = await createMockServer().get('/test.json?userId=1');
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toStrictEqual([{ colName: 'result' }]);
-    testResponse(res);
 });
 
 test('default mock report - XLSX - correct response', async () => {
-    const res = await createMockServer().get('/test.xlsx?userId=1');
+    const res = await createMockServer().get('/test.xlsx?currency=MMK');
     expect(res.statusCode).toEqual(200);
     expect(res.body).toStrictEqual({});
     testResponseXlsx(res, { contentType: 'xlsx' });
-});
-
-test('default mock report - CSV - correct response stored proc', async () => {
-    const res = await createMockServer().get('/storedProcReport.csv?userId=1');
-    expect(res.statusCode).toEqual(200);
-    expect(csvParse(res.text, { columns: true })).toStrictEqual([{ colName: 'result' }]);
-    testResponse(res, { contentType: 'csv' });
-});
-
-test('default mock report - JSON - correct response stored proc', async () => {
-    const res = await createMockServer().get('/storedProcReport.json?userId=1');
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toStrictEqual([{ colName: 'result' }]);
-    testResponse(res);
-});
-
-test('default mock report - XLSX - correct response stored proc', async () => {
-    const res = await createMockServer().get('/storedProcReport.xlsx?userId=1');
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toStrictEqual({});
-    testResponseXlsx(res, { contentType: 'xlsx' });
-});
-
-test('report query missing parameter name results in handler build failure', async () => {
-    const t = () => createMockServer({ reportsConfig: { '/blah': '$P{}' } });
-    expect(t).toThrow(/^Loading report config: report parameter \$P\{\} for route \/blah\.(json|csv) did not contain a name$/);
 });
 
 test('query failure results in 500', async () => {
     const res = await createMockServer({ db: { query: () => { throw new Error(); } } })
-        .get('/test.json?userId=1');
+        .get('/test.csv?currency=MMK');
     expect(res.statusCode).toEqual(500);
     expect(res.body).toStrictEqual({});
     testResponse(res);
-});
-
-test('default mock report - correct query and bindings received by database', async () => {
-    expect.assertions(4);
-    const reportsConfig = {
-        '/t': '$P{arg0}$P{arg1}$P{arg2}',
-    };
-    const res = await createMockServer({
-        reportsConfig,
-        db: {
-            query: (query, bindings) => {
-                expect(query).toEqual(':arg0:arg1:arg2');
-                expect(bindings).toStrictEqual({
-                    arg0: 'a',
-                    arg1: 'b',
-                    arg2: 'c',
-                });
-                return ['blah'];
-            },
-        },
-    }).get('/t.json?arg0=a&arg1=b&arg2=c');
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toStrictEqual(['blah']);
-});
-
-test('default mock report - missing queryparam', async () => {
-    const res = await createMockServer().get('/test.json');
-    expect(res.statusCode).toEqual(400);
-    expect(res.body).toStrictEqual({
-        message: 'Errors in request',
-        errors: ['Missing parameter in querystring: userId'],
-    });
-    testResponse(res);
-});
-
-test('default mock report - missing queryparam value', async () => {
-    const res = await createMockServer().get('/test.json?userId=');
-    expect(res.statusCode).toEqual(400);
-    expect(res.body).toStrictEqual({
-        message: 'Errors in request',
-        errors: ['queryparam userId must have a value supplied'],
-    });
-    testResponse(res);
-});
-
-test('default mock report - duplicated queryparam', async () => {
-    const res = await createMockServer().get('/test.json?userId&userId=1');
-    expect(res.statusCode).toEqual(400);
-    expect(res.body).toStrictEqual({
-        message: 'Errors in request',
-        errors: [
-            'Only one argument allowed for queryparam userId',
-            'queryparam userId must have a value supplied',
-        ],
-    });
-    testResponse(res);
-});
-
-test('default mock report - extra queryparam', async () => {
-    const res = await createMockServer().get('/test.json?hello&userId=1');
-    expect(res.statusCode).toEqual(400);
-    expect(res.body).toStrictEqual({
-        message: 'Errors in request',
-        errors: ['queryparam hello not supported by this report'],
-    });
-    testResponse(res);
-});
-
-test('default mock report - optional query parameter provided - correct query and bindings received by database', async () => {
-    expect.assertions(4);
-    const reportsConfig = {
-        '/t': '$P{arg0}$P{arg1}$O{arg2}',
-    };
-    const res = await createMockServer({
-        reportsConfig,
-        db: {
-            query: (query, bindings) => {
-                expect(query).toEqual(':arg0:arg1:arg2');
-                expect(bindings).toStrictEqual({
-                    arg0: 'a',
-                    arg1: 'b',
-                    arg2: 'c',
-                });
-                return ['blah'];
-            },
-        },
-    }).get('/t.json?arg0=a&arg1=b&arg2=c');
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toStrictEqual(['blah']);
-});
-
-test('default mock report - optional query parameter omitted - correct query and bindings received by database', async () => {
-    expect.assertions(4);
-    const reportsConfig = {
-        '/t': '$P{arg0}$P{arg1}$O{arg2}',
-    };
-    const res = await createMockServer({
-        reportsConfig,
-        db: {
-            query: (query, bindings) => {
-                expect(query).toEqual(':arg0:arg1:arg2');
-                expect(bindings).toStrictEqual({
-                    arg0: 'a',
-                    arg1: 'b',
-                    arg2: null,
-                });
-                return ['blah'];
-            },
-        },
-    }).get('/t.json?arg0=a&arg1=b');
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toStrictEqual(['blah']);
-});
-
-test('default mock report - optional query parameter value omitted - correct query and bindings received by database', async () => {
-    expect.assertions(4);
-    const reportsConfig = {
-        '/t': '$P{arg0}$P{arg1}$O{arg2}',
-    };
-    const res = await createMockServer({
-        reportsConfig,
-        db: {
-            query: (query, bindings) => {
-                expect(query).toEqual(':arg0:arg1:arg2');
-                expect(bindings).toStrictEqual({
-                    arg0: 'a',
-                    arg1: 'b',
-                    arg2: null,
-                });
-                return ['blah'];
-            },
-        },
-    }).get('/t.json?arg0=a&arg1=b&arg2=');
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toStrictEqual(['blah']);
 });

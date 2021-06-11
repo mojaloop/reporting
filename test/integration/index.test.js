@@ -28,6 +28,7 @@ const testResponse = (res, { contentType = 'json' } = {}) => {
         'content-type',
         'content-length',
         'date',
+        'vary',
         'connection',
     ].sort());
     expect(res.headers['content-type']).toEqual(`application/${contentType}`);
@@ -40,6 +41,7 @@ const testResponseXlsx = (res) => {
         'content-type',
         'etag',
         'date',
+        'vary',
         'connection',
     ].sort());
     expect(res.headers['content-type']).toEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

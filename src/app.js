@@ -1,4 +1,5 @@
 const Koa = require('koa');
+const cors = require('@koa/cors');
 const router = require('@internal/router');
 const randomphrase = require('@internal/randomphrase');
 const sendFile = require('koa-sendfile');
@@ -34,6 +35,8 @@ const create = ({ templatesDir, db, logger }) => {
 
     // Default context
     app.context.db = db;
+
+    app.use(cors());
 
     // Attach state for handlers
     app.use(async (ctx, next) => {

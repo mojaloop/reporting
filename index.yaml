@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  reporting-service:
+  - apiVersion: v2
+    appVersion: v10.4.7
+    created: "2021-06-15T11:23:07.278938813Z"
+    description: Mojaloop Reporting Service
+    digest: f595e8d9dd890e754d97cc3363bb2dff56026b5ef71becfd62c91d87216ca6e1
+    name: reporting-service
+    type: application
+    urls:
+    - reporting-service-10.4.7.tgz
+    version: 10.4.7
+generated: "2021-06-15T11:23:07.278261007Z"

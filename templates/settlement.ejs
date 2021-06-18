@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        td, th {
+//            border: 1px solid #efefef;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+//            background-color: #efefef;
+        }
+
+        td > span {
+            font-weight: bold;
+        }
+    </style>
+    <title>Settlement Bank Report</title>
+</head>
+<body>
+
+<%
+const senders = [];
+const receivers = [];
+const amounts = {};
+const totalSent = {};
+const totalReceived = {};
+const participants = {};
+let netTotal = 0;
+const netPositionsPretty = {};
+const defaultCurrency = transfers[0] && transfers[0].currencyId;
+for (let t of transfers) {
+    participants[t.senderId] = t.sender;
+    if (!senders.includes(t.senderId)) {
+        senders.push(t.senderId);
+    }
+    if (t.receiverId && t.currencyId === defaultCurrency) {
+        amounts[`${t.senderId}:${t.receiverId}`] = parseFloat(t.amount);
+        totalSent[t.senderId] = (totalSent[t.senderId] || 0) + parseFloat(t.amount);
+        totalReceived[t.receiverId] = (totalReceived[t.receiverId] || 0) + parseFloat(t.amount);
+        if (!receivers.includes(t.receiverId)) {
+            receivers.push(t.receiverId);
+        }
+    }
+}
+const participantEntries = Object.entries(participants).sort((a, b) => a[1].localeCompare(b[1]));
+
+for(let [id] of participantEntries) {
+    let v = ((totalSent[id] || 0) - (totalReceived[id] || 0));
+    netTotal += v;
+    let vf = Math.abs(v).toLocaleString('en-US');
+    netPositionsPretty[id] = v >= 0 ? vf : `(${vf})`;
+}
+
+%>
+
+<table>
+    <tr>
+        <td><span>Settlement ID</span></td>
+        <td style="text-align: right"><%= transfers[0] && transfers[0].settlementId %></td>
+        <td></td>
+        <td><span>Created Date</span></td>
+        <td colspan="2" style="text-align: right"><%= transfers[0] && (d = transfers[0].createdDate, `${d.toLocaleDateString('en-ZA')} ${d.toLocaleTimeString('en-US')}`)%></td>
+    </tr>
+    <tr>
+        <td><span>Currency</span></td>
+        <td style="text-align: right"><%= transfers[0] && transfers[0].currencyId %></td>
+        <td></td>
+        <td><span>Last Action Date</span></td>
+        <td colspan="2" style="text-align: right"><%=
+            transfers[0] &&
+            (d = transfers
+                    .filter(a => a.lastActionDate)
+                    .reduce((a,b) => a.lastActionDate.getTime() > b.lastActionDate.getTime() ? a : b).lastActionDate,
+                    `${d.toLocaleDateString('en-ZA')} ${d.toLocaleTimeString('en-US')}`)
+            %></td>
+    </tr>
+    <tr>
+        <td colspan="100%" style="padding-top: 20px"><div style="font-weight: bold">Multilateral Net Positions</div></td>
+    </tr>
+    <tr>
+        <th></th>
+        <th></th>
+        <% for(let i = 0; i < participantEntries.length; i++) { %>
+        <th><span>Received by</span></th>
+        <% } %>
+        <th>TOTAL SENT</th>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <% for(let [id, name] of participantEntries) { %>
+            <td><%= `${id} ${name}` %></td>
+        <% } %>
+        <td></td>
+    </tr>
+    <% for(let [senderId, senderName] of participantEntries) { %>
+        <tr>
+            <td><span>Sent by</span></td>
+            <td><%= `${senderId} ${senderName}` %></td>
+            <% for(let [receiverId] of participantEntries) { %>
+                <% if (senderId === receiverId) { %>
+                    <td style="background-color: #cccccc"></td>
+                <% } else if (amounts[`${senderId}:${receiverId}`]) { %>
+                    <td style="text-align: right"><%= amounts[`${senderId}:${receiverId}`].toLocaleString('en-US') %></td>
+                <% } else { %>
+                    <td style="text-align: right">-</td>
+                <% } %>
+            <% } %>
+            <td style="text-align: right"><%= totalSent[senderId] ? totalSent[senderId].toLocaleString('en-US') : '-' %></td>
+        </tr>
+    <% } %>
+    <tr>
+        <td colspan="100%" style="padding-top: 10px"></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td><span>Total Received</span></td>
+        <% for(let [id] of participantEntries) { %>
+            <td style="text-align: right"><%= totalReceived[id] ? totalReceived[id].toLocaleString('en-US') : '-' %></td>
+        <% } %>
+    </tr>
+    <tr>
+        <td colspan="100%" style="padding-top: 30px"><div style="font-weight: bold">Aggregated Net Positions</div></td>
+    </tr>
+    <% for(let [id, name] of participantEntries) { %>
+        <tr>
+            <td><%= `${id} ${name}` %></td>
+            <td style="text-align: right"><%= netPositionsPretty[id] %></td>
+            <td></td>
+        </tr>
+    <% } %>
+    <tr>
+        <td style="padding-top: 30px">Check value</td>
+        <td style="text-align: right"><%= netTotal %></td>
+        <td>(should be zero)</td>
+    </tr>
+</table>
+</body>
+</html>

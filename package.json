@@ -1,6 +1,6 @@
 {
   "name": "mojaloop-reporting-service",
-  "version": "10.4.7",
+  "version": "10.4.8",
   "description": "",
   "main": "src/server.js",
   "scripts": {

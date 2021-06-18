@@ -8,6 +8,7 @@ WORKDIR /opt/reporting
 COPY package.json package-lock.json* /opt/reporting/
 COPY patches /opt/reporting/patches
 COPY src /opt/reporting/src
+COPY templates /opt/reporting/templates
 
 RUN npm ci --production --unsafe-perm
 

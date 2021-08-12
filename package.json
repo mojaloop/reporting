@@ -27,7 +27,7 @@
   },
   "resolutions": {
     "fast-csv": "4.3.6",
-    "xmldom": "0.7.0",
+    "xmldom": "0.6.0",
     "css-what": "5.0.1",
     "cheerio": "1.0.0-rc.5",
     "parse5-htmlparser2-tree-adapter": "6.0.1",

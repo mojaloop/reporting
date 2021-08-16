@@ -31,8 +31,7 @@
     "css-what": "5.0.1",
     "cheerio": "1.0.0-rc.5",
     "parse5-htmlparser2-tree-adapter": "6.0.1",
-    "lodash": "4.17.21",
-    "jszip": "3.7.0"
+    "lodash": "4.17.21"
   },
   "homepage": "https://github.com/mojaloop/reporting#readme",
   "devDependencies": {

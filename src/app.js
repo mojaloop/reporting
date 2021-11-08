@@ -23,6 +23,8 @@ const tableToCsv = require('node-table-to-csv');
 
 const fs = require('fs').promises;
 const fsSync = require('fs');
+const config = require('./config');
+const { createAuthMiddleware } = require('./auth');
 
 const {
     createReportHandlers,
@@ -67,6 +69,8 @@ const create = ({ templatesDir, db, logger }) => {
         }
         ctx.state.logger.log('Handled request');
     });
+
+    app.use(createAuthMiddleware(config.oryKetoReadUrl));
 
     const templates = readTemplates(templatesDir);
     const reportHandlers = createReportHandlers(templates);

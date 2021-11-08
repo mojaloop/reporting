@@ -30,6 +30,7 @@ DB_HOST="localhost"
 DB_USER="central_ledger"
 DB_PASSWORD="password"
 DB_DATABASE="central_ledger"
+KETO_READ_URL=http://keto/
 EOF
 ```
 Where `reporting` is the image name from the build stage:

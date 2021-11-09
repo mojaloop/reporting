@@ -30,7 +30,7 @@ class Database {
         this.conn = connPool.promise();
     }
 
-    async query(query, bindings) {
+    async query(query, bindings = {}) {
         const isSPCall = (query.match(/^call\s/ig) !== null);
         const result = await this.conn.execute(query, bindings);
         return (isSPCall ? result[0][0] : result[0]);

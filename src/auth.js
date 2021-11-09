@@ -9,6 +9,7 @@
  ************************************************************************* */
 
 const keto = require('@ory/keto-client');
+const path = require('path');
 
 module.exports.createAuthMiddleware = (userIdHeader, oryKetoReadUrl) => {
     let oryKetoReadApi;
@@ -30,17 +31,29 @@ module.exports.createAuthMiddleware = (userIdHeader, oryKetoReadUrl) => {
         return response.data.allowed;
     };
 
+    function isNumeric(value) {
+        return /^\d+$/.test(value);
+    }
+
     return async (ctx, next) => {
         let grant = true;
         if (oryKetoReadApi) {
             const userId = ctx.req.headers[userIdHeader];
             ctx.state.participants = await getParticipantsByUserId(userId);
-            grant = await checkPermission(userId, ctx.req.path);
+            const obj = path.parse(ctx.request.URL.pathname.toLowerCase().substr(1)).name;
+            grant = await checkPermission(userId, obj);
             if (grant) {
                 const params = ctx.request.URL.searchParams;
-                for (const [name, value] of params) {
+                for await (const [name, value] of params) {
                     if (/d?fspId/i.test(name)) {
-                        grant &= ctx.state.participants.includes(value);
+                        let participant;
+                        if (isNumeric(value)) {
+                            const queryName = 'SELECT name FROM participant WHERE participantId = :id';
+                            participant = (await ctx.db.query(queryName, { id: value }))[0]?.name;
+                        } else {
+                            participant = value;
+                        }
+                        grant &&= ctx.state.participants.includes(participant);
                     }
                 }
             }

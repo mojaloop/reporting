@@ -2,6 +2,7 @@ const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
 const path = require('path');
 const Database = require('./db');
 const config = require('./config');
+const createApp = require('./app');
 
 const dbConfig = {
     connection: {
@@ -21,7 +22,7 @@ const db = new Database(dbConfig);
 
 const logger = new Logger();
 const templatesDir = config.templatesDir || path.join(__dirname, '..', 'templates');
-const app = require('./app')({ templatesDir, db, logger });
+const app = createApp({ templatesDir, db, logger });
 
 const { port } = config;
 const host = '0.0.0.0';

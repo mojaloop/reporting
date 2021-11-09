@@ -5,7 +5,9 @@
     "node": true
   },
   "rules": {
+    "max-len": ["error", { "code": 120 }],
     "no-restricted-syntax": "off",
+    "no-promise-executor-return": "off",
     "no-bitwise": "off",
     "indent": [
       "error",

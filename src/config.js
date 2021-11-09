@@ -13,7 +13,7 @@ const env = require('env-var');
 
 module.exports = {
     oryKetoReadUrl: env.get('ORY_KETO_READ_URL').asUrlString(),
-    userTokenHeaderName: env.get('USER_TOKEN_HEADER_NAME').default('token_id').asString(),
+    userIdHeader: env.get('USER_ID_HEADER').default('x-user').asString(),
     port: env.get('PORT').default('3000').asPortNumber(),
     templatesDir: env.get('TEMPLATES_DIR').asString(),
     database: {

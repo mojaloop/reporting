@@ -9,35 +9,31 @@
  ************************************************************************* */
 
 const keto = require('@ory/keto-client');
-const jwtDecode = require('jwt-decode');
 
-module.exports.createAuthMiddleware = (userTokenHeaderName, oryKetoReadUrl) => {
+module.exports.createAuthMiddleware = (userIdHeader, oryKetoReadUrl) => {
     let oryKetoReadApi;
     if (oryKetoReadUrl) {
         oryKetoReadApi = new keto.ReadApi(undefined, oryKetoReadUrl);
     }
 
+    const opts = {
+        validateStatus: () => true,
+    };
+
     const getParticipantsByUserId = async (userId) => {
-        const response = await oryKetoReadApi.getRelationTuples(
-            'participant',
-            undefined,
-            undefined,
-            undefined,
-            'member',
-            userId,
-        );
+        const response = await oryKetoReadApi.getRelationTuples('participant', undefined, 'member', userId);
         return response.data.relation_tuples.map(({ object }) => object);
     };
 
     const checkPermission = async (userId, obj) => {
-        const response = await oryKetoReadApi.getCheck('permission', obj, 'access', userId);
+        const response = await oryKetoReadApi.getCheck('permission', obj, 'granted', userId, opts);
         return response.data.allowed;
     };
 
     return async (ctx, next) => {
         let grant = true;
         if (oryKetoReadApi) {
-            const { userId } = jwtDecode(ctx.req.headers[userTokenHeaderName]);
+            const userId = ctx.req.headers[userIdHeader];
             ctx.state.participants = await getParticipantsByUserId(userId);
             grant = await checkPermission(userId, ctx.req.path);
             if (grant) {

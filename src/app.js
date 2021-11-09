@@ -44,6 +44,7 @@ const create = ({ templatesDir, db, logger }) => {
     app.use(async (ctx, next) => {
         ctx.state = {
             ...ctx.state,
+            generatedFiles: {},
             logger: logger.push({
                 request: {
                     id: randomphrase(),
@@ -70,7 +71,7 @@ const create = ({ templatesDir, db, logger }) => {
         ctx.state.logger.log('Handled request');
     });
 
-    app.use(createAuthMiddleware(config.userTokenHeaderName, config.oryKetoReadUrl));
+    app.use(createAuthMiddleware(config.userIdHeader, config.oryKetoReadUrl));
 
     const templates = readTemplates(templatesDir);
     const reportHandlers = createReportHandlers(templates);
@@ -94,7 +95,8 @@ const create = ({ templatesDir, db, logger }) => {
             case 'xlsx': {
                 ctx.state.logger.log('Setting XLSX response');
 
-                const reportName = ctx.request.path.substr(ctx.request.path.lastIndexOf('/'), ctx.request.path.length).replace('/', '').replace('.xlsx', '');
+                const reportName = ctx.request.path.substr(ctx.request.path.lastIndexOf('/'), ctx.request.path.length)
+                    .replace('/', '').replace('.xlsx', '');
                 const conversion = conversionFactory({
                     extract: async ({ html, ...restOptions }) => {
                         const tmpHtmlPath = `/tmp/${reportName}_${Date.now()}.html`;
@@ -123,13 +125,25 @@ const create = ({ templatesDir, db, logger }) => {
 
                 const stream = await conversion(ctx.state.html);
 
-                const fileName = `${reportName}_${Date.now()}.xlsx`;
+                const now = Date.now();
+
+                const fileName = `${reportName}_${now}.xlsx`;
                 stream.pipe(fsSync.createWriteStream(fileName));
 
                 await new Promise((resolve) => stream.on('end', resolve));
                 ctx.response.status = 200;
                 await sendFile(ctx, fileName);
-                await fs.unlink(fileName);
+                ctx.state.generatedFiles[now] = fileName;
+
+                // Cleanup old generatedFiles
+                for (const fileStamp of Object.keys(ctx.state.generatedFiles).sort()) {
+                    if (now - fileStamp > 60 * 1000) {
+                        fsSync.unlinkSync(ctx.state.generatedFiles[fileStamp]);
+                        delete ctx.state.generatedFiles[fileStamp];
+                    } else {
+                        break;
+                    }
+                }
                 break;
             }
             case 'csv': {

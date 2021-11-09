@@ -41,9 +41,8 @@ const createReportHandlers = (reportTemplates) => {
         const params = [...requiredParams, ...optionalParams];
 
         // Build the optional param default object here (once) for later use
-        const optionalParamDefaults = Object.assign(
-            {}, ...optionalParams.map((p) => ({ [p]: template.dataSource.params[p].default })),
-        );
+        // eslint-disable-next-line max-len
+        const optionalParamDefaults = Object.assign({}, ...optionalParams.map((p) => ({ [p]: template.dataSource.params[p].default })));
 
         const handler = {
             get: async (ctx) => {
@@ -79,7 +78,8 @@ const createReportHandlers = (reportTemplates) => {
                     ...optionalParamDefaults,
                     // Filter out empty strings as these are optional parameters with no supplied
                     // value. We'll treat these as null, rather than an empty string.
-                    ...Object.fromEntries(Array.from(ctx.request.URL.searchParams.entries()).filter(([, v]) => v !== '')),
+                    ...Object.fromEntries(Array.from(ctx.request.URL.searchParams.entries())
+                        .filter(([, v]) => v !== '')),
                 };
 
                 const queries = Object.entries(template.dataSource.data)

@@ -4,6 +4,7 @@
   "description": "",
   "main": "src/server.js",
   "scripts": {
+    "audit:resolve": "SHELL=sh resolve-audit",
     "audit:check": "SHELL=sh check-audit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -11,7 +12,7 @@
     "test": "jest test/**/*.test.js",
     "test:integration": "jest test/integration",
     "postinstall": "patch-package",
-    "preinstall": "npx npm-force-resolutions"
+    "preinstall__": "npx npm-force-resolutions"
   },
   "repository": {
     "type": "git",
@@ -25,22 +26,14 @@
   "bugs": {
     "url": "https://github.com/mojaloop/reporting/issues"
   },
-  "resolutions": {
-    "fast-csv": "4.3.6",
-    "xmldom": "github:xmldom/xmldom#0.7.0",
-    "css-what": "5.0.1",
-    "cheerio": "1.0.0-rc.5",
-    "parse5-htmlparser2-tree-adapter": "6.0.1",
-    "lodash": "4.17.21",
-    "jszip": "3.7.0"
-  },
   "homepage": "https://github.com/mojaloop/reporting#readme",
   "devDependencies": {
     "csv-parse": "^4.16.0",
-    "eslint": "^7.32.0",
-    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint": "^8.2.0",
+    "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.25.2",
     "jest": "^27.0.4",
+    "npm-audit-resolver": "^3.0.0-4",
     "npm-force-resolutions": "0.0.10",
     "supertest": "^6.1.3"
   },
@@ -51,7 +44,7 @@
     "@internal/router": "file:src/lib/router",
     "@koa/cors": "^3.1.0",
     "@mojaloop/sdk-standard-components": "^15.10.5",
-    "@ory/keto-client": "^0.7.0-alpha.1",
+    "@ory/keto-client": "^0.6.0-alpha.6",
     "cheerio-select": "^1.5.0",
     "cheerio-select-tmp": "^0.1.1",
     "chrome-page-eval": "^1.3.0",
@@ -60,17 +53,16 @@
     "ejs": "^3.1.6",
     "env-var": "^7.1.1",
     "html-to-xlsx": "^2.0.3",
-    "htmlparser2": "^3.8.3",
+    "htmlparser2": "^7.1.2",
     "js-yaml": "^4.1.0",
     "json2xls": "^0.1.2",
-    "jwt-decode": "^3.1.2",
     "koa": "^2.13.1",
     "koa-sendfile": "^3.0.0",
     "mysql2": "^2.2.5",
     "node-table-to-csv": "^0.1.0",
     "parse5-htmlparser2-tree-adapter": "^6.0.1",
     "patch-package": "^6.4.7",
-    "puppeteer": "^10.0.0",
+    "puppeteer": "^11.0.0",
     "tslib": "^2.3.0"
   }
 }

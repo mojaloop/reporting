@@ -47,11 +47,11 @@ const formatNetPosition = (amount) => {
     <tr>
         <td><span>Report for:</span></td>
         <td><span>FSP prefix</span></td>
-        <td style="text-align: right"><%= dfspInfo[0] && dfspInfo[0].participantId %></td>
+        <td style="text-align: right"><%= dfspInfo[0]?.participantId %></td>
         <td><span>FSP ID</span></td>
-        <td><%= dfspInfo[0] && dfspInfo[0].name %></td>
+        <td><%= dfspInfo[0]?.name %></td>
         <td><span>Settlement ID</span></td>
-        <td style="text-align: right"><%= report[0] && report[0].settlementId %></td>
+        <td style="text-align: right"><%= report[0]?.settlementId %></td>
         <td></td>
         <td><span>Created Date</span></td>
         <td colspan="2" style="text-align: right"><%= report[0] && (d = report[0].createdDate, `${d.toLocaleDateString('en-ZA')} ${d.toLocaleTimeString('en-US')}`)%></td>

@@ -38,7 +38,7 @@ const totalReceived = {};
 const participants = {};
 let netTotal = 0;
 const netPositionsPretty = {};
-const defaultCurrency = transfers[0] && transfers[0].currencyId;
+const defaultCurrency = transfers[0]?.currencyId;
 for (let t of transfers) {
     participants[t.senderId] = t.sender;
     if (!senders.includes(t.senderId)) {
@@ -67,14 +67,14 @@ for(let [id] of participantEntries) {
 <table>
     <tr>
         <td><span>Settlement ID</span></td>
-        <td style="text-align: right"><%= transfers[0] && transfers[0].settlementId %></td>
+        <td style="text-align: right"><%= transfers[0]?.settlementId %></td>
         <td></td>
         <td><span>Created Date</span></td>
         <td colspan="2" style="text-align: right"><%= transfers[0] && (d = transfers[0].createdDate, `${d.toLocaleDateString('en-ZA')} ${d.toLocaleTimeString('en-US')}`)%></td>
     </tr>
     <tr>
         <td><span>Currency</span></td>
-        <td style="text-align: right"><%= transfers[0] && transfers[0].currencyId %></td>
+        <td style="text-align: right"><%= transfers[0]?.currencyId %></td>
         <td></td>
         <td><span>Last Action Date</span></td>
         <td colspan="2" style="text-align: right"><%=

@@ -41,17 +41,17 @@
 <table>
     <tr>
         <td>Participant ID</td>
-        <td style="text-align: right"><%= dfspInfo[0].participantId %></td>
+        <td style="text-align: right"><%= dfspInfo[0]?.participantId %></td>
         <td>FSP ID</td>
-        <td style="text-align: right"><%= dfspInfo[0].name %></td>
+        <td style="text-align: right"><%= dfspInfo[0]?.name %></td>
         <td>Settlement ID</td>
-        <td style="text-align: right"><%= report[0] && report[0].settlementId %></td>
+        <td style="text-align: right"><%= report[0]?.settlementId %></td>
         <td style="width: 20px"></td>
         <td>Created Date</td>
-        <td colspan="2" style="text-align: right"><%= report[0] && report[0].settlementCreatedDate.toISOString() %></td>
+        <td colspan="2" style="text-align: right"><%= report[0]?.settlementCreatedDate.toISOString() %></td>
         <td style="wisth: 20px"></td>
         <td>Currency</td>
-        <td><%= report[0] && report[0].currencyId %></td>
+        <td><%= report[0]?.currencyId %></td>
         <td></td>
         <td></td>
     </tr>

@@ -136,8 +136,10 @@ const create = ({ templatesDir, db, logger }) => {
                 ctx.state.generatedFiles[now] = fileName;
 
                 // Cleanup old generatedFiles
+                const SECONDS = 1000;
                 for (const fileStamp of Object.keys(ctx.state.generatedFiles).sort()) {
-                    if (now - fileStamp > 60 * 1000) {
+                    const age = now - fileStamp;
+                    if (age > 60 * SECONDS) {
                         fsSync.unlinkSync(ctx.state.generatedFiles[fileStamp]);
                         delete ctx.state.generatedFiles[fileStamp];
                     } else {

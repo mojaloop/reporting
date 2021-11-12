@@ -10,7 +10,6 @@
   "rules": {
     "max-len": ["error", { "code": 120 }],
     "no-restricted-syntax": "off",
-    "no-promise-executor-return": "off",
     "indent": [
       "error",
       4,

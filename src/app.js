@@ -2,7 +2,6 @@ const Koa = require('koa');
 const cors = require('@koa/cors');
 const router = require('@internal/router');
 const randomphrase = require('@internal/randomphrase');
-const sendFile = require('koa-sendfile');
 const conversionFactory = require('html-to-xlsx');
 const puppeteer = require('puppeteer');
 const chromeEval = require('chrome-page-eval')({
@@ -22,7 +21,6 @@ const chromeEval = require('chrome-page-eval')({
 const tableToCsv = require('node-table-to-csv');
 
 const fs = require('fs').promises;
-const fsSync = require('fs');
 const config = require('./config');
 const { createAuthMiddleware } = require('./auth');
 
@@ -44,7 +42,6 @@ const create = ({ templatesDir, db, logger }) => {
     app.use(async (ctx, next) => {
         ctx.state = {
             ...ctx.state,
-            generatedFiles: {},
             logger: logger.push({
                 request: {
                     id: randomphrase(),
@@ -123,29 +120,9 @@ const create = ({ templatesDir, db, logger }) => {
                     },
                 });
 
-                const stream = await conversion(ctx.state.html);
-
-                const now = Date.now();
-
-                const fileName = `${reportName}_${now}.xlsx`;
-                stream.pipe(fsSync.createWriteStream(fileName));
-
-                await new Promise((resolve) => stream.on('end', resolve));
+                ctx.body = await conversion(ctx.state.html);
+                ctx.res.setHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
                 ctx.response.status = 200;
-                await sendFile(ctx, fileName);
-                ctx.state.generatedFiles[now] = fileName;
-
-                // Cleanup old generatedFiles
-                const SECONDS = 1000;
-                for (const fileStamp of Object.keys(ctx.state.generatedFiles).sort()) {
-                    const age = now - fileStamp;
-                    if (age > 60 * SECONDS) {
-                        fsSync.unlinkSync(ctx.state.generatedFiles[fileStamp]);
-                        delete ctx.state.generatedFiles[fileStamp];
-                    } else {
-                        break;
-                    }
-                }
                 break;
             }
             case 'csv': {

@@ -7,10 +7,12 @@ WORKDIR /opt/reporting
 
 COPY package.json package-lock.json* /opt/reporting/
 COPY patches /opt/reporting/patches
+
+RUN npm ci --production --unsafe-perm
+
 COPY src /opt/reporting/src
 COPY templates /opt/reporting/templates
 
-RUN npm ci --production --unsafe-perm
 
 FROM node:lts-buster-slim
 

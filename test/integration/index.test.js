@@ -36,10 +36,8 @@ const testResponse = (res, { contentType = 'json' } = {}) => {
 
 const testResponseXlsx = (res) => {
     expect(Object.keys(res.headers).sort()).toEqual([
-        'last-modified',
-        'content-length',
+        'transfer-encoding',
         'content-type',
-        'etag',
         'date',
         'vary',
         'connection',

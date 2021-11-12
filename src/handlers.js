@@ -42,7 +42,7 @@ const createReportHandlers = (reportTemplates) => {
 
         // Build the optional param default object here (once) for later use
         // eslint-disable-next-line max-len
-        const optionalParamDefaults = Object.assign({}, ...optionalParams.map((p) => ({ [p]: template.dataSource.params[p].default })));
+        const optionalParamDefaults = Object.fromEntries(optionalParams.map((p) => ([p, template.dataSource.params[p].default])));
 
         const handler = {
             get: async (ctx) => {

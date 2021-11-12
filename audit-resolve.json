@@ -2,39 +2,39 @@
   "decisions": {
     "1002612|cheerio-select-tmp>css-what": {
       "decision": "postpone",
-      "madeAt": 1636492280519
+      "madeAt": 1636744832521
     },
     "1002612|node-table-to-csv>cheerio>css-select>css-what": {
       "decision": "postpone",
-      "madeAt": 1636492280519
+      "madeAt": 1636744832522
     },
     "1002423|node-table-to-csv>cheerio>css-select>css-what>nth-check": {
       "decision": "postpone",
-      "madeAt": 1636492282267
+      "madeAt": 1636744833595
     },
     "1002847|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
       "decision": "postpone",
-      "madeAt": 1636492283962
+      "madeAt": 1636744834215
     },
     "1004063|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
       "decision": "postpone",
-      "madeAt": 1636492284894
+      "madeAt": 1636744834788
     },
     "1004206|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
       "decision": "postpone",
-      "madeAt": 1636492285721
+      "madeAt": 1636744835335
     },
     "1004274|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
       "decision": "postpone",
-      "madeAt": 1636492286647
+      "madeAt": 1636744835885
     },
     "1004503|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
       "decision": "postpone",
-      "madeAt": 1636492287951
+      "madeAt": 1636744836433
     },
     "1002548|node-zip>jszip": {
       "decision": "postpone",
-      "madeAt": 1636492293015
+      "madeAt": 1636744837462
     }
   },
   "rules": {},

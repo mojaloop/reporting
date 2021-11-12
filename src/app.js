@@ -68,7 +68,9 @@ const create = ({ templatesDir, db, logger }) => {
         ctx.state.logger.log('Handled request');
     });
 
-    app.use(createAuthMiddleware(config.userIdHeader, config.oryKetoReadUrl));
+    if (config.oryKetoReadUrl) {
+        app.use(createAuthMiddleware(config.userIdHeader, config.oryKetoReadUrl));
+    }
 
     const templates = readTemplates(templatesDir);
     const reportHandlers = createReportHandlers(templates);

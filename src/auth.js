@@ -12,10 +12,7 @@ const keto = require('@ory/keto-client');
 const path = require('path');
 
 module.exports.createAuthMiddleware = (userIdHeader, oryKetoReadUrl) => {
-    let oryKetoReadApi;
-    if (oryKetoReadUrl) {
-        oryKetoReadApi = new keto.ReadApi(undefined, oryKetoReadUrl);
-    }
+    const oryKetoReadApi = new keto.ReadApi(undefined, oryKetoReadUrl);
 
     const opts = {
         validateStatus: () => true,
@@ -26,39 +23,36 @@ module.exports.createAuthMiddleware = (userIdHeader, oryKetoReadUrl) => {
         return response.data.relation_tuples.map(({ object }) => object);
     };
 
-    const checkPermission = async (userId, obj) => {
+    const canAccessReport = async (userId, obj) => {
         const response = await oryKetoReadApi.getCheck('permission', obj, 'granted', userId, opts);
         return response.data.allowed;
     };
 
-    function isNumeric(value) {
-        return /^\d+$/.test(value);
-    }
+    const canAccessParticipant = async (ctx) => {
+        const queryParams = ctx.request.query;
+        const isNumeric = (value) => /^\d+$/.test(value);
+        const grants = await Promise.all(Object.entries(queryParams)
+            .filter(([k]) => /^d?fspId$/i.test(k))
+            .map(([, v]) => {
+                if (isNumeric(v)) {
+                    const queryName = 'SELECT name FROM participant WHERE participantId = :id';
+                    return ctx.db.query(queryName, { id: v });
+                }
+                return Promise.resolve([{ name: v }]);
+            })
+            .map((rows) => rows.then((r) => ctx.state.participants.includes(r[0]?.name))));
+        return grants.every(Boolean);
+    };
 
     return async (ctx, next) => {
-        let grant = true;
-        if (oryKetoReadApi) {
-            const userId = ctx.req.headers[userIdHeader];
-            ctx.state.participants = await getParticipantsByUserId(userId);
-            const obj = path.parse(ctx.request.URL.pathname.toLowerCase().substr(1)).name;
-            grant = await checkPermission(userId, obj);
-            if (grant) {
-                const params = ctx.request.URL.searchParams;
-                for await (const [name, value] of params) {
-                    if (/d?fspId/i.test(name)) {
-                        let participant;
-                        if (isNumeric(value)) {
-                            const queryName = 'SELECT name FROM participant WHERE participantId = :id';
-                            participant = (await ctx.db.query(queryName, { id: value }))[0]?.name;
-                        } else {
-                            participant = value;
-                        }
-                        grant &&= ctx.state.participants.includes(participant);
-                    }
-                }
-            }
-        }
-        if (grant) {
+        const userId = ctx.req.headers[userIdHeader];
+        ctx.state.participants = await getParticipantsByUserId(userId);
+        const obj = path.parse(ctx.request.URL.pathname.toLowerCase().substr(1)).name;
+        const grants = await Promise.all([
+            canAccessReport(userId, obj),
+            canAccessParticipant(ctx),
+        ]);
+        if (grants.every(Boolean)) {
             await next();
         } else {
             ctx.response.status = 403;

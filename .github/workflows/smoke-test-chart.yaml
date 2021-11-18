@@ -1,0 +1,93 @@
+name: Validate chart
+
+on:
+  push:
+
+jobs:
+  validate_manifests:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - uses: cachix/install-nix-action@v13
+      with:
+        nix_path: nixpkgs=https://github.com/NixOS/nixpkgs/archive/8e4fe32876ca15e3d5eb3ecd3ca0b224417f5f17.tar.gz
+
+    - name: Install dependencies
+      run: nix-env -if ci-helpers/default.nix
+
+    - name: Validate generated chart manifests
+      run: |-
+        set -euxo pipefail
+
+        CAPABILITIES="-a apps/v1/Deployment"
+        helm template $CAPABILITIES testreleasename helm/reporting-service --output-dir manifests_1_17 \
+          --set-file=templates."dfspSettlement\.ejs"=https://raw.githubusercontent.com/mojaloop/reporting/59dd08c67a2dca5b78376795f1580103cd5eea8a/templates/dfspSettlement.ejs \
+          --set-file=templates."dfspSettlement\.yaml"=https://raw.githubusercontent.com/mojaloop/reporting/59dd08c67a2dca5b78376795f1580103cd5eea8a/templates/dfspSettlement.yaml \
+          --set-file=templates."participants\.ejs"=templates/participants.ejs \
+          --set-file=templates."participants\.yaml"=templates/participants.yaml
+        kubeconform -strict -kubernetes-version 1.17.9 manifests_1_17
+
+        CAPABILITIES="-a apps/v1/Deployment -a networking.k8s.io/v1/Ingress"
+        helm template $CAPABILITIES testreleasename helm/reporting-service --output-dir manifests_1_21 \
+          --set-file=templates."dfspSettlement\.ejs"=https://raw.githubusercontent.com/mojaloop/reporting/59dd08c67a2dca5b78376795f1580103cd5eea8a/templates/dfspSettlement.ejs \
+          --set-file=templates."dfspSettlement\.yaml"=https://raw.githubusercontent.com/mojaloop/reporting/59dd08c67a2dca5b78376795f1580103cd5eea8a/templates/dfspSettlement.yaml \
+          --set-file=templates."participants\.ejs"=templates/participants.ejs \
+          --set-file=templates."participants\.yaml"=templates/participants.yaml
+        kubeconform -strict -kubernetes-version 1.21.1 manifests_1_21
+
+    - name: Store templated manifests on failure
+      uses: actions/upload-artifact@v2
+      if: failure()
+      with:
+        retention-days: 4 # over the weekend plus a bit
+        name: failed_templates
+        path: |
+          manifests_1_17
+          manifests_1_21
+
+  smoke_test_deploy_sim_backend:
+    needs: validate_sim_backend_manifests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: cachix/install-nix-action@v13
+      with:
+        nix_path: nixpkgs=https://github.com/NixOS/nixpkgs/archive/8e4fe32876ca15e3d5eb3ecd3ca0b224417f5f17.tar.gz
+
+    - name: Install dependencies
+      run: nix-env -if ci-helpers/default.nix
+
+    - name: Start cluster
+      run: |-
+        # --k3s-server-arg args according to
+        # https://k3d.io/faq/faq/#solved-nodes-fail-to-start-or-get-stuck-in-notready-state-with-log-nf_conntrack_max-permission-denied
+        k3d cluster create \
+          --k3s-server-arg "--kube-proxy-arg=conntrack-max-per-core=0" \
+          --k3s-agent-arg "--kube-proxy-arg=conntrack-max-per-core=0" \
+          --kubeconfig-update-default \
+          --kubeconfig-switch-context \
+          --image=rancher/k3s:v1.17.9-k3s1 \
+          int-test
+
+    - name: Deploy
+      run: time helm install --wait --wait-for-jobs int-test ./helm/reporting-service
+
+    - name: Print docker containers to check any issues with the cluster
+      if: ${{ failure() }}
+      run: docker ps
+
+    - name: Print resources
+      if: ${{ always() }}
+      run: kubectl get svc,deploy,sts,pv,pvc,configmap,job,pod -A
+
+    - name: Describe resources
+      if: ${{ failure() }}
+      run: kubectl describe svc,deploy,sts,pv,pvc,configmap,job,pod -A
+
+    - name: Print secret values
+      if: ${{ failure() }}
+      run: |-
+        kubectl get secrets -o json | jq -r '.items[] | { name: .metadata.name, data: .data | map_values(@base64d) }'

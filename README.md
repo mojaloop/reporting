@@ -22,6 +22,19 @@ From the repo root:
 docker build -t reporting .
 ```
 
+#### Deploy
+
+##### Configur reporting templates
+An example showing usage of a report template from Github, and a local report template. Run this
+command from the repository root:
+```sh
+helm template helm/reporting-service \
+  --set-file=templates."dfspSettlement\.ejs"=https://raw.githubusercontent.com/mojaloop/reporting/59dd08c67a2dca5b78376795f1580103cd5eea8a/templates/dfspSettlement.ejs \
+  --set-file=templates."dfspSettlement\.yaml"=https://raw.githubusercontent.com/mojaloop/reporting/59dd08c67a2dca5b78376795f1580103cd5eea8a/templates/dfspSettlement.yaml \
+  --set-file=templates."participants\.ejs"=templates/participants.ejs \
+  --set-file=templates."participants\.yaml"=templates/participants.yaml
+```
+
 #### Audit Issues
  This repository uses [npm-audit-resolver](https://github.com/naugtur/npm-audit-resolver#readme) to check for security vulnerabilities. Basic troubleshooting of a failed security check is as follows:
  1. Run `npm audit` to show the current issues.

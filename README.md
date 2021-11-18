@@ -22,21 +22,6 @@ From the repo root:
 docker build -t reporting .
 ```
 
-#### Run
-Populate an environment file with the credentials of your Mojaloop instance:
-```sh
-cat <<EOF >./.my.env
-DB_HOST="localhost"
-DB_USER="central_ledger"
-DB_PASSWORD="password"
-DB_DATABASE="central_ledger"
-EOF
-```
-Where `reporting` is the image name from the build stage:
-```sh
-docker run -v $PWD/config:/opt/reporting/config -p 3000:3000 --env-file=./.my.env reporting
-```
-
 #### Audit Issues
  This repository uses [npm-audit-resolver](https://github.com/naugtur/npm-audit-resolver#readme) to check for security vulnerabilities. Basic troubleshooting of a failed security check is as follows:
  1. Run `npm audit` to show the current issues.

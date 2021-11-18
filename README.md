@@ -24,7 +24,7 @@ docker build -t reporting .
 
 #### Deploy
 
-##### Configur reporting templates
+##### Configure reporting templates
 An example showing usage of a report template from Github, and a local report template. Run this
 command from the repository root:
 ```sh

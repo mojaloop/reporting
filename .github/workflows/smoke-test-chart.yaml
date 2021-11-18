@@ -48,7 +48,7 @@ jobs:
           manifests_1_21
 
   smoke_test_deploy_sim_backend:
-    needs: validate_sim_backend_manifests
+    needs: validate_manifests
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2

@@ -11,7 +11,6 @@ COPY patches /opt/reporting/patches
 RUN npm ci --production --unsafe-perm
 
 COPY src /opt/reporting/src
-COPY templates /opt/reporting/templates
 
 
 FROM node:lts-buster-slim

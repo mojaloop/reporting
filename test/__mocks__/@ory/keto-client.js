@@ -3,17 +3,11 @@ class ReadApi {
         ReadApi.instance = this;
     }
 
-    // getRelationTuples(ns, obj, rel, subj) {
-    //     return {
-    //         data: {
-    //             relation_tuples: this.tuples.filter((t) => t.)
-    //         },
-    //     };
-    // }
-    //
-    // getCheck() {
-    //
-    // }
+    // eslint-disable-next-line class-methods-use-this
+    getRelationTuples() { }
+
+    // eslint-disable-next-line class-methods-use-this
+    getCheck() { }
 
     static getInstance() {
         return ReadApi.instance;

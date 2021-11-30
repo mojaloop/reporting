@@ -25,4 +25,10 @@ module.exports = {
         connectionLimit: env.get('DB_POOL_CONNECTION_LIMIT').default('10').asInt(),
         queueLimit: env.get('DB_POOL_QUEUE_LIMIT').default('0').asInt(),
     },
+    operator: {
+        resourceGroup: env.get('WATCH_RESOURCE_GROUP').default('mojaloop.io').asString(),
+        resourceVersion: env.get('WATCH_RESOURCE_VERSION').default('v1').asString(),
+        namespace: env.get('WATCH_NAMESPACE').default('default').asString(),
+        resourcePlural: env.get('WATCH_RESOURCE_PLURAL').default('mojaloopreports').asString(),
+    },
 };

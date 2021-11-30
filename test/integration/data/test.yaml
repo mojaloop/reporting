@@ -1,0 +1,45 @@
+apiVersion: mojaloop.io/v1
+kind: MojaloopReport
+metadata:
+  name: test
+  namespace: default
+spec:
+  endpoint:
+    path: /test
+    params:
+      - name: currency
+        required: true
+      - name: active
+        default: "1"
+        required: false
+      - name: dfspId
+        required: true
+  queries:
+    - name: participants
+      query: |
+        SELECT name, currency FROM participant
+        WHERE currency = :currency AND active = :active AND name = :dfspId
+  template: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <title>Participants</title>
+    </head>
+    <body>
+
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Currency</th>
+        </tr>
+        <% for(let p of participants) { %>
+            <tr>
+
+                <td><%= p.name %></td>
+                <td><%= p.currency %></td>
+            </tr>
+        <% } %>
+    </table>
+
+    </body>
+    </html>

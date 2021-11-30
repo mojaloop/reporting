@@ -10,9 +10,19 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
+dbName: central_ledger
 dbHost: localhost
 dbUser: root
 dbPassword: password
+
+auth: false
+keto:
+  readURL: 'http://keto-read:4466'
+
+operator:
+  resourceGroup: mojaloop.io
+  resourceVersion: v1
+  resourcePlural: mojaloopreports
 
 imagePullSecrets: []
 nameOverride: ""

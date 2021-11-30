@@ -37,16 +37,30 @@ spec:
               containerPort: 80
               protocol: TCP
           env:
-            - name: "PORT"
+            {{- if .Values.auth }}
+            - name: ORY_KETO_READ_URL
+              value: '{{ include "common.backends.keto.readURL" . }}'
+            {{- end }}
+            - name: WATCH_RESOURCE_GROUP
+              value: "{{ .Values.operator.resourceGroup }}"
+            - name: WATCH_RESOURCE_VERSION
+              value: '{{ .Values.operator.resourceVersion }}'
+            - name: WATCH_RESOURCE_PLURAL
+              value: '{{ .Values.operator.resourcePlural }}'
+            - name: WATCH_NAMESPACE
+              value: '{{ .Release.Namespace }}'
+            - name: PORT
               value: "80"
-            - name: "DB_HOST"
+            - name: DB_HOST
               value: "{{ .Values.dbHost }}"
-            - name: "DB_USER"
+            - name: DB_DATABASE
+              value: "{{ .Values.dbName }}"
+            - name: DB_USER
               valueFrom:
                 secretKeyRef:
                   key: dbUser
                   name: "{{ include "reporting-service.fullname" . }}-auth"
-            - name: "DB_PASSWORD"
+            - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   key:  dbPassword

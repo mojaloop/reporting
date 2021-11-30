@@ -9,7 +9,6 @@
  ************************************************************************* */
 
 const keto = require('@ory/keto-client');
-const path = require('path');
 
 module.exports.createAuthMiddleware = (userIdHeader, oryKetoReadUrl) => {
     const oryKetoReadApi = new keto.ReadApi(undefined, oryKetoReadUrl);
@@ -30,24 +29,17 @@ module.exports.createAuthMiddleware = (userIdHeader, oryKetoReadUrl) => {
 
     const canAccessParticipant = async (ctx) => {
         const queryParams = ctx.request.query;
-        const isNumeric = (value) => /^\d+$/.test(value);
         const grants = await Promise.all(Object.entries(queryParams)
             .filter(([k]) => /^d?fspId$/i.test(k))
-            .map(([, v]) => {
-                if (isNumeric(v)) {
-                    const queryName = 'SELECT name FROM participant WHERE participantId = :id';
-                    return ctx.db.query(queryName, { id: v });
-                }
-                return Promise.resolve([{ name: v }]);
-            })
-            .map((rows) => rows.then((r) => ctx.state.participants.includes(r[0]?.name))));
+            .map(([, fspId]) => ctx.state.participants.includes(fspId)));
         return grants.every(Boolean);
     };
 
     return async (ctx, next) => {
         const userId = ctx.req.headers[userIdHeader];
         ctx.state.participants = await getParticipantsByUserId(userId);
-        const obj = path.parse(ctx.request.URL.pathname.toLowerCase().substr(1)).name;
+        // const obj = ctx.request.URL.pathname.toLowerCase();
+        const obj = ctx.state.reportData.pathMap[ctx.request.URL.pathname.toLowerCase()];
         const grants = await Promise.all([
             canAccessReport(userId, obj),
             canAccessParticipant(ctx),

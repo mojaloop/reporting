@@ -2,18 +2,20 @@
 
 The Reporting Service allows to create HTTP API endpoints using SQL queries and EJS templates and output the result in different formats.
 
-- Create API endpoint description file in `templates/ENDPOINT_NAME.yaml`
-- Create render template in `templates/ENDPOINT_NAME.ejs`
-- See examples in `templates` directory
+- Create Custom Resource for the report.
+  
+  The schema can be found in `helm/reporting-service/crds/mojaloopreport-crd.yaml`
+
+  Examples in `resources/examples` directory
 - See architecture diagram in docs [here](docs/Mojaloop%20Reporting%20Service%20Architecture.png) .
 - Make requests as follows:
     ```
-    curl localhost:3000/ENDPOINT_NAME.FORMAT?PARAM_NAME=VALUE
+    curl localhost:3000/ENDPOINT_NAME?PARAM_NAME=VALUE&format=FORMAT
     ```
-  `FORMAT` can be `xlsx`, `html` or `csv`
+  `FORMAT` can be `xlsx`, `html`, `json` or `csv`
   Example:
     ```
-    curl localhost:3000/participants.html?currency=USD
+    curl localhost:3000/participants?currency=USD&format=html
     ```
 
 #### Build
@@ -40,9 +42,8 @@ docker run -v $PWD/config:/opt/reporting/config -p 3000:3000 --env-file=./.my.en
 
 #### Audit Issues
  This repository uses [npm-audit-resolver](https://github.com/naugtur/npm-audit-resolver#readme) to check for security vulnerabilities. Basic troubleshooting of a failed security check is as follows:
- 1. Run `npm audit` to show the current issues.
- 2. Run `npm audit fix` to attempt to automatically fix the current issues.
- 3. If there are still some packages with vulnerabilities, add the fixed (up-to-date) versions of those packages to `resolutions` in `package.json`.
+ 1. Run `npm run audit:check` to show the current issues.
+ 2. Run `npm run audit:resolve` to attempt to automatically fix the current issues.
 
 #### TODO
 - OpenAPI validation on requests and responses (optionally for reports)

@@ -1,6 +1,6 @@
 {
   "name": "mojaloop-reporting-service",
-  "version": "10.5.1",
+  "version": "10.6.0",
   "description": "",
   "main": "src/server.js",
   "scripts": {
@@ -11,8 +11,7 @@
     "start": "node src/server.js",
     "test": "jest test/**/*.test.js",
     "test:integration": "jest test/integration",
-    "postinstall": "patch-package",
-    "preinstall__": "npx npm-force-resolutions"
+    "postinstall": "patch-package"
   },
   "repository": {
     "type": "git",
@@ -41,8 +40,8 @@
     "@fast-csv/format": "^4.3.5",
     "@fast-csv/parse": "^4.3.6",
     "@internal/randomphrase": "file:src/lib/randomphrase",
-    "@internal/router": "file:src/lib/router",
     "@koa/cors": "^3.1.0",
+    "@kubernetes/client-node": "^0.15.1",
     "@mojaloop/sdk-standard-components": "^15.10.5",
     "@ory/keto-client": "^0.6.0-alpha.6",
     "cheerio-select": "^1.5.0",
@@ -57,8 +56,8 @@
     "js-yaml": "^4.1.0",
     "json2xls": "^0.1.2",
     "koa": "^2.13.1",
-    "koa-sendfile": "^3.0.0",
     "mysql2": "^2.2.5",
+    "node-html-parser": "^5.1.0",
     "node-table-to-csv": "^0.1.0",
     "parse5-htmlparser2-tree-adapter": "^6.0.1",
     "patch-package": "^6.4.7",

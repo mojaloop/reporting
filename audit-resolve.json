@@ -35,6 +35,46 @@
     "1002548|node-zip>jszip": {
       "decision": "postpone",
       "madeAt": 1636744837462
+    },
+    "1005143|cheerio-select-tmp>css-what": {
+      "decision": "postpone",
+      "madeAt": 1638285862183
+    },
+    "1005143|node-table-to-csv>cheerio>css-select>css-what": {
+      "decision": "postpone",
+      "madeAt": 1638285862183
+    },
+    "1006724|jsprim>json-schema": {
+      "decision": "postpone",
+      "madeAt": 1638285862981
+    },
+    "1004967|node-table-to-csv>cheerio>css-select>css-what>nth-check": {
+      "decision": "postpone",
+      "madeAt": 1638285865709
+    },
+    "1005365|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1638285866794
+    },
+    "1006094|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1638285867386
+    },
+    "1006231|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1638285868141
+    },
+    "1006298|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1638285869036
+    },
+    "1006517|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1638285870136
+    },
+    "1005083|node-zip>jszip": {
+      "decision": "postpone",
+      "madeAt": 1638285873162
     }
   },
   "rules": {},

@@ -1,9 +1,12 @@
 const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
 const supertest = require('supertest');
 const path = require('path');
-
-const App = require(`${__ROOT__}/src/app`); // eslint-disable-line import/no-dynamic-require
+const k8s = require('@kubernetes/client-node');
+const keto = require('@ory/keto-client');
 const csvParse = require('csv-parse/lib/sync');
+const defaultConfig = require('./data/defaultConfig.json');
+
+const App = require('../../src/app');
 
 const createDbMock = (result) => ({
     query: async (/* qStr, bindings */) => result,
@@ -16,7 +19,6 @@ const db = createDbMock([
     { name: 'fsp3', currency: 'MMK' },
 ]);
 const mockDefaults = {
-    templatesDir: path.join(__dirname, 'templates'),
     db,
     logger,
 };
@@ -31,7 +33,7 @@ const testResponse = (res, { contentType = 'json' } = {}) => {
         'vary',
         'connection',
     ].sort());
-    expect(res.headers['content-type']).toEqual(`application/${contentType}`);
+    expect(res.headers['content-type']).toContain(`application/${contentType}`);
 };
 
 const testResponseXlsx = (res) => {
@@ -45,48 +47,93 @@ const testResponseXlsx = (res) => {
     expect(res.headers['content-type']).toEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 };
 
-test('able to create server', () => {
-    createMockServer();
-});
+describe('report', () => {
+    let config;
 
-test('able to create server without any reports configured', () => {
-    createMockServer({ templatesDir: path.join(__dirname, 'emptyDir') });
-});
+    beforeEach(() => {
+        config = JSON.parse(JSON.stringify(defaultConfig));
+    });
 
-test('healthcheck passes', async () => {
-    const res = await createMockServer().get('/');
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toStrictEqual({ status: 'ok' });
-    testResponse(res);
-});
+    it('able to create server', () => {
+        createMockServer({ config });
+    });
 
-test('default mock report - CSV - correct response', async () => {
-    const res = await createMockServer().get('/test.csv?currency=MMK');
-    expect(res.statusCode).toEqual(200);
-    expect(csvParse(res.text, { columns: true })).toStrictEqual([
-        {
-            Currency: 'MMK',
-            Name: 'fsp1',
-        },
-        {
-            Currency: 'MMK',
-            Name: 'fsp3',
-        },
-    ]);
-    testResponse(res, { contentType: 'csv' });
-});
+    test('healthcheck passes', async () => {
+        const res = await createMockServer({ config }).get('/');
+        expect(res.statusCode).toEqual(200);
+        expect(res.body).toStrictEqual({ status: 'ok' });
+        testResponse(res);
+    });
 
-test('default mock report - XLSX - correct response', async () => {
-    const res = await createMockServer().get('/test.xlsx?currency=MMK');
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toStrictEqual({});
-    testResponseXlsx(res, { contentType: 'xlsx' });
-});
+    test('CSV - correct response', async () => {
+        const server = createMockServer({ config });
+        const watch = k8s.Watch.getInstance();
+        watch.sendResource(path.join(__dirname, 'data/test.yaml'));
+        const res = await server.get('/test?dfspId=payerfsp&currency=MMK&format=csv');
+        expect(res.statusCode).toEqual(200);
+        expect(csvParse(res.text, { columns: true })).toStrictEqual([
+            {
+                Currency: 'MMK',
+                Name: 'fsp1',
+            },
+            {
+                Currency: 'MMK',
+                Name: 'fsp3',
+            },
+        ]);
+        testResponse(res, { contentType: 'csv' });
+    });
 
-test('query failure results in 500', async () => {
-    const res = await createMockServer({ db: { query: () => { throw new Error(); } } })
-        .get('/test.csv?currency=MMK');
-    expect(res.statusCode).toEqual(500);
-    expect(res.body).toStrictEqual({});
-    testResponse(res);
+    test('XLSX - correct response', async () => {
+        const server = createMockServer({ config });
+        const watch = k8s.Watch.getInstance();
+        watch.sendResource(path.join(__dirname, 'data/test.yaml'));
+        const res = await server.get('/test?dfspId=payerfsp&currency=MMK&format=xlsx');
+        expect(res.statusCode).toEqual(200);
+        expect(res.body).toStrictEqual({});
+        testResponseXlsx(res, { contentType: 'xlsx' });
+    });
+
+    test('perms check', async () => {
+        config.oryKetoReadUrl = 'http://localhost:4466';
+        const server = createMockServer({ config });
+        const ketoMock = keto.ReadApi.getInstance();
+        const userId = 'test-user-id';
+        const fspId = 'payerfsp';
+        const reportName = 'test';
+        ketoMock.getRelationTuples = (ns, obj, rel, subj) => {
+            const result = [];
+            if (ns === 'participant' && obj === undefined && rel === 'member' && subj === userId) {
+                result.push({ object: fspId });
+            }
+            return {
+                data: {
+                    relation_tuples: result,
+                },
+            };
+        };
+        ketoMock.getCheck = (ns, obj, rel, subj) => {
+            let allowed = false;
+            if (ns === 'permission' && obj === reportName && rel === 'granted' && subj === userId) {
+                allowed = true;
+            }
+            return {
+                data: {
+                    allowed,
+                },
+            };
+        };
+        const watch = k8s.Watch.getInstance();
+        watch.sendResource(path.join(__dirname, 'data/test.yaml'));
+        let res = await server.get(`/test?dfspId=${fspId}&currency=MMK&format=xlsx`).set('x-user', userId);
+        expect(res.statusCode).toEqual(200);
+        expect(res.body).toStrictEqual({});
+        testResponseXlsx(res, { contentType: 'xlsx' });
+
+        res = await server.get(`/test?dfspId=${fspId}&currency=MMK&format=xlsx`).set('x-user', 'other-user');
+        expect(res.statusCode).toEqual(403);
+
+        res = await server.get('/test?dfspId=otherFsp&currency=MMK&format=xlsx').set('x-user', userId);
+        expect(res.statusCode).toEqual(403);
+    });
 });

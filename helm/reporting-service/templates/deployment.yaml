@@ -39,22 +39,16 @@ spec:
           env:
             {{- if .Values.auth }}
             - name: ORY_KETO_READ_URL
-              value: '{{ include "common.backends.keto.readURL" . }}'
+              value: '{{ .Values.keto.readURL | quote }}'
             {{- end }}
-            - name: WATCH_RESOURCE_GROUP
-              value: "{{ .Values.operator.resourceGroup }}"
-            - name: WATCH_RESOURCE_VERSION
-              value: '{{ .Values.operator.resourceVersion }}'
-            - name: WATCH_RESOURCE_PLURAL
-              value: '{{ .Values.operator.resourcePlural }}'
             - name: WATCH_NAMESPACE
-              value: '{{ .Release.Namespace }}'
+              value: '{{ .Release.Namespace | quote }}'
             - name: PORT
               value: "80"
             - name: DB_HOST
-              value: "{{ .Values.dbHost }}"
+              value: "{{ .Values.dbHost | quote }}"
             - name: DB_DATABASE
-              value: "{{ .Values.dbName }}"
+              value: "{{ .Values.dbName | quote }}"
             - name: DB_USER
               valueFrom:
                 secretKeyRef:

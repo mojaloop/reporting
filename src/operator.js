@@ -10,7 +10,6 @@
 
 const k8s = require('@kubernetes/client-node');
 const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
-const ejs = require('ejs');
 const config = require('./config');
 const { createReportHandler } = require('./handlers');
 
@@ -19,30 +18,64 @@ const logger = new Logger();
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
 
-// const k8sApiMC = kc.makeApiClient(k8s.CustomObjectsApi);
+const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi);
 
 // Listen for events or notifications and act accordingly
 const watch = new k8s.Watch(kc);
 
-async function onEvent(reportData, phase, apiObj) {
-    logger.info(`Received event in phase ${phase} for the resource ${apiObj?.metadata?.name}`);
+const resourceGeneration = {};
 
+async function updateResourceStatus(apiObj, statusText, error) {
+    const status = {
+        apiVersion: apiObj.apiVersion,
+        kind: apiObj.kind,
+        metadata: {
+            name: apiObj.metadata.name,
+            resourceVersion: apiObj.metadata.resourceVersion,
+        },
+        status: {
+            state: statusText,
+            error,
+        },
+    };
+
+    try {
+        await k8sApiCustomObjects.replaceNamespacedCustomObjectStatus(
+            config.operator.resourceGroup,
+            config.operator.resourceVersion,
+            config.operator.namespace,
+            config.operator.resourcePlural,
+            apiObj.metadata.name,
+            status,
+        );
+    } catch (err) {
+        logger.error(`Error updating status of the custom resource ${apiObj.metadata.name}`, err.message);
+    }
+}
+
+async function onEvent(reportData, phase, apiObj) {
     const name = apiObj?.metadata?.name;
     const path = apiObj.spec.endpoint.path.toLowerCase();
-    const { handlerMap, renderMap, pathMap } = reportData;
+    const { handlerMap, pathMap, db } = reportData;
     if (name) {
-        if (phase === 'ADDED') {
-            renderMap[name] = ejs.compile(apiObj.spec.template);
-            handlerMap[path] = createReportHandler(renderMap[name], apiObj.spec);
+        if (['ADDED', 'MODIFIED'].includes(phase)) {
+            const { generation } = apiObj.metadata;
+            if (resourceGeneration[name] === generation) {
+                return;
+            }
+            resourceGeneration[name] = generation;
+            try {
+                handlerMap[path] = await createReportHandler(db, apiObj.spec);
+            } catch (e) {
+                await updateResourceStatus(apiObj, 'INVALID', e.message);
+                return;
+            }
             pathMap[path] = name;
-        } else if (phase === 'MODIFIED') {
-            renderMap[name] = ejs.compile(apiObj.spec.template);
-            handlerMap[path] = createReportHandler(renderMap[name], apiObj.spec);
-            pathMap[path] = name;
+            await updateResourceStatus(apiObj, 'VALID');
         } else if (phase === 'DELETED') {
             delete handlerMap[path];
-            delete renderMap[name];
             delete pathMap[path];
+            delete resourceGeneration[name];
         } else {
             logger.warn(`Unknown event type: ${phase}`);
         }

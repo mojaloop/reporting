@@ -20,8 +20,8 @@ const create = ({ db, logger, config }) => {
 
     const reportData = {
         handlerMap: defaultHandlerMap,
-        renderMap: {},
         pathMap: {},
+        db,
     };
 
     // Attach state for handlers

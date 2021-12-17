@@ -101,6 +101,9 @@ spec:
                 state:
                   description: The state of the report.
                   type: string
+                error:
+                  description: Error messages
+                  type: string
       additionalPrinterColumns:
       - name: endpoint
         type: string

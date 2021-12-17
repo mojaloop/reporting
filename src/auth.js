@@ -38,8 +38,11 @@ module.exports.createAuthMiddleware = (userIdHeader, oryKetoReadUrl) => {
     return async (ctx, next) => {
         const userId = ctx.req.headers[userIdHeader];
         ctx.state.participants = await getParticipantsByUserId(userId);
-        // const obj = ctx.request.URL.pathname.toLowerCase();
         const obj = ctx.state.reportData.pathMap[ctx.request.URL.pathname.toLowerCase()];
+        if (!obj) {
+            ctx.response.status = 404;
+            return;
+        }
         const grants = await Promise.all([
             canAccessReport(userId, obj),
             canAccessParticipant(ctx),

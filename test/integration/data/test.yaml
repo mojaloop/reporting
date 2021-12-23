@@ -3,6 +3,7 @@ kind: MojaloopReport
 metadata:
   name: test
   namespace: default
+  generation: 1
 spec:
   endpoint:
     path: /test

@@ -17,13 +17,12 @@ const healthCheck = async (ctx) => {
 
 const createRouter = () => async (ctx, next) => {
     const handlers = ctx.state.reportData.handlerMap[ctx.request.URL.pathname.toLowerCase()];
-    const handler = handlers ? handlers[ctx.method.toLowerCase()] : undefined;
+    const handler = handlers?.[ctx.method.toLowerCase()];
 
-    ctx.assert(
-        handler && handlers,
-        404,
-        'Not found',
-    );
+    if (!handler) {
+        ctx.response.status = 404;
+        return;
+    }
 
     ctx.state.logger.push({ handler }).log('Found handler');
     await handler(ctx);

@@ -8,7 +8,7 @@ const {
     defaultHandlerMap,
     createRouter,
 } = require('./handlers');
-const { startOperator } = require('./operator');
+const ReportingOperator = require('./operator');
 
 const create = ({ db, logger, config }) => {
     const app = new Koa();
@@ -59,7 +59,8 @@ const create = ({ db, logger, config }) => {
         app.use(createAuthMiddleware(config.userIdHeader, config.oryKetoReadUrl));
     }
 
-    startOperator(reportData);
+    const operator = new ReportingOperator(reportData);
+    operator.start();
 
     app.use(createRouter());
 

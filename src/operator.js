@@ -13,93 +13,101 @@ const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
 const config = require('./config');
 const { createReportHandler } = require('./handlers');
 
-const logger = new Logger();
+class ReportingOperator {
+    constructor(reportData) {
+        this.reportData = reportData;
 
-const kc = new k8s.KubeConfig();
-kc.loadFromDefault();
+        this.resourceGeneration = {};
 
-const k8sApiCustomObjects = kc.makeApiClient(k8s.CustomObjectsApi);
+        this.logger = new Logger();
 
-// Listen for events or notifications and act accordingly
-const watch = new k8s.Watch(kc);
+        this.kc = new k8s.KubeConfig();
+        this.kc.loadFromDefault();
 
-const resourceGeneration = {};
+        this.k8sApiCustomObjects = this.kc.makeApiClient(k8s.CustomObjectsApi);
 
-async function updateResourceStatus(apiObj, statusText, error) {
-    const status = {
-        apiVersion: apiObj.apiVersion,
-        kind: apiObj.kind,
-        metadata: {
-            name: apiObj.metadata.name,
-            resourceVersion: apiObj.metadata.resourceVersion,
-        },
-        status: {
-            state: statusText,
-            error,
-        },
-    };
+        this.watch = new k8s.Watch(this.kc);
+    }
 
-    try {
-        await k8sApiCustomObjects.replaceNamespacedCustomObjectStatus(
-            config.operator.resourceGroup,
-            config.operator.resourceVersion,
-            config.operator.namespace,
-            config.operator.resourcePlural,
-            apiObj.metadata.name,
-            status,
+    async updateResourceStatus(apiObj, statusText, error) {
+        const status = {
+            apiVersion: apiObj.apiVersion,
+            kind: apiObj.kind,
+            metadata: {
+                name: apiObj.metadata.name,
+                resourceVersion: apiObj.metadata.resourceVersion,
+            },
+            status: {
+                state: statusText,
+                error,
+            },
+        };
+
+        try {
+            await this.k8sApiCustomObjects.replaceNamespacedCustomObjectStatus(
+                config.operator.resourceGroup,
+                config.operator.resourceVersion,
+                config.operator.namespace,
+                config.operator.resourcePlural,
+                apiObj.metadata.name,
+                status,
+            );
+        } catch (err) {
+            this.logger.error(`Error updating status of the custom resource ${apiObj.metadata.name}: ${err.message}`);
+        }
+    }
+
+    async onEvent(phase, apiObj) {
+        const name = apiObj?.metadata?.name;
+        const path = apiObj.spec.endpoint.path.toLowerCase();
+        const { handlerMap, pathMap, db } = this.reportData;
+        if (name) {
+            this.logger.info(`Received event in phase ${phase} for the resource ${name}`);
+            if (['ADDED', 'MODIFIED'].includes(phase)) {
+                const { generation } = apiObj.metadata;
+                if (this.resourceGeneration[name] === generation) {
+                    return;
+                }
+                this.resourceGeneration[name] = generation;
+                try {
+                    handlerMap[path] = await createReportHandler(db, apiObj.spec);
+                } catch (e) {
+                    await this.updateResourceStatus(apiObj, 'INVALID', e.message);
+                    return;
+                }
+                pathMap[path] = name;
+                await this.updateResourceStatus(apiObj, 'VALID');
+            } else if (phase === 'DELETED') {
+                delete handlerMap[path];
+                delete pathMap[path];
+                delete this.resourceGeneration[name];
+            } else {
+                this.logger.warn(`Unknown event type: ${phase}`);
+            }
+        }
+    }
+
+    watchResource() {
+        const {
+            resourceGroup, resourceVersion, namespace, resourcePlural,
+        } = config.operator;
+        return this.watch.watch(
+            `/apis/${resourceGroup}/${resourceVersion}/namespaces/${namespace}/${resourcePlural}`,
+            {},
+            (phase, apiObj) => this.onEvent(phase, apiObj),
+            () => setTimeout(() => this.watchResource(), 1000),
         );
-    } catch (err) {
-        logger.error(`Error updating status of the custom resource ${apiObj.metadata.name}`, err.message);
+    }
+
+    start() {
+        this.watchResource().catch((err) => {
+            if (err.message === 'No currently active cluster') {
+                this.logger.error('Can not connect to K8S API');
+            } else {
+                this.logger.error(err.stack);
+            }
+        });
     }
 }
 
-async function onEvent(reportData, phase, apiObj) {
-    const name = apiObj?.metadata?.name;
-    const path = apiObj.spec.endpoint.path.toLowerCase();
-    const { handlerMap, pathMap, db } = reportData;
-    if (name) {
-        if (['ADDED', 'MODIFIED'].includes(phase)) {
-            const { generation } = apiObj.metadata;
-            if (resourceGeneration[name] === generation) {
-                return;
-            }
-            resourceGeneration[name] = generation;
-            try {
-                handlerMap[path] = await createReportHandler(db, apiObj.spec);
-            } catch (e) {
-                await updateResourceStatus(apiObj, 'INVALID', e.message);
-                return;
-            }
-            pathMap[path] = name;
-            await updateResourceStatus(apiObj, 'VALID');
-        } else if (phase === 'DELETED') {
-            delete handlerMap[path];
-            delete pathMap[path];
-            delete resourceGeneration[name];
-        } else {
-            logger.warn(`Unknown event type: ${phase}`);
-        }
-    }
-}
-
-function watchResource(reportData) {
-    return watch.watch(
-        // eslint-disable-next-line max-len
-        `/apis/${config.operator.resourceGroup}/${config.operator.resourceVersion}/namespaces/${config.operator.namespace}/${config.operator.resourcePlural}`,
-        {},
-        (phase, apiObj) => onEvent(reportData, phase, apiObj),
-        () => setTimeout(watchResource, 1000),
-    );
-}
-
-function startOperator(reportData) {
-    watchResource(reportData).catch((err) => {
-        if (err.message === 'No currently active cluster') {
-            logger.error('Can not connect to K8S API');
-        } else {
-            logger.error(err.stack);
-        }
-    });
-}
-
-module.exports = { startOperator };
+module.exports = ReportingOperator;

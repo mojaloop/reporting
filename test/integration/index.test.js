@@ -23,7 +23,10 @@ const mockDefaults = {
     logger,
 };
 
-const createMockServer = (opts) => supertest(App({ ...mockDefaults, ...opts }).callback());
+const createMockServer = async (opts) => {
+    const app = await App({ ...mockDefaults, ...opts });
+    return supertest(app.callback());
+};
 
 const testResponse = (res, { contentType = 'application/json; charset=utf-8' } = {}) => {
     expect(Object.keys(res.headers).sort()).toStrictEqual([
@@ -54,19 +57,20 @@ describe('report', () => {
         config = JSON.parse(JSON.stringify(defaultConfig));
     });
 
-    it('able to create server', () => {
-        createMockServer({ config });
+    it('able to create server', async () => {
+        await createMockServer({ config });
     });
 
     test('healthcheck passes', async () => {
-        const res = await createMockServer({ config }).get('/');
+        const server = await createMockServer({ config });
+        const res = await server.get('/');
         expect(res.statusCode).toEqual(200);
         expect(res.body).toStrictEqual({ status: 'ok' });
         testResponse(res);
     });
 
     test('CSV - correct response', async () => {
-        const server = createMockServer({ config });
+        const server = await createMockServer({ config });
         const watch = k8s.Watch.getInstance();
         watch.sendResource(path.join(__dirname, 'data/test.yaml'));
         const res = await server.get('/test?dfspId=payerfsp&currency=MMK&format=csv');
@@ -85,7 +89,7 @@ describe('report', () => {
     });
 
     test('XLSX - correct response', async () => {
-        const server = createMockServer({ config });
+        const server = await createMockServer({ config });
         const watch = k8s.Watch.getInstance();
         watch.sendResource(path.join(__dirname, 'data/test.yaml'));
         const res = await server.get('/test?dfspId=payerfsp&currency=MMK&format=xlsx');
@@ -95,7 +99,7 @@ describe('report', () => {
 
     test('perms check', async () => {
         config.oryKetoReadUrl = 'http://localhost:4466';
-        const server = createMockServer({ config });
+        const server = await createMockServer({ config });
         const ketoMock = keto.ReadApi.getInstance();
         const userId = 'test-user-id';
         const fspId = 'payerfsp';

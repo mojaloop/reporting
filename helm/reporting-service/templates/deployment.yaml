@@ -39,7 +39,7 @@ spec:
           env:
             {{- if .Values.auth }}
             - name: ORY_KETO_READ_URL
-              value: '{{ .Values.keto.readURL | quote }}'
+              value: {{ .Values.keto.readURL | quote }}
             {{- end }}
             - name: WATCH_NAMESPACE
               value: '{{ .Release.Namespace | quote }}'

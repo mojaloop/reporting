@@ -78,7 +78,7 @@ const createReportHandler = async (db, report) => {
                 ctx.state.logger.log(e);
             }
         },
-    }
+    };
 };
 
 module.exports = {

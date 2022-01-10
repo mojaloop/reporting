@@ -25,7 +25,7 @@ const mockDefaults = {
 
 const createMockServer = (opts) => supertest(App({ ...mockDefaults, ...opts }).callback());
 
-const testResponse = (res, { contentType = 'json' } = {}) => {
+const testResponse = (res, { contentType = 'application/json; charset=utf-8' } = {}) => {
     expect(Object.keys(res.headers).sort()).toStrictEqual([
         'content-type',
         'content-length',
@@ -33,7 +33,7 @@ const testResponse = (res, { contentType = 'json' } = {}) => {
         'vary',
         'connection',
     ].sort());
-    expect(res.headers['content-type']).toContain(`application/${contentType}`);
+    expect(res.headers['content-type']).toEqual(contentType);
 };
 
 const testResponseXlsx = (res) => {
@@ -81,7 +81,7 @@ describe('report', () => {
                 Name: 'fsp3',
             },
         ]);
-        testResponse(res, { contentType: 'csv' });
+        testResponse(res, { contentType: 'application/csv' });
     });
 
     test('XLSX - correct response', async () => {
@@ -90,8 +90,7 @@ describe('report', () => {
         watch.sendResource(path.join(__dirname, 'data/test.yaml'));
         const res = await server.get('/test?dfspId=payerfsp&currency=MMK&format=xlsx');
         expect(res.statusCode).toEqual(200);
-        expect(res.body).toStrictEqual({});
-        testResponseXlsx(res, { contentType: 'xlsx' });
+        testResponseXlsx(res, { contentType: 'application/xlsx' });
     });
 
     test('perms check', async () => {
@@ -127,8 +126,7 @@ describe('report', () => {
         watch.sendResource(path.join(__dirname, 'data/test.yaml'));
         let res = await server.get(`/test?dfspId=${fspId}&currency=MMK&format=xlsx`).set('x-user', userId);
         expect(res.statusCode).toEqual(200);
-        expect(res.body).toStrictEqual({});
-        testResponseXlsx(res, { contentType: 'xlsx' });
+        testResponseXlsx(res, { contentType: 'application/xlsx' });
 
         res = await server.get(`/test?dfspId=${fspId}&currency=MMK&format=xlsx`).set('x-user', 'other-user');
         expect(res.statusCode).toEqual(403);

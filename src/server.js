@@ -17,11 +17,13 @@ const dbConfig = {
     },
 };
 
-const db = new Database(dbConfig);
+(async () => {
+    const db = new Database(dbConfig);
 
-const logger = new Logger();
-const app = createApp({ config, db, logger });
+    const logger = new Logger();
+    const app = await createApp({ config, db, logger });
 
-const { port } = config;
-const host = '0.0.0.0';
-app.listen(port, host, () => (logger.log(`Listening on ${host}:${port}`)));
+    const { port } = config;
+    const host = '0.0.0.0';
+    app.listen(port, host, () => (logger.log(`Listening on ${host}:${port}`)));
+})();

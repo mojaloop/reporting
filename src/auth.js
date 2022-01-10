@@ -27,13 +27,10 @@ module.exports.createAuthMiddleware = (userIdHeader, oryKetoReadUrl) => {
         return response.data.allowed;
     };
 
-    const canAccessParticipant = async (ctx) => {
-        const queryParams = ctx.request.query;
-        const grants = await Promise.all(Object.entries(queryParams)
-            .filter(([k]) => /^d?fspId$/i.test(k))
-            .map(([, fspId]) => ctx.state.participants.includes(fspId)));
-        return grants.every(Boolean);
-    };
+    const canAccessParticipant = (ctx) => Object.entries(ctx.request.query)
+        .filter(([k]) => /^d?fspId$/i.test(k))
+        .map(([, fspId]) => ctx.state.participants.includes(fspId))
+        .every(Boolean);
 
     return async (ctx, next) => {
         const userId = ctx.req.headers[userIdHeader];

@@ -100,12 +100,13 @@ class ReportingOperator {
     }
 
     start() {
-        this.watchResource().catch((err) => {
+        return this.watchResource().catch((err) => {
             if (err.message === 'No currently active cluster') {
                 this.logger.error('Can not connect to K8S API');
             } else {
                 this.logger.error(err.stack);
             }
+            throw err;
         });
     }
 }

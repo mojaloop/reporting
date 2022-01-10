@@ -10,7 +10,7 @@ const {
 } = require('./handlers');
 const ReportingOperator = require('./operator');
 
-const create = ({ db, logger, config }) => {
+const create = async ({ db, logger, config }) => {
     const app = new Koa();
 
     // Default context
@@ -60,7 +60,7 @@ const create = ({ db, logger, config }) => {
     }
 
     const operator = new ReportingOperator(reportData);
-    operator.start();
+    await operator.start();
 
     app.use(createRouter());
 

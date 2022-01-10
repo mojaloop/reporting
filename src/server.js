@@ -1,7 +1,7 @@
 const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
 const Database = require('./db');
 const config = require('./config');
-const createApp = require('./app');
+const { createApp } = require('./app');
 
 const dbConfig = {
     connection: {

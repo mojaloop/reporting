@@ -6,7 +6,7 @@ const keto = require('@ory/keto-client');
 const csvParse = require('csv-parse/lib/sync');
 const defaultConfig = require('./data/defaultConfig.json');
 
-const App = require('../../src/app');
+const { createApp } = require('../../src/app');
 
 const createDbMock = (result) => ({
     query: async (/* qStr, bindings */) => result,
@@ -24,7 +24,7 @@ const mockDefaults = {
 };
 
 const createMockServer = async (opts) => {
-    const app = await App({ ...mockDefaults, ...opts });
+    const app = await createApp({ ...mockDefaults, ...opts });
     return supertest(app.callback());
 };
 

@@ -76,6 +76,7 @@ const createReportHandler = async (db, report) => {
                 await formatResponse(ctx, html);
             } catch (e) {
                 ctx.state.logger.log(e);
+                ctx.response.status = 500;
             }
         },
     };

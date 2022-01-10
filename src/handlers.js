@@ -1,104 +1,91 @@
-const { readdirSync, readFileSync } = require('fs');
-const path = require('path');
-const yaml = require('js-yaml');
+/** ************************************************************************
+ *  (C) Copyright Mojaloop Foundation 2020                                *
+ *                                                                        *
+ *  This file is made available under the terms of the license agreement  *
+ *  specified in the corresponding source code repository.                *
+ *                                                                        *
+ *  ORIGINAL AUTHOR:                                                      *
+ *       Yevhen Kyriukha <yevhen.kyriukha@modusbox.com>                   *
+ ************************************************************************* */
+
 const ejs = require('ejs');
+const { formatResponse } = require('./format');
 
 const healthCheck = async (ctx) => {
-    ctx.response.status = 200;
-    ctx.response.body = { status: 'ok' };
-    ctx.response.set('content-type', 'application/json');
+    ctx.body = { status: 'ok' };
 };
 
-const readTemplates = (templatesDir) => {
-    const files = readdirSync(templatesDir);
-    return files.reduce((acc, curr) => {
-        if (path.extname(curr) === '.yaml') {
-            const name = path.basename(curr, '.yaml');
-            const absPath = path.join(templatesDir, curr);
-            acc[name] = acc[name] || {};
-            acc[name].dataSource = yaml.load(readFileSync(absPath));
-        }
-        if (path.extname(curr) === '.ejs') {
-            const name = path.basename(curr, '.ejs');
-            const absPath = path.join(templatesDir, curr);
-            acc[name] = acc[name] || {};
-            acc[name].render = ejs.compile(readFileSync(absPath).toString());
-        }
-        return acc;
-    }, {});
+const createRouter = () => async (ctx, next) => {
+    const handlers = ctx.state.reportData.handlerMap[ctx.request.URL.pathname.toLowerCase()];
+    const handler = handlers?.[ctx.method.toLowerCase()];
+
+    if (!handler) {
+        ctx.response.status = 404;
+        return;
+    }
+
+    ctx.state.logger.push({ handler }).log('Found handler');
+    await handler(ctx);
+    await next();
 };
 
-const getParams = (template) => {
-    const { params } = template;
-    const requiredParams = Object.keys(params).filter((name) => params[name].required);
-    const optionalParams = Object.keys(params).filter((name) => !params[name].required);
-    return { requiredParams, optionalParams };
+const validateReport = async (render, report, db) => {
+    const queryArgs = {};
+    for (const param of (report.endpoint.params || [])) {
+        queryArgs[param.name] = param.default || '0';
+    }
+
+    const queries = report.queries
+        .map((q) => db.query(q.query, queryArgs)
+            .then((result) => ({ [q.name]: result })));
+    const result = await Promise.all(queries);
+    render(Object.assign({}, ...result));
 };
 
-const createReportHandlers = (reportTemplates) => {
-    const createReportHandler = ([route, template]) => {
-        const { requiredParams, optionalParams } = getParams(template.dataSource);
-        const params = [...requiredParams, ...optionalParams];
+const createReportHandler = async (db, report) => {
+    const render = ejs.compile(report.template);
+    await validateReport(render, report, db);
 
-        // Build the optional param default object here (once) for later use
-        const optionalParamDefaults = Object.assign(
-            {}, ...optionalParams.map((p) => ({ [p]: template.dataSource.params[p].default })),
-        );
+    return {
+        get: async (ctx) => {
+            const errors = [];
+            const queryArgs = {};
+            for (const param of (report.endpoint.params || [])) {
+                if (!ctx.request.query[param.name] && param.required) {
+                    errors.push(`Missing parameter in querystring: ${param.name}`);
+                } else {
+                    queryArgs[param.name] = ctx.request.query[param.name] || param.default;
+                }
+            }
 
-        const handler = {
-            get: async (ctx) => {
-                const requestErrors = [
-                    // User did not provide all necessary query parameters
-                    ...requiredParams
-                        .filter((pn) => !ctx.request.URL.searchParams.has(pn))
-                        .map((pn) => `Missing parameter in querystring: ${pn}`),
-                    // User provided a querystring with duplicated params/args, such as ?q=a&q=b
-                    ...params
-                        .filter((pn) => ctx.request.URL.searchParams.getAll(pn).length > 1)
-                        .map((pn) => `Only one argument allowed for queryparam ${pn}`),
-                    // User provided a querystring parameter not in our allowed list
-                    ...[...ctx.request.URL.searchParams.keys()]
-                        .filter((pn) => !params.includes(pn))
-                        .map((pn) => `queryparam ${pn} not supported by this report`),
-                    // User did not provide a value for a required query parameter
-                    ...[...ctx.request.URL.searchParams.entries()]
-                        .filter(([pn, arg]) => !arg && requiredParams.includes(pn))
-                        .map(([param]) => `queryparam ${param} must have a value supplied`),
-                ];
+            ctx.assert(
+                errors.length === 0,
+                400,
+                {
+                    message: 'Errors in request',
+                    errors,
+                },
+            );
 
-                ctx.assert(
-                    requestErrors.length === 0,
-                    400,
-                    {
-                        message: 'Errors in request',
-                        errors: requestErrors,
-                    },
-                );
-
-                const queryArgs = {
-                    ...optionalParamDefaults,
-                    // Filter out empty strings as these are optional parameters with no supplied
-                    // value. We'll treat these as null, rather than an empty string.
-                    ...Object.fromEntries(Array.from(ctx.request.URL.searchParams.entries()).filter(([, v]) => v !== '')),
-                };
-
-                const queries = Object.entries(template.dataSource.data)
-                    .map(([k, v]) => ctx.db.query(v, queryArgs)
-                        .then((result) => ({ [k]: result })));
-                const result = await Promise.all(queries);
-                ctx.state.html = template.render(Object.assign({}, ...result));
-            },
-        };
-        return [`/${route}`, handler];
+            const queries = report.queries
+                .map((q) => ctx.db.query(q.query, queryArgs)
+                    .then((result) => ({ [q.name]: result })));
+            const result = await Promise.all(queries);
+            try {
+                const html = render(Object.assign({}, ...result));
+                await formatResponse(ctx, html);
+            } catch (e) {
+                ctx.state.logger.log(e);
+                ctx.response.status = 500;
+            }
+        },
     };
-
-    return Object.fromEntries(Object.entries(reportTemplates).map(createReportHandler));
 };
 
 module.exports = {
-    createReportHandlers,
-    readTemplates,
-    handlerMap: {
+    createReportHandler,
+    createRouter,
+    defaultHandlerMap: {
         '/': {
             get: healthCheck,
         },

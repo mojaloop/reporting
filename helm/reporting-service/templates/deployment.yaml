@@ -37,16 +37,24 @@ spec:
               containerPort: 80
               protocol: TCP
           env:
-            - name: "PORT"
+            {{- if .Values.auth }}
+            - name: ORY_KETO_READ_URL
+              value: {{ .Values.keto.readURL | quote }}
+            {{- end }}
+            - name: WATCH_NAMESPACE
+              value: {{ .Release.Namespace | quote }}
+            - name: PORT
               value: "80"
-            - name: "DB_HOST"
-              value: "{{ .Values.dbHost }}"
-            - name: "DB_USER"
+            - name: DB_HOST
+              value: {{ .Values.dbHost | quote }}
+            - name: DB_DATABASE
+              value: {{ .Values.dbName | quote }}
+            - name: DB_USER
               valueFrom:
                 secretKeyRef:
                   key: dbUser
                   name: "{{ include "reporting-service.fullname" . }}-auth"
-            - name: "DB_PASSWORD"
+            - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   key:  dbPassword

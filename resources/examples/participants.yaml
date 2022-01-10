@@ -1,0 +1,108 @@
+apiVersion: mojaloop.io/v1
+kind: MojaloopReport
+metadata:
+  name: participants
+spec:
+  endpoint:
+    path: /participants
+    params:
+      - name: name
+        required: false
+      - name: currency
+        required: true
+      - name: limit
+        default: "100"
+  queries:
+    - name: totalSent
+      query: |
+        SELECT p.name, SUM(amount) as total, currencyId
+        FROM participant p
+        INNER JOIN participantCurrency pC on pC.participantId = p.participantId
+        INNER JOIN transferParticipant tP ON pC.participantCurrencyId = tP.participantCurrencyId
+        WHERE amount > 0 AND currencyId = :currency
+        AND CASE WHEN :name IS NOT NULL THEN p.name = :name ELSE TRUE END
+        GROUP BY p.name, currencyId
+        LIMIT :limit
+    - name: totalReceived
+      query: |
+        SELECT p.name, -SUM(amount) as total, currencyId
+        FROM participant p
+        INNER JOIN participantCurrency pC on pC.participantId = p.participantId
+        INNER JOIN transferParticipant tP ON pC.participantCurrencyId = tP.participantCurrencyId
+        WHERE amount < 0 AND currencyId = :currency
+        AND CASE WHEN :name IS NOT NULL THEN p.name = :name ELSE TRUE END
+        GROUP BY p.name, currencyId
+        LIMIT :limit
+  template: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <style>
+            table {
+                font-family: arial, sans-serif;
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            td, th {
+                border: 1px solid #efefef;
+                text-align: left;
+                padding: 8px;
+            }
+
+            tr:nth-child(even) {
+                background-color: #efefef;
+            }
+
+            td > span {
+                font-weight: bold;
+            }
+
+            .amount {
+                text-align: right;
+            }
+        </style>
+        <title>Participants Summary</title>
+    </head>
+    <body>
+
+    <%
+    const amountFormat = (amount) => parseFloat(amount).toFixed(4).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+    %>
+
+    <h2>Total Sent</h2>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th class="amount">Amount</th>
+            <th>Currency</th>
+        </tr>
+        <% for(let t of totalSent) { %>
+            <tr>
+                <td><%= t.name %></td>
+                <td class="amount"><%= amountFormat(t.total) %></td>
+                <td><%= t.currencyId %></td>
+            </tr>
+        <% } %>
+    </table>
+
+    <br>
+    <h2>Total Received</h2>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th class="amount">Amount</th>
+            <th>Currency</th>
+        </tr>
+        <% for(let t of totalReceived) { %>
+            <tr>
+                <td><%= t.name %></td>
+                <td class="amount"><%= amountFormat(t.total) %></td>
+                <td><%= t.currencyId %></td>
+            </tr>
+        <% } %>
+    </table>
+
+    </body>
+    </html>
+

@@ -1,27 +1,29 @@
 const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
-const path = require('path');
 const Database = require('./db');
+const config = require('./config');
+const { createApp } = require('./app');
 
 const dbConfig = {
     connection: {
-        host: process.env.DB_HOST || 'localhost',
-        user: process.env.DB_USER || 'central_ledger',
-        password: process.env.DB_PASSWORD || 'password',
-        database: process.env.DB_DATABASE || 'central_ledger',
-        port: process.env.DB_PORT || 3306,
+        host: config.database.host,
+        user: config.database.user,
+        password: config.database.password,
+        database: config.database.database,
+        port: config.database.port,
     },
     pool: {
-        connectionLimit: 10,
-        queueLimit: 0,
+        connectionLimit: config.database.connectionLimit,
+        queueLimit: config.database.queueLimit,
     },
 };
 
-const db = new Database(dbConfig);
+(async () => {
+    const db = new Database(dbConfig);
 
-const logger = new Logger();
-const templatesDir = process.env.TEMPLATES_DIR || path.join(__dirname, '..', 'templates');
-const app = require('./app')({ templatesDir, db, logger });
+    const logger = new Logger();
+    const app = await createApp({ config, db, logger });
 
-const port = process.env.PORT || 3000;
-const host = '0.0.0.0';
-app.listen(port, host, () => (logger.log(`Listening on ${host}:${port}`)));
+    const { port } = config;
+    const host = '0.0.0.0';
+    app.listen(port, host, () => (logger.log(`Listening on ${host}:${port}`)));
+})();

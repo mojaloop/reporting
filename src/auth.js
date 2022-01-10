@@ -8,6 +8,10 @@
  *       Yevhen Kyriukha <yevhen.kyriukha@modusbox.com>                   *
  ************************************************************************* */
 
+/**
+ * Keto auth middleware for Koa
+ */
+
 const keto = require('@ory/keto-client');
 
 module.exports.createAuthMiddleware = (userIdHeader, oryKetoReadUrl) => {

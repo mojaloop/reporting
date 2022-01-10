@@ -42,7 +42,7 @@ spec:
               value: {{ .Values.keto.readURL | quote }}
             {{- end }}
             - name: WATCH_NAMESPACE
-              value: '{{ .Release.Namespace | quote }}'
+              value: {{ .Release.Namespace | quote }}
             - name: PORT
               value: "80"
             - name: DB_HOST

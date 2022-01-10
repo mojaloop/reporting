@@ -46,7 +46,7 @@ spec:
             - name: PORT
               value: "80"
             - name: DB_HOST
-              value: "{{ .Values.dbHost | quote }}"
+              value: {{ .Values.dbHost | quote }}
             - name: DB_DATABASE
               value: "{{ .Values.dbName | quote }}"
             - name: DB_USER

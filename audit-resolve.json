@@ -163,6 +163,26 @@
     "1006752|cheerio-select-tmp>css-select>css-what": {
       "decision": "postpone",
       "madeAt": 1645812343303
+    },
+    "1006865|follow-redirects": {
+      "decision": "postpone",
+      "madeAt": 1645814862689
+    },
+    "1007026|follow-redirects": {
+      "decision": "postpone",
+      "madeAt": 1645814863127
+    },
+    "1006948|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1645814863431
+    },
+    "1006952|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1645814863667
+    },
+    "1006882|shelljs": {
+      "decision": "postpone",
+      "madeAt": 1645814864207
     }
   },
   "rules": {},

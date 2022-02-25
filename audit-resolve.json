@@ -78,7 +78,7 @@
     },
     "1006752|cheerio-select-tmp>css-what": {
       "decision": "postpone",
-      "madeAt": 1741816974022
+      "madeAt": 1645812343303
     },
     "1006752|node-table-to-csv>cheerio>css-select>css-what": {
       "decision": "postpone",
@@ -87,6 +87,82 @@
     "1004946|npm-audit-resolver>yargs-unparser>yargs>cliui>strip-ansi>ansi-regex": {
       "decision": "postpone",
       "madeAt": 1741816994668
+    },
+    "1004946|npm-audit-resolver>yargs-unparser>yargs>string-width>strip-ansi>ansi-regex": {
+      "decision": "postpone",
+      "madeAt": 1645812335802
+    },
+    "1004946|npm-audit-resolver>yargs-unparser>yargs>cliui>string-width>strip-ansi>ansi-regex": {
+      "decision": "postpone",
+      "madeAt": 1645812335802
+    },
+    "1004946|npm-audit-resolver>yargs-unparser>yargs>cliui>wrap-ansi>string-width>strip-ansi>ansi-regex": {
+      "decision": "postpone",
+      "madeAt": 1645812335802
+    },
+    "1006899|puppeteer>node-fetch": {
+      "decision": "postpone",
+      "madeAt": 1645812336289
+    },
+    "1006724|@kubernetes/client-node>request>http-signature>jsprim>json-schema": {
+      "decision": "postpone",
+      "madeAt": 1645812336666
+    },
+    "1006865|@ory/keto-client>axios>follow-redirects": {
+      "decision": "postpone",
+      "madeAt": 1645812337048
+    },
+    "1007026|@ory/keto-client>axios>follow-redirects": {
+      "decision": "postpone",
+      "madeAt": 1645812337430
+    },
+    "1006882|@kubernetes/client-node>shelljs": {
+      "decision": "postpone",
+      "madeAt": 1645812337882
+    },
+    "1006893|@kubernetes/client-node>shelljs": {
+      "decision": "postpone",
+      "madeAt": 1645812338376
+    },
+    "1004967|node-table-to-csv>cheerio>css-select>nth-check": {
+      "decision": "postpone",
+      "madeAt": 1645812339017
+    },
+    "1005083|json2xls>excel-export>node-zip>jszip": {
+      "decision": "postpone",
+      "madeAt": 1645812339489
+    },
+    "1006231|node-table-to-csv>cheerio>lodash": {
+      "decision": "postpone",
+      "madeAt": 1645812339917
+    },
+    "1006298|node-table-to-csv>cheerio>lodash": {
+      "decision": "postpone",
+      "madeAt": 1645812340391
+    },
+    "1006475|node-table-to-csv>cheerio>lodash": {
+      "decision": "postpone",
+      "madeAt": 1645812340807
+    },
+    "1006517|node-table-to-csv>cheerio>lodash": {
+      "decision": "postpone",
+      "madeAt": 1645812341244
+    },
+    "1006948|node-table-to-csv>cheerio>lodash": {
+      "decision": "postpone",
+      "madeAt": 1645812341751
+    },
+    "1006949|node-table-to-csv>cheerio>lodash": {
+      "decision": "postpone",
+      "madeAt": 1645812342200
+    },
+    "1006952|node-table-to-csv>cheerio>lodash": {
+      "decision": "postpone",
+      "madeAt": 1645812342865
+    },
+    "1006752|cheerio-select-tmp>css-select>css-what": {
+      "decision": "postpone",
+      "madeAt": 1645812343303
     }
   },
   "rules": {},

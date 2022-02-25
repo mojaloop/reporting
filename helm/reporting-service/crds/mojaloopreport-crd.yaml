@@ -47,6 +47,9 @@ spec:
                 - queries
                 - template
               properties:
+                permission:
+                  description: Permission to be needed to access this report. This is optional. If unspecified, the name of the resource will be considered as permission.
+                  type: string
                 endpoint:
                   description: Reporting endpoint
                   type: object

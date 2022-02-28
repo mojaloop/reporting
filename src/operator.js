@@ -75,7 +75,7 @@ class ReportingOperator {
                     await this.updateResourceStatus(apiObj, 'INVALID', e.message);
                     return;
                 }
-                pathMap[path] = name;
+                pathMap[path] = apiObj.spec.permission || name;
                 await this.updateResourceStatus(apiObj, 'VALID');
             } else if (phase === 'DELETED') {
                 delete handlerMap[path];

@@ -9,8 +9,12 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "start": "node src/server.js",
-    "test": "jest test/**/*.test.js",
-    "test:integration": "jest test/integration",
+    "test": "npm run test:unit",
+    "test:coverage": "jest --coverage --coverageThreshold='{}' --testMatch '**/test/unit/**/*.(test|spec).js'",
+    "test:coverage-check": "jest -w 1 --coverage --testMatch '**/test/unit/**/*.(test|spec).js'",
+    "test:integration": "jest --testMatch '**/test/integration/**/*.(test|spec).js' --runInBand",
+    "test:junit": "jest --reporters=default --reporters=jest-junit",
+    "test:unit": "jest -w 1 --testMatch '**/test/unit/**/*.(test|spec).js'",
     "postinstall": "patch-package"
   },
   "repository": {

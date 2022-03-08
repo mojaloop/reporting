@@ -1,0 +1,53 @@
+apiVersion: v2
+name: integrationtest
+description: A Helm chart for Kubernetes
+
+# A chart can be either an 'application' or a 'library' chart.
+#
+# Application charts are a collection of templates that can be packaged into versioned archives
+# to be deployed.
+#
+# Library charts provide useful utilities or functions for the chart developer. They're included as
+# a dependency of application charts to inject those utilities and functions into the rendering
+# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 0.0.1
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+appVersion: "0.0.1"
+dependencies:
+  - name: reporting-legacy-api
+    condition: reporting-legacy-api.enabled
+    repository: "http://docs.mojaloop.io/charts/repo"
+    tags:
+      - mojaloop
+      - reporting-legacy-api
+    version: 1.1.0
+  - name: mysql
+    alias: mysql
+    condition: mysql.enabled
+    repository: "https://charts.bitnami.com/bitnami"
+    tags:
+      - mojaloop
+      - dependency
+      - backend
+      - kafka
+    version: 8.8.8
+  - name: keto
+    alias: keto
+    condition: keto.enabled
+    repository: "https://k8s.ory.sh/helm/charts"
+    tags:
+      - mojaloop
+      - dependency
+      - backend
+      - keto
+      - bof
+    version: 0.19.5

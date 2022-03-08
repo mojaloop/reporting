@@ -1,0 +1,1627 @@
+global:
+  keto:
+    readURL: "http://keto-read:80"
+    writeURL: "http://keto-write:80"
+  reportingDB:
+    host: mysql
+    port: 3306
+    user: user
+    database: default
+    # secret: {}
+    secret:
+      name: mysql
+      key: mysql-password
+
+
+################################################################
+## Legacy Reporting API
+
+reporting-legacy-api:
+  enabled: true
+
+  install-templates: false
+  mojaloopreport: {}
+  podAffinityPreset: ""
+  ## @param podAntiAffinityPreset Pod anti-affinity preset. Ignored if `main.affinity` is set. Allowed values: `soft` or `hard`
+  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+  ##
+  podAntiAffinityPreset: soft
+  ## Node affinity preset
+  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+  ##
+
+  nodeAffinityPreset:
+    ## @param nodeAffinityPreset.type Node affinity preset type. Ignored if `main.affinity` is set. Allowed values: `soft` or `hard`
+    ##
+    type: ""
+    ## @param nodeAffinityPreset.key Node label key to match. Ignored if `main.affinity` is set
+    ##
+    key: ""
+    ## @param nodeAffinityPreset.values Node label values to match. Ignored if `main.affinity` is set
+    ## E.g.
+    ## values:
+    ##   - e2e-az1
+    ##   - e2e-az2
+    ##
+    values: []
+  ## @param affinity Affinity for %%MAIN_CONTAINER_NAME%% pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ## NOTE: `podAffinityPreset`, `main.podAntiAffinityPreset`, and `main.nodeAffinityPreset` will be ignored when it's set
+  ##
+
+  ## Pod scheduling preferences.
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  affinity: {}
+
+  ## Node labels for pod assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+  nodeSelector: {}
+
+  ## Set toleration for scheduler
+  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  ## Configure Pods Security Context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+  ## @param podSecurityContext.enabled Enabled %%MAIN_CONTAINER_NAME%% pods' Security Context
+  ## @param podSecurityContext.fsGroup Set %%MAIN_CONTAINER_NAME%% pod's Security Context fsGroup
+  ##
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+  ## Configure Container Security Context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+  ## @param containerSecurityContext.enabled Enabled %%MAIN_CONTAINER_NAME%% containers' Security Context
+  ## @param containerSecurityContext.runAsUser Set %%MAIN_CONTAINER_NAME%% containers' Security Context runAsUser
+  ##
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+
+  image:
+    registry: docker.io
+    repository: mojaloop/reporting
+    tag: v10.7.0
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## e.g:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+    ## Enable debug mode
+    ##
+    debug: false
+
+  replicaCount: 1
+  command:
+    # - sleep
+    # - infinity
+    - npm
+    - start
+
+  ## Enable diagnostic mode in the deployment
+  ##
+  diagnosticMode:
+    ## @param diagnosticMode.enabled Enable diagnostic mode (all probes will be disabled and the command will be overridden)
+    ##
+    enabled: false
+    ## @param diagnosticMode.command Command to override all containers in the deployment
+    ##
+    command:
+      - npm
+      - start
+    ## @param diagnosticMode.args Args to override all containers in the deployment
+    ##
+    args:
+      - --inspect=0.0.0.0:{{ .Values.diagnosticMode.debug.port }}
+
+    ## @param diagnosticMode.debug config to override all debug information
+    ##
+    debug:
+      internalPort: 9229
+      port: 9229
+
+  ## @param initContainers Add additional init containers to the %%MAIN_CONTAINER_NAME%% pod(s)
+  ## ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+  ## e.g:
+  ## initContainers:
+  ##  - name: your-image-name
+  ##    image: your-image
+  ##    imagePullPolicy: Always
+  ##    command: ['sh', '-c', 'echo "hello world"']
+  ##
+  initContainers: []
+
+  readinessProbe:
+    enabled: false
+    httpGet:
+      path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 15
+  livenessProbe:
+    enabled: false
+    httpGet:
+      path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 15
+
+  ## metric configuration for prometheus instrumentation
+  metrics:
+    ## flag to enable/disable the metrics end-points
+    enabled: true
+    config:
+      timeout: 5000
+      prefix: moja_
+      defaultLabels:
+        serviceName: reporting-legacy-api
+
+  config: {}
+
+  service:
+    internalPort: 3000
+    ## @param service.type %%MAIN_CONTAINER_NAME%% service type
+    ##
+    type: ClusterIP
+    ## @param service.port %%MAIN_CONTAINER_NAME%% service HTTP port
+    ##
+    port: 80
+    ## @param service.httpsPort %%MAIN_CONTAINER_NAME%% service HTTPS port
+    ##
+    httpsPort: 443
+    ## Node ports to expose
+    ## @param service.nodePorts.http Node port for HTTP
+    ## @param service.nodePorts.https Node port for HTTPS
+    ## NOTE: choose port between <30000-32767>
+    ##
+    nodePorts:
+      http:
+      https:
+    ## @param service.clusterIP %%MAIN_CONTAINER_NAME%% service Cluster IP
+    ## e.g.:
+    ## clusterIP: None
+    ##
+    clusterIP:
+    ## @param service.loadBalancerIP %%MAIN_CONTAINER_NAME%% service Load Balancer IP
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
+    ##
+    loadBalancerIP:
+    ## @param service.loadBalancerSourceRanges %%MAIN_CONTAINER_NAME%% service Load Balancer sources
+    ## ref: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+    ## e.g:
+    ## loadBalancerSourceRanges:
+    ##   - 10.10.10.0/24
+    ##
+    loadBalancerSourceRanges: []
+    ## @param service.externalTrafficPolicy %%MAIN_CONTAINER_NAME%% service external traffic policy
+    ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    ##
+    externalTrafficPolicy: Cluster
+    ## @param service.annotations Additional custom annotations for %%MAIN_CONTAINER_NAME%% service
+    ##
+    annotations: {}
+
+  ingress:
+    ## @param ingress.enabled Enable ingress record generation for %%MAIN_CONTAINER_NAME%%
+    ##
+    enabled: true
+    ## @param ingress.pathType Ingress path type
+    ##
+    pathType: ImplementationSpecific
+    ## @param ingress.apiVersion Force Ingress API version (automatically detected if not set)
+    ##
+    apiVersion:
+    ## @param ingress.hostname Default host for the ingress record
+    ##
+    hostname: reporting-legacy-api.local
+    ## @param ingress.path Default path for the ingress record
+    ## NOTE: You may need to set this to '/*' in order to use this with ALB ingress controllers
+    ##
+    path: /
+    ## @param ingress.annotations Additional custom annotations for the ingress record
+    ## NOTE: If `ingress.certManager=true`, annotation `kubernetes.io/tls-acme: "true"` will automatically be added
+    ##
+    annotations: {}
+    ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.hostname` parameter
+    ## TLS certificates will be retrieved from a TLS secret with name: `{{- printf "%s-tls" .Values.ingress.hostname }}`
+    ## You can:
+    ##   - Use the `ingress.secrets` parameter to create this TLS secret
+    ##   - Relay on cert-manager to create it by setting `ingress.certManager=true`
+    ##   - Relay on Helm to create self-signed certificates by setting `ingress.selfSigned=true`
+    ##   - use `ingress.tlsManualSecretName=<secretname>` to set the tls secretname to the desired value if ingress.tlsSetSecretManual is true
+    ##   - To add wildcard to tls, use `ingress.tlsWildcardName`
+    ##
+    tls: false
+    ## @param ingress.tlsSetSecretManual configure tlssecret manually
+    ##
+    tlsSetSecretManual: false
+    ## @param ingress.tlsManualSecretName Use a TLS secret named this value if tlsSetSecretManual is true
+    ##
+    tlsManualSecretName: null
+    ## @param ingress.tlsWildcardName - add wildcard name to tls hosts
+    ##
+    tlsWildcardName: null
+    ## @param ingress.certManager Add the corresponding annotations for cert-manager integration
+    ##
+    certManager: false
+    ## @param ingress.selfSigned Create a TLS secret for this ingress record using self-signed certificates generated by Helm
+    ##
+    selfSigned: false
+    ## @param ingress.extraHosts An array with additional hostname(s) to be covered with the ingress record
+    ## e.g:
+    ## extraHosts:
+    ##   - name: transfer-api-svc.local
+    ##     path: /
+    ##
+    extraHosts: []
+    ## @param ingress.extraPaths An array with additional arbitrary paths that may need to be added to the ingress under the main host
+    ## e.g:
+    ## extraPaths:
+    ## - path: /*
+    ##   backend:
+    ##     serviceName: ssl-redirect
+    ##     servicePort: use-annotation
+    ##
+    extraPaths: []
+    ## @param ingress.extraTls TLS configuration for additional hostname(s) to be covered with this ingress record
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
+    ## e.g:
+    ## extraTls:
+    ## - hosts:
+    ##     - transfer-api-svc.local
+    ##   secretName: transfer-api-svc.local-tls
+    ##
+    extraTls: []
+    ## @param ingress.secrets Custom TLS certificates as secrets
+    ## NOTE: 'key' and 'certificate' are expected in PEM format
+    ## NOTE: 'name' should line up with a 'secretName' set further up
+    ## If it is not set and you're using cert-manager, this is unneeded, as it will create a secret for you with valid certificates
+    ## If it is not set and you're NOT using cert-manager either, self-signed certificates will be created valid for 365 days
+    ## It is also possible to create and manage the certificates outside of this helm chart
+    ## Please see README.md for more information
+    ## e.g:
+    ## secrets:
+    ##   - name: transfer-api-svc.local-tls
+    ##     key: |-
+    ##       -----BEGIN RSA PRIVATE KEY-----
+    ##       ...
+    ##       -----END RSA PRIVATE KEY-----
+    ##     certificate: |-
+    ##       -----BEGIN CERTIFICATE-----
+    ##       ...
+    ##       -----END CERTIFICATE-----
+    ##
+    secrets: []
+
+  podAnnotations: {}
+
+  auth: false
+
+  ## RBAC configuration
+  ##
+  rbac:
+    ## @param rbac.create Specifies whether RBAC resources should be created
+    ##
+    create: false
+
+  ## ServiceAccount configuration
+  ##
+  serviceAccount:
+    ## @param serviceAccount.create Specifies whether a ServiceAccount should be created
+    ##
+    create: true
+    ## @param serviceAccount.name The name of the ServiceAccount to use.
+    ## If not set and create is true, a name is generated using the common.names.fullname template
+    ##
+    name: ""
+
+
+
+################################################################
+## MySQL Backend Dependency
+mysql:
+  enabled: true
+  ## Installation
+  # https://bitnami.com/stack/mysql/helm
+  # https://github.com/bitnami/charts/tree/master/bitnami/mysql
+  # helm repo add bitnami https://charts.bitnami.com/bitnami
+  # helm install db bitnami/mysql -f ./bitnami-mysql-charts.IGNORE.yaml --version 4.5.2
+
+  ## @section Global parameters
+  ## Global Docker image parameters
+  ## Please, note that this will override the image parameters, including dependencies, configured to use the global value
+  ## Current available global Docker image parameters: imageRegistry, imagePullSecrets and storageClass
+
+  ## @param global.imageRegistry Global Docker image registry
+  ## @param global.imagePullSecrets [array] Global Docker registry secret names as an array
+  ## @param global.storageClass Global StorageClass for Persistent Volume(s)
+  ##
+  global:
+    imageRegistry: ""
+    ## E.g.
+    ## imagePullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    imagePullSecrets: []
+    storageClass: ""
+
+  ## @section Common parameters
+
+  ## @param nameOverride String to partially override common.names.fullname template (will maintain the release name)
+  ##
+  nameOverride: ""
+  ## @param fullnameOverride String to fully override common.names.fullname template
+  ##
+  fullnameOverride: "mysql"
+  ## @param clusterDomain Cluster domain
+  ##
+  clusterDomain: cluster.local
+  ## @param commonAnnotations [object] Common annotations to add to all MySQL resources (sub-charts are not considered). Evaluated as a template
+  ##
+  commonAnnotations: {}
+  ## @param commonLabels [object] Common labels to add to all MySQL resources (sub-charts are not considered). Evaluated as a template
+  ##
+  commonLabels: {}
+  ## @param extraDeploy [array] Array with extra yaml to deploy with the chart. Evaluated as a template
+  ##
+  extraDeploy: []
+  ## @param schedulerName Use an alternate scheduler, e.g. "stork".
+  ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+  ##
+  schedulerName: ""
+
+  ## Enable diagnostic mode in the deployment
+  ##
+  diagnosticMode:
+    ## @param diagnosticMode.enabled Enable diagnostic mode (all probes will be disabled and the command will be overridden)
+    ##
+    enabled: false
+    ## @param diagnosticMode.command Command to override all containers in the deployment
+    ##
+    command:
+      - sleep
+    ## @param diagnosticMode.args Args to override all containers in the deployment
+    ##
+    args:
+      - infinity
+
+  ## @section MySQL common parameters
+
+  ## Bitnami MySQL image
+  ## ref: https://hub.docker.com/r/bitnami/mysql/tags/
+  ## @param image.registry MySQL image registry
+  ## @param image.repository MySQL image repository
+  ## @param image.tag MySQL image tag (immutable tags are recommended)
+  ## @param image.pullPolicy MySQL image pull policy
+  ## @param image.pullSecrets [array] Specify docker-registry secret names as an array
+  ## @param image.debug Specify if debug logs should be enabled
+  ##
+  image:
+    registry: docker.io
+    repository: bitnami/mysql
+    tag: 8.0.26-debian-10-r31
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## Example:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+    ## Set to true if you would like to see extra information on logs
+    ## It turns BASH and/or NAMI debugging in the image
+    ##
+    debug: false
+  ## @param architecture MySQL architecture (`standalone` or `replication`)
+  ##
+  architecture: standalone
+  ## MySQL Authentication parameters
+  ##
+  auth:
+    ## @param auth.rootPassword Password for the `root` user. Ignored if existing secret is provided
+    ## ref: https://github.com/bitnami/bitnami-docker-mysql#setting-the-root-password-on-first-run
+    ##
+    rootPassword: "rootPassword"
+    ## @param auth.database Name for a custom database to create
+    ## ref: https://github.com/bitnami/bitnami-docker-mysql/blob/master/README.md#creating-a-database-on-first-run
+    ##
+    database: default
+    ## @param auth.username Name for a custom user to create
+    ## ref: https://github.com/bitnami/bitnami-docker-mysql/blob/master/README.md#creating-a-database-user-on-first-run
+    ##
+    username: "user"
+    ## @param auth.password Password for the new user. Ignored if existing secret is provided
+    ##
+    password: "password"
+    ## @param auth.replicationUser MySQL replication user
+    ## ref: https://github.com/bitnami/bitnami-docker-mysql#setting-up-a-replication-cluster
+    ##
+    replicationUser: replicator
+    ## @param auth.replicationPassword MySQL replication user password. Ignored if existing secret is provided
+    ##
+    replicationPassword: ""
+    ## @param auth.existingSecret Use existing secret for password details. The secret has to contain the keys `mysql-root-password`, `mysql-replication-password` and `mysql-password`
+    ## NOTE: When it's set the auth.rootPassword, auth.password, auth.replicationPassword are ignored.
+    ##
+    existingSecret: ""
+    ## @param auth.forcePassword Force users to specify required passwords
+    ##
+    forcePassword: true
+    ## @param auth.usePasswordFiles Mount credentials as files instead of using an environment variable
+    ##
+    usePasswordFiles: false
+    ## @param auth.customPasswordFiles [object] Use custom password files when `auth.usePasswordFiles` is set to `true`. Define path for keys `root` and `user`, also define `replicator` if `architecture` is set to `replication`
+    ## Example:
+    ## customPasswordFiles:
+    ##   root: /vault/secrets/mysql-root
+    ##   user: /vault/secrets/mysql-user
+    ##   replicator: /vault/secrets/mysql-replicator
+    ##
+    customPasswordFiles: {}
+  ## @param initdbScripts [object] Dictionary of initdb scripts
+  ## Specify dictionary of scripts to be run at first boot
+  ## Example:
+  ## initdbScripts:
+  ##   my_init_script.sh: |
+  ##      #!/bin/bash
+  ##      echo "Do something."
+  ##
+  # initdbScripts: {}
+  initdbScripts:
+      # This script enables legacy authentication for MySQL v8. NodeJS MySQL Client currently does not support authentication plugins, reference: https://github.com/mysqljs/mysql/pull/2233
+      enableLegacyAuth.sql: |-
+        ALTER USER 'user'@'%' IDENTIFIED WITH mysql_native_password BY 'password';
+  ## @param initdbScriptsConfigMap ConfigMap with the initdb scripts (Note: Overrides `initdbScripts`)
+  ##
+  initdbScriptsConfigMap: ""
+
+  ## @section MySQL Primary parameters
+
+  primary:
+    ## @param primary.command [array] Override default container command on MySQL Primary container(s) (useful when using custom images)
+    ##
+    command: []
+    ## @param primary.args [array] Override default container args on MySQL Primary container(s) (useful when using custom images)
+    ##
+    args: []
+    ## @param primary.hostAliases [array] Deployment pod host aliases
+    ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+    ##
+    hostAliases: []
+    ## @param primary.configuration [string] Configure MySQL Primary with a custom my.cnf file
+    ## ref: https://mysql.com/kb/en/mysql/configuring-mysql-with-mycnf/#example-of-configuration-file
+    ##
+    configuration: |-
+      [mysqld]
+      default_authentication_plugin=mysql_native_password
+      skip-name-resolve
+      explicit_defaults_for_timestamp
+      basedir=/opt/bitnami/mysql
+      plugin_dir=/opt/bitnami/mysql/lib/plugin
+      port=3306
+      socket=/opt/bitnami/mysql/tmp/mysql.sock
+      datadir=/bitnami/mysql/data
+      tmpdir=/opt/bitnami/mysql/tmp
+      max_allowed_packet=16M
+      bind-address=0.0.0.0
+      pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+      log-error=/opt/bitnami/mysql/logs/mysqld.log
+      character-set-server=UTF8
+      collation-server=utf8_general_ci
+
+      [client]
+      port=3306
+      socket=/opt/bitnami/mysql/tmp/mysql.sock
+      default-character-set=UTF8
+      plugin_dir=/opt/bitnami/mysql/lib/plugin
+
+      [manager]
+      port=3306
+      socket=/opt/bitnami/mysql/tmp/mysql.sock
+      pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+    ## @param primary.existingConfiguration Name of existing ConfigMap with MySQL Primary configuration.
+    ## NOTE: When it's set the 'configuration' parameter is ignored
+    ##
+    existingConfiguration: ""
+    ## @param primary.updateStrategy Update strategy type for the MySQL primary statefulset
+    ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
+    ##
+    updateStrategy: RollingUpdate
+    ## @param primary.rollingUpdatePartition Partition update strategy for MySQL Primary statefulset
+    ## https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#partitions
+    ##
+    rollingUpdatePartition: ""
+    ## @param primary.podAnnotations [object] Additional pod annotations for MySQL primary pods
+    ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+    ##
+    podAnnotations: {}
+    ## @param primary.podAffinityPreset MySQL primary pod affinity preset. Ignored if `primary.affinity` is set. Allowed values: `soft` or `hard`
+    ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+    ##
+    podAffinityPreset: ""
+    ## @param primary.podAntiAffinityPreset MySQL primary pod anti-affinity preset. Ignored if `primary.affinity` is set. Allowed values: `soft` or `hard`
+    ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+    ##
+    podAntiAffinityPreset: soft
+    ## MySQL Primary node affinity preset
+    ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+    ##
+    nodeAffinityPreset:
+      ## @param primary.nodeAffinityPreset.type MySQL primary node affinity preset type. Ignored if `primary.affinity` is set. Allowed values: `soft` or `hard`
+      ##
+      type: ""
+      ## @param primary.nodeAffinityPreset.key MySQL primary node label key to match Ignored if `primary.affinity` is set.
+      ## E.g.
+      ## key: "kubernetes.io/e2e-az-name"
+      ##
+      key: ""
+      ## @param primary.nodeAffinityPreset.values [array] MySQL primary node label values to match. Ignored if `primary.affinity` is set.
+      ## E.g.
+      ## values:
+      ##   - e2e-az1
+      ##   - e2e-az2
+      ##
+      values: []
+    ## @param primary.affinity [object] Affinity for MySQL primary pods assignment
+    ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+    ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
+    ##
+    affinity: {}
+    ## @param primary.nodeSelector [object] Node labels for MySQL primary pods assignment
+    ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+    ##
+    nodeSelector: {}
+    ## @param primary.tolerations [array] Tolerations for MySQL primary pods assignment
+    ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+    ##
+    tolerations: []
+    ## MySQL primary Pod security context
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+    ## @param primary.podSecurityContext.enabled Enable security context for MySQL primary pods
+    ## @param primary.podSecurityContext.fsGroup Group ID for the mounted volumes' filesystem
+    ##
+    podSecurityContext:
+      enabled: true
+      fsGroup: 1001
+    ## MySQL primary container security context
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+    ## @param primary.containerSecurityContext.enabled MySQL primary container securityContext
+    ## @param primary.containerSecurityContext.runAsUser User ID for the MySQL primary container
+    ##
+    containerSecurityContext:
+      enabled: true
+      runAsUser: 1001
+    ## MySQL primary container's resource requests and limits
+    ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+    ## We usually recommend not to specify default resources and to leave this as a conscious
+    ## choice for the user. This also increases chances charts run on environments with little
+    ## resources, such as Minikube. If you do want to specify resources, uncomment the following
+    ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    ## @param primary.resources.limits [object] The resources limits for MySQL primary containers
+    ## @param primary.resources.requests [object] The requested resources for MySQL primary containers
+    ##
+    resources:
+      ## Example:
+      ## limits:
+      ##    cpu: 250m
+      ##    memory: 256Mi
+      limits: {}
+      ## Examples:
+      ## requests:
+      ##    cpu: 250m
+      ##    memory: 256Mi
+      requests: {}
+    ## Configure extra options for liveness probe
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+    ## @param primary.livenessProbe.enabled Enable livenessProbe
+    ## @param primary.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+    ## @param primary.livenessProbe.periodSeconds Period seconds for livenessProbe
+    ## @param primary.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+    ## @param primary.livenessProbe.failureThreshold Failure threshold for livenessProbe
+    ## @param primary.livenessProbe.successThreshold Success threshold for livenessProbe
+    ##
+    livenessProbe:
+      enabled: true
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 1
+      failureThreshold: 3
+      successThreshold: 1
+    ## Configure extra options for readiness probe
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+    ## @param primary.readinessProbe.enabled Enable readinessProbe
+    ## @param primary.readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+    ## @param primary.readinessProbe.periodSeconds Period seconds for readinessProbe
+    ## @param primary.readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+    ## @param primary.readinessProbe.failureThreshold Failure threshold for readinessProbe
+    ## @param primary.readinessProbe.successThreshold Success threshold for readinessProbe
+    ##
+    readinessProbe:
+      enabled: true
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 1
+      failureThreshold: 3
+      successThreshold: 1
+    ## Configure extra options for startupProbe probe
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+    ## @param primary.startupProbe.enabled Enable startupProbe
+    ## @param primary.startupProbe.initialDelaySeconds Initial delay seconds for startupProbe
+    ## @param primary.startupProbe.periodSeconds Period seconds for startupProbe
+    ## @param primary.startupProbe.timeoutSeconds Timeout seconds for startupProbe
+    ## @param primary.startupProbe.failureThreshold Failure threshold for startupProbe
+    ## @param primary.startupProbe.successThreshold Success threshold for startupProbe
+    ##
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      timeoutSeconds: 1
+      failureThreshold: 10
+      successThreshold: 1
+    ## @param primary.customLivenessProbe [object] Override default liveness probe for MySQL primary containers
+    ##
+    customLivenessProbe: {}
+    ## @param primary.customReadinessProbe [object] Override default readiness probe for MySQL primary containers
+    ##
+    customReadinessProbe: {}
+    ## @param primary.customStartupProbe [object] Override default startup probe for MySQL primary containers
+    ##
+    customStartupProbe: {}
+    ## @param primary.extraFlags MySQL primary additional command line flags
+    ## Can be used to specify command line flags, for example:
+    ## E.g.
+    ## extraFlags: "--max-connect-errors=1000 --max_connections=155"
+    ##
+    extraFlags: ""
+    ## @param primary.extraEnvVars [array] Extra environment variables to be set on MySQL primary containers
+    ## E.g.
+    ## extraEnvVars:
+    ##  - name: TZ
+    ##    value: "Europe/Paris"
+    ##
+    extraEnvVars: []
+    ## @param primary.extraEnvVarsCM Name of existing ConfigMap containing extra env vars for MySQL primary containers
+    ##
+    extraEnvVarsCM: ""
+    ## @param primary.extraEnvVarsSecret Name of existing Secret containing extra env vars for MySQL primary containers
+    ##
+    extraEnvVarsSecret: ""
+    ## Enable persistence using Persistent Volume Claims
+    ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+    ##
+    persistence:
+      ## @param primary.persistence.enabled Enable persistence on MySQL primary replicas using a `PersistentVolumeClaim`. If false, use emptyDir
+      ##
+      enabled: false
+      ## @param primary.persistence.existingClaim Name of an existing `PersistentVolumeClaim` for MySQL primary replicas
+      ## NOTE: When it's set the rest of persistence parameters are ignored
+      ##
+      existingClaim: ""
+      ## @param primary.persistence.storageClass MySQL primary persistent volume storage Class
+      ## If defined, storageClassName: <storageClass>
+      ## If set to "-", storageClassName: "", which disables dynamic provisioning
+      ## If undefined (the default) or set to null, no storageClassName spec is
+      ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+      ##   GKE, AWS & OpenStack)
+      ##
+      storageClass: ""
+      ## @param primary.persistence.annotations [object] MySQL primary persistent volume claim annotations
+      ##
+      annotations: {}
+      ## @param primary.persistence.accessModes MySQL primary persistent volume access Modes
+      ##
+      accessModes:
+        - ReadWriteOnce
+      ## @param primary.persistence.size MySQL primary persistent volume size
+      ##
+      size: 8Gi
+      ## @param primary.persistence.selector [object] Selector to match an existing Persistent Volume
+      ## selector:
+      ##   matchLabels:
+      ##     app: my-app
+      ##
+      selector: {}
+    ## @param primary.extraVolumes [array] Optionally specify extra list of additional volumes to the MySQL Primary pod(s)
+    ##
+    extraVolumes: []
+    ## @param primary.extraVolumeMounts [array] Optionally specify extra list of additional volumeMounts for the MySQL Primary container(s)
+    ##
+    extraVolumeMounts: []
+    ## @param primary.initContainers [array] Add additional init containers for the MySQL Primary pod(s)
+    ##
+    initContainers: []
+    ## @param primary.sidecars [array] Add additional sidecar containers for the MySQL Primary pod(s)
+    ##
+    sidecars: []
+    ## MySQL Primary Service parameters
+    ##
+    service:
+      ## @param primary.service.type MySQL Primary K8s service type
+      ##
+      type: ClusterIP
+      ## @param primary.service.port MySQL Primary K8s service port
+      ##
+      port: 3306
+      ## @param primary.service.nodePort MySQL Primary K8s service node port
+      ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
+      ##
+      nodePort: ""
+      ## @param primary.service.clusterIP MySQL Primary K8s service clusterIP IP
+      ## e.g:
+      ## clusterIP: None
+      ##
+      clusterIP: ""
+      ## @param primary.service.loadBalancerIP MySQL Primary loadBalancerIP if service type is `LoadBalancer`
+      ## Set the LoadBalancer service type to internal only
+      ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
+      ##
+      loadBalancerIP: ""
+      ## @param primary.service.externalTrafficPolicy Enable client source IP preservation
+      ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+      ##
+      externalTrafficPolicy: Cluster
+      ## @param primary.service.loadBalancerSourceRanges [array] Addresses that are allowed when MySQL Primary service is LoadBalancer
+      ## https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+      ## E.g.
+      ## loadBalancerSourceRanges:
+      ##   - 10.10.10.0/24
+      ##
+      loadBalancerSourceRanges: []
+      ## @param primary.service.annotations [object] Provide any additional annotations which may be required
+      ##
+      annotations: {}
+    ## MySQL primary Pod Disruption Budget configuration
+    ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+    ##
+    pdb:
+      ## @param primary.pdb.enabled Enable/disable a Pod Disruption Budget creation for MySQL primary pods
+      ##
+      enabled: false
+      ## @param primary.pdb.minAvailable Minimum number/percentage of MySQL primary pods that should remain scheduled
+      ##
+      minAvailable: 1
+      ## @param primary.pdb.maxUnavailable Maximum number/percentage of MySQL primary pods that may be made unavailable
+      ##
+      maxUnavailable: ""
+    ## @param primary.podLabels [object] MySQL Primary pod label. If labels are same as commonLabels , this will take precedence
+    ##
+    podLabels: {}
+
+  ## @section MySQL Secondary parameters
+
+  secondary:
+    ## @param secondary.replicaCount Number of MySQL secondary replicas
+    ##
+    replicaCount: 0
+    ## @param secondary.hostAliases [array] Deployment pod host aliases
+    ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+    ##
+    hostAliases: []
+    ## @param secondary.command [array] Override default container command on MySQL Secondary container(s) (useful when using custom images)
+    ##
+    command: []
+    ## @param secondary.args [array] Override default container args on MySQL Secondary container(s) (useful when using custom images)
+    ##
+    args: []
+    ## @param secondary.configuration [string] Configure MySQL Secondary with a custom my.cnf file
+    ## ref: https://mysql.com/kb/en/mysql/configuring-mysql-with-mycnf/#example-of-configuration-file
+    ##
+    configuration: |-
+      [mysqld]
+      default_authentication_plugin=mysql_native_password
+      skip-name-resolve
+      explicit_defaults_for_timestamp
+      basedir=/opt/bitnami/mysql
+      port=3306
+      socket=/opt/bitnami/mysql/tmp/mysql.sock
+      datadir=/bitnami/mysql/data
+      tmpdir=/opt/bitnami/mysql/tmp
+      max_allowed_packet=16M
+      bind-address=0.0.0.0
+      pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+      log-error=/opt/bitnami/mysql/logs/mysqld.log
+      character-set-server=UTF8
+      collation-server=utf8_general_ci
+
+      [client]
+      port=3306
+      socket=/opt/bitnami/mysql/tmp/mysql.sock
+      default-character-set=UTF8
+
+      [manager]
+      port=3306
+      socket=/opt/bitnami/mysql/tmp/mysql.sock
+      pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+    ## @param secondary.existingConfiguration Name of existing ConfigMap with MySQL Secondary configuration.
+    ## NOTE: When it's set the 'configuration' parameter is ignored
+    ##
+    existingConfiguration: ""
+    ## @param secondary.updateStrategy Update strategy type for the MySQL secondary statefulset
+    ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
+    ##
+    updateStrategy: RollingUpdate
+    ## @param secondary.rollingUpdatePartition Partition update strategy for MySQL Secondary statefulset
+    ## https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#partitions
+    ##
+    rollingUpdatePartition: ""
+    ## @param secondary.podAnnotations [object] Additional pod annotations for MySQL secondary pods
+    ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+    ##
+    podAnnotations: {}
+    ## @param secondary.podAffinityPreset MySQL secondary pod affinity preset. Ignored if `secondary.affinity` is set. Allowed values: `soft` or `hard`
+    ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+    ##
+    podAffinityPreset: ""
+    ## @param secondary.podAntiAffinityPreset MySQL secondary pod anti-affinity preset. Ignored if `secondary.affinity` is set. Allowed values: `soft` or `hard`
+    ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+    ## Allowed values: soft, hard
+    ##
+    podAntiAffinityPreset: soft
+    ## MySQL Secondary node affinity preset
+    ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+    ##
+    nodeAffinityPreset:
+      ## @param secondary.nodeAffinityPreset.type MySQL secondary node affinity preset type. Ignored if `secondary.affinity` is set. Allowed values: `soft` or `hard`
+      ##
+      type: ""
+      ## @param secondary.nodeAffinityPreset.key MySQL secondary node label key to match Ignored if `secondary.affinity` is set.
+      ## E.g.
+      ## key: "kubernetes.io/e2e-az-name"
+      ##
+      key: ""
+      ## @param secondary.nodeAffinityPreset.values [array] MySQL secondary node label values to match. Ignored if `secondary.affinity` is set.
+      ## E.g.
+      ## values:
+      ##   - e2e-az1
+      ##   - e2e-az2
+      ##
+      values: []
+    ## @param secondary.affinity [object] Affinity for MySQL secondary pods assignment
+    ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+    ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
+    ##
+    affinity: {}
+    ## @param secondary.nodeSelector [object] Node labels for MySQL secondary pods assignment
+    ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+    ##
+    nodeSelector: {}
+    ## @param secondary.tolerations [array] Tolerations for MySQL secondary pods assignment
+    ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+    ##
+    tolerations: []
+    ## MySQL secondary Pod security context
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+    ## @param secondary.podSecurityContext.enabled Enable security context for MySQL secondary pods
+    ## @param secondary.podSecurityContext.fsGroup Group ID for the mounted volumes' filesystem
+    ##
+    podSecurityContext:
+      enabled: true
+      fsGroup: 1001
+    ## MySQL secondary container security context
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+    ## @param secondary.containerSecurityContext.enabled MySQL secondary container securityContext
+    ## @param secondary.containerSecurityContext.runAsUser User ID for the MySQL secondary container
+    ##
+    containerSecurityContext:
+      enabled: true
+      runAsUser: 1001
+    ## MySQL secondary container's resource requests and limits
+    ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+    ## We usually recommend not to specify default resources and to leave this as a conscious
+    ## choice for the user. This also increases chances charts run on environments with little
+    ## resources, such as Minikube. If you do want to specify resources, uncomment the following
+    ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    ## @param secondary.resources.limits [object] The resources limits for MySQL secondary containers
+    ## @param secondary.resources.requests [object] The requested resources for MySQL secondary containers
+    ##
+    resources:
+      ## Example:
+      ## limits:
+      ##    cpu: 250m
+      ##    memory: 256Mi
+      limits: {}
+      ## Examples:
+      ## requests:
+      ##    cpu: 250m
+      ##    memory: 256Mi
+      requests: {}
+    ## Configure extra options for liveness probe
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+    ## @param secondary.livenessProbe.enabled Enable livenessProbe
+    ## @param secondary.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+    ## @param secondary.livenessProbe.periodSeconds Period seconds for livenessProbe
+    ## @param secondary.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+    ## @param secondary.livenessProbe.failureThreshold Failure threshold for livenessProbe
+    ## @param secondary.livenessProbe.successThreshold Success threshold for livenessProbe
+    ##
+    livenessProbe:
+      enabled: true
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 1
+      failureThreshold: 3
+      successThreshold: 1
+    ## Configure extra options for readiness probe
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+    ## @param secondary.readinessProbe.enabled Enable readinessProbe
+    ## @param secondary.readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+    ## @param secondary.readinessProbe.periodSeconds Period seconds for readinessProbe
+    ## @param secondary.readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+    ## @param secondary.readinessProbe.failureThreshold Failure threshold for readinessProbe
+    ## @param secondary.readinessProbe.successThreshold Success threshold for readinessProbe
+    ##
+    readinessProbe:
+      enabled: true
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 1
+      failureThreshold: 3
+      successThreshold: 1
+    ## Configure extra options for startupProbe probe
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+    ## @param secondary.startupProbe.enabled Enable startupProbe
+    ## @param secondary.startupProbe.initialDelaySeconds Initial delay seconds for startupProbe
+    ## @param secondary.startupProbe.periodSeconds Period seconds for startupProbe
+    ## @param secondary.startupProbe.timeoutSeconds Timeout seconds for startupProbe
+    ## @param secondary.startupProbe.failureThreshold Failure threshold for startupProbe
+    ## @param secondary.startupProbe.successThreshold Success threshold for startupProbe
+    ##
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      timeoutSeconds: 1
+      failureThreshold: 15
+      successThreshold: 1
+    ## @param secondary.customLivenessProbe [object] Override default liveness probe for MySQL secondary containers
+    ##
+    customLivenessProbe: {}
+    ## @param secondary.customReadinessProbe [object] Override default readiness probe for MySQL secondary containers
+    ##
+    customReadinessProbe: {}
+    ## @param secondary.customStartupProbe [object] Override default startup probe for MySQL secondary containers
+    ##
+    customStartupProbe: {}
+    ## @param secondary.extraFlags MySQL secondary additional command line flags
+    ## Can be used to specify command line flags, for example:
+    ## E.g.
+    ## extraFlags: "--max-connect-errors=1000 --max_connections=155"
+    ##
+    extraFlags: ""
+    ## @param secondary.extraEnvVars [array] An array to add extra environment variables on MySQL secondary containers
+    ## E.g.
+    ## extraEnvVars:
+    ##  - name: TZ
+    ##    value: "Europe/Paris"
+    ##
+    extraEnvVars: []
+    ## @param secondary.extraEnvVarsCM Name of existing ConfigMap containing extra env vars for MySQL secondary containers
+    ##
+    extraEnvVarsCM: ""
+    ## @param secondary.extraEnvVarsSecret Name of existing Secret containing extra env vars for MySQL secondary containers
+    ##
+    extraEnvVarsSecret: ""
+    ## Enable persistence using Persistent Volume Claims
+    ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+    ##
+    persistence:
+      ## @param secondary.persistence.enabled Enable persistence on MySQL secondary replicas using a `PersistentVolumeClaim`
+      ##
+      enabled: false
+      ## @param secondary.persistence.storageClass MySQL secondary persistent volume storage Class
+      ## If defined, storageClassName: <storageClass>
+      ## If set to "-", storageClassName: "", which disables dynamic provisioning
+      ## If undefined (the default) or set to null, no storageClassName spec is
+      ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+      ##   GKE, AWS & OpenStack)
+      ##
+      storageClass: ""
+      ## @param secondary.persistence.annotations [object] MySQL secondary persistent volume claim annotations
+      ##
+      annotations: {}
+      ## @param secondary.persistence.accessModes MySQL secondary persistent volume access Modes
+      ##
+      accessModes:
+        - ReadWriteOnce
+      ## @param secondary.persistence.size MySQL secondary persistent volume size
+      ##
+      size: 8Gi
+      ## @param secondary.persistence.selector [object] Selector to match an existing Persistent Volume
+      ## selector:
+      ##   matchLabels:
+      ##     app: my-app
+      ##
+      selector: {}
+    ## @param secondary.extraVolumes [array] Optionally specify extra list of additional volumes to the MySQL secondary pod(s)
+    ##
+    extraVolumes: []
+    ## @param secondary.extraVolumeMounts [array] Optionally specify extra list of additional volumeMounts for the MySQL secondary container(s)
+    ##
+    extraVolumeMounts: []
+    ## @param secondary.initContainers [array] Add additional init containers for the MySQL secondary pod(s)
+    ##
+    initContainers: []
+    ## @param secondary.sidecars [array] Add additional sidecar containers for the MySQL secondary pod(s)
+    ##
+    sidecars: []
+    ## MySQL Secondary Service parameters
+    ##
+    service:
+      ## @param secondary.service.type MySQL secondary Kubernetes service type
+      ##
+      type: ClusterIP
+      ## @param secondary.service.port MySQL secondary Kubernetes service port
+      ##
+      port: 3306
+      ## @param secondary.service.nodePort MySQL secondary Kubernetes service node port
+      ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
+      ##
+      nodePort: ""
+      ## @param secondary.service.clusterIP MySQL secondary Kubernetes service clusterIP IP
+      ## e.g:
+      ## clusterIP: None
+      ##
+      clusterIP: ""
+      ## @param secondary.service.loadBalancerIP MySQL secondary loadBalancerIP if service type is `LoadBalancer`
+      ## Set the LoadBalancer service type to internal only
+      ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
+      ##
+      loadBalancerIP: ""
+      ## @param secondary.service.externalTrafficPolicy Enable client source IP preservation
+      ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+      ##
+      externalTrafficPolicy: Cluster
+      ## @param secondary.service.loadBalancerSourceRanges [array] Addresses that are allowed when MySQL secondary service is LoadBalancer
+      ## https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+      ## E.g.
+      ## loadBalancerSourceRanges:
+      ##   - 10.10.10.0/24
+      ##
+      loadBalancerSourceRanges: []
+      ## @param secondary.service.annotations [object] Provide any additional annotations which may be required
+      ##
+      annotations: {}
+    ## MySQL secondary Pod Disruption Budget configuration
+    ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+    ##
+    pdb:
+      ## @param secondary.pdb.enabled Enable/disable a Pod Disruption Budget creation for MySQL secondary pods
+      ##
+      enabled: false
+      ## @param secondary.pdb.minAvailable Minimum number/percentage of MySQL secondary pods that should remain scheduled
+      ##
+      minAvailable: 1
+      ## @param secondary.pdb.maxUnavailable Maximum number/percentage of MySQL secondary pods that may be made unavailable
+      ##
+      maxUnavailable: ""
+    ## @param secondary.podLabels [object] Additional pod labels for MySQL secondary pods
+    ##
+    podLabels: {}
+
+  ## @section RBAC parameters
+
+  ## MySQL pods ServiceAccount
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+  ##
+  serviceAccount:
+    ## @param serviceAccount.create Enable the creation of a ServiceAccount for MySQL pods
+    ##
+    create: true
+    ## @param serviceAccount.name Name of the created ServiceAccount
+    ## If not set and create is true, a name is generated using the mysql.fullname template
+    ##
+    name: ""
+    ## @param serviceAccount.annotations [object] Annotations for MySQL Service Account
+    ##
+    annotations: {}
+  ## Role Based Access
+  ## ref: https://kubernetes.io/docs/admin/authorization/rbac/
+  ##
+  rbac:
+    ## @param rbac.create Whether to create & use RBAC resources or not
+    ##
+    create: false
+
+  ## @section Network Policy
+
+  ## MySQL Nework Policy configuration
+  ##
+  networkPolicy:
+    ## @param networkPolicy.enabled Enable creation of NetworkPolicy resources
+    ##
+    enabled: false
+    ## @param networkPolicy.allowExternal The Policy model to apply.
+    ## When set to false, only pods with the correct
+    ## client label will have network access to the port MySQL is listening
+    ## on. When true, MySQL will accept connections from any source
+    ## (with the correct destination port).
+    ##
+    allowExternal: true
+    ## @param networkPolicy.explicitNamespacesSelector [object] A Kubernetes LabelSelector to explicitly select namespaces from which ingress traffic could be allowed to MySQL
+    ## If explicitNamespacesSelector is missing or set to {}, only client Pods that are in the networkPolicy's namespace
+    ## and that match other criteria, the ones that have the good label, can reach the DB.
+    ## But sometimes, we want the DB to be accessible to clients from other namespaces, in this case, we can use this
+    ## LabelSelector to select these namespaces, note that the networkPolicy's namespace should also be explicitly added.
+    ##
+    ## Example:
+    ## explicitNamespacesSelector:
+    ##   matchLabels:
+    ##     role: frontend
+    ##   matchExpressions:
+    ##    - {key: role, operator: In, values: [frontend]}
+    ##
+    explicitNamespacesSelector: {}
+
+  ## @section Volume Permissions parameters
+
+  ## Init containers parameters:
+  ## volumePermissions: Change the owner and group of the persistent volume mountpoint to runAsUser:fsGroup values from the securityContext section.
+  ##
+  volumePermissions:
+    ## @param volumePermissions.enabled Enable init container that changes the owner and group of the persistent volume(s) mountpoint to `runAsUser:fsGroup`
+    ##
+    enabled: false
+    ## @param volumePermissions.image.registry Init container volume-permissions image registry
+    ## @param volumePermissions.image.repository Init container volume-permissions image repository
+    ## @param volumePermissions.image.tag Init container volume-permissions image tag (immutable tags are recommended)
+    ## @param volumePermissions.image.pullPolicy Init container volume-permissions image pull policy
+    ## @param volumePermissions.image.pullSecrets [array] Specify docker-registry secret names as an array
+    ##
+    image:
+      registry: docker.io
+      repository: bitnami/bitnami-shell
+      tag: 10-debian-10-r172
+      pullPolicy: Always
+      ## Optionally specify an array of imagePullSecrets.
+      ## Secrets must be manually created in the namespace.
+      ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+      ## e.g:
+      ## pullSecrets:
+      ##   - myRegistryKeySecretName
+      ##
+      pullSecrets: []
+    ## @param volumePermissions.resources [object] Init container volume-permissions resources
+    ##
+    resources: {}
+
+  ## @section Metrics parameters
+
+  ## Mysqld Prometheus exporter parameters
+  ##
+  metrics:
+    ## @param metrics.enabled Start a side-car prometheus exporter
+    ##
+    enabled: true
+    ## @param metrics.image.registry Exporter image registry
+    ## @param metrics.image.repository Exporter image repository
+    ## @param metrics.image.tag Exporter image tag (immutable tags are recommended)
+    ## @param metrics.image.pullPolicy Exporter image pull policy
+    ## @param metrics.image.pullSecrets [array] Specify docker-registry secret names as an array
+    ##
+    image:
+      registry: docker.io
+      repository: bitnami/mysqld-exporter
+      tag: 0.13.0-debian-10-r75
+      pullPolicy: IfNotPresent
+      ## Optionally specify an array of imagePullSecrets.
+      ## Secrets must be manually created in the namespace.
+      ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+      ## e.g:
+      ## pullSecrets:
+      ##   - myRegistryKeySecretName
+      ##
+      pullSecrets: []
+    ## MySQL Prometheus exporter service parameters
+    ## Mysqld Prometheus exporter liveness and readiness probes
+    ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+    ## @param metrics.service.type Kubernetes service type for MySQL Prometheus Exporter
+    ## @param metrics.service.port MySQL Prometheus Exporter service port
+    ## @param metrics.service.annotations [object] Prometheus exporter service annotations
+    ##
+    service:
+      type: ClusterIP
+      port: 9104
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.metrics.service.port }}"
+    ## @param metrics.extraArgs.primary [array] Extra args to be passed to mysqld_exporter on Primary pods
+    ## @param metrics.extraArgs.secondary [array] Extra args to be passed to mysqld_exporter on Secondary pods
+    ## ref: https://github.com/prometheus/mysqld_exporter/
+    ## E.g.
+    ## - --collect.auto_increment.columns
+    ## - --collect.binlog_size
+    ## - --collect.engine_innodb_status
+    ## - --collect.engine_tokudb_status
+    ## - --collect.global_status
+    ## - --collect.global_variables
+    ## - --collect.info_schema.clientstats
+    ## - --collect.info_schema.innodb_metrics
+    ## - --collect.info_schema.innodb_tablespaces
+    ## - --collect.info_schema.innodb_cmp
+    ## - --collect.info_schema.innodb_cmpmem
+    ## - --collect.info_schema.processlist
+    ## - --collect.info_schema.processlist.min_time
+    ## - --collect.info_schema.query_response_time
+    ## - --collect.info_schema.tables
+    ## - --collect.info_schema.tables.databases
+    ## - --collect.info_schema.tablestats
+    ## - --collect.info_schema.userstats
+    ## - --collect.perf_schema.eventsstatements
+    ## - --collect.perf_schema.eventsstatements.digest_text_limit
+    ## - --collect.perf_schema.eventsstatements.limit
+    ## - --collect.perf_schema.eventsstatements.timelimit
+    ## - --collect.perf_schema.eventswaits
+    ## - --collect.perf_schema.file_events
+    ## - --collect.perf_schema.file_instances
+    ## - --collect.perf_schema.indexiowaits
+    ## - --collect.perf_schema.tableiowaits
+    ## - --collect.perf_schema.tablelocks
+    ## - --collect.perf_schema.replication_group_member_stats
+    ## - --collect.slave_status
+    ## - --collect.slave_hosts
+    ## - --collect.heartbeat
+    ## - --collect.heartbeat.database
+    ## - --collect.heartbeat.table
+    ##
+    extraArgs:
+      primary: []
+      secondary: []
+    ## Mysqld Prometheus exporter resource requests and limits
+    ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+    ## We usually recommend not to specify default resources and to leave this as a conscious
+    ## choice for the user. This also increases chances charts run on environments with little
+    ## resources, such as Minikube. If you do want to specify resources, uncomment the following
+    ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    ## @param metrics.resources.limits [object] The resources limits for MySQL prometheus exporter containers
+    ## @param metrics.resources.requests [object] The requested resources for MySQL prometheus exporter containers
+    ##
+    resources:
+      ## Example:
+      ## limits:
+      ##    cpu: 100m
+      ##    memory: 256Mi
+      limits: {}
+      ## Examples:
+      ## requests:
+      ##    cpu: 100m
+      ##    memory: 256Mi
+      requests: {}
+    ## Mysqld Prometheus exporter liveness probe
+    ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+    ## @param metrics.livenessProbe.enabled Enable livenessProbe
+    ## @param metrics.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+    ## @param metrics.livenessProbe.periodSeconds Period seconds for livenessProbe
+    ## @param metrics.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+    ## @param metrics.livenessProbe.failureThreshold Failure threshold for livenessProbe
+    ## @param metrics.livenessProbe.successThreshold Success threshold for livenessProbe
+    ##
+    livenessProbe:
+      enabled: true
+      initialDelaySeconds: 120
+      periodSeconds: 10
+      timeoutSeconds: 1
+      successThreshold: 1
+      failureThreshold: 3
+    ## Mysqld Prometheus exporter readiness probe
+    ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+    ## @param metrics.readinessProbe.enabled Enable readinessProbe
+    ## @param metrics.readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+    ## @param metrics.readinessProbe.periodSeconds Period seconds for readinessProbe
+    ## @param metrics.readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+    ## @param metrics.readinessProbe.failureThreshold Failure threshold for readinessProbe
+    ## @param metrics.readinessProbe.successThreshold Success threshold for readinessProbe
+    ##
+    readinessProbe:
+      enabled: true
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 1
+      successThreshold: 1
+      failureThreshold: 3
+    ## Prometheus Service Monitor
+    ## ref: https://github.com/coreos/prometheus-operator
+    ##
+    serviceMonitor:
+      ## @param metrics.serviceMonitor.enabled Create ServiceMonitor Resource for scraping metrics using PrometheusOperator
+      ##
+      enabled: false
+      ## @param metrics.serviceMonitor.namespace Specify the namespace in which the serviceMonitor resource will be created
+      ##
+      namespace: ""
+      ## @param metrics.serviceMonitor.interval Specify the interval at which metrics should be scraped
+      ##
+      interval: 30s
+      ## @param metrics.serviceMonitor.scrapeTimeout Specify the timeout after which the scrape is ended
+      ## e.g:
+      ## scrapeTimeout: 30s
+      ##
+      scrapeTimeout: ""
+      ## @param metrics.serviceMonitor.relabellings [array] Specify Metric Relabellings to add to the scrape endpoint
+      ##
+      relabellings: []
+      ## @param metrics.serviceMonitor.honorLabels Specify honorLabels parameter to add the scrape endpoint
+      ##
+      honorLabels: false
+      ## @param metrics.serviceMonitor.additionalLabels [object] Used to pass Labels that are used by the Prometheus installed in your cluster to select Service Monitors to work with
+      ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
+      ##
+      additionalLabels: {}
+
+
+################################################################
+## Ory Keto Backend Dependency
+
+keto:
+  enabled: true
+  ## Installation
+  # https://k8s.ory.sh/helm/charts
+  # helm repo add ory https://k8s.ory.sh/helm/charts
+  # helm install my-keto ory/keto --version 0.19.5
+
+  ## @section Global parameters
+  ## Global Docker image parameters
+  ## Please, note that this will override the image parameters, including dependencies, configured to use the global value
+  ## Current available global Docker image parameters: imageRegistry, imagePullSecrets and storageClass
+
+  ## @param global.imageRegistry Global Docker image registry
+  ## @param global.imagePullSecrets Global Docker registry secret names as an array
+  ## @param global.storageClass Global StorageClass for Persistent Volume(s)
+  ##
+  global:
+    imageRegistry: ""
+    ## E.g.
+    ## imagePullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    imagePullSecrets: []
+    storageClass: ""
+
+  ## @section Common parameters
+
+  ## @param nameOverride String to partially override kafka.fullname
+  ##
+  nameOverride: ""
+  ## @param fullnameOverride String to fully override kafka.fullname
+  ##
+  fullnameOverride: "keto"
+  ## @param clusterDomain Default Kubernetes cluster domain
+  ##
+  clusterDomain: cluster.local
+  ## @param commonLabels Labels to add to all deployed objects
+  ##
+  commonLabels: {}
+  ## @param commonAnnotations Annotations to add to all deployed objects
+  ##
+  commonAnnotations: {}
+  ## @param extraDeploy Array of extra objects to deploy with the release
+  ##
+  extraDeploy: []
+
+  ## @section Keto parameters
+
+  ## Ory Keto image version
+  ## ref: https://k8s.ory.sh/helm/charts
+  ## @param image.registry Kafka image registry
+  ## @param image.repository Keto image repository
+  ## @param image.tag Kafka image tag (immutable tags are recommended)
+  ## @param image.pullPolicy Kafka image pull policy
+  ## @param image.pullSecrets Specify docker-registry secret names as an array
+  ##
+  # Default values for keto.
+  # This is a YAML-formatted file.
+  # Declare variables to be passed into your templates.
+  # -- Number of replicas in deployment
+  replicaCount: 1
+
+  image:
+    # -- Ory KETO image
+    repository: oryd/keto
+    # -- Default image pull policy
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    # -- Ory KETO version
+    tag: "v0.6.0-alpha.1-sqlite"
+
+  imagePullSecrets: []
+
+  serviceAccount:
+    # -- Specifies whether a service account should be created
+    create: true
+    # -- Annotations to add to the service account
+    annotations: {}
+    # -- The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  # https://github.com/kubernetes/kubernetes/issues/57601
+  automountServiceAccountToken: true
+
+  # -- Default security context configuration
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 100
+    allowPrivilegeEscalation: false
+    privileged: false
+
+  job:
+    annotations: {}
+
+  ingress:
+    read:
+      enabled: true
+      className: ""
+      annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+      hosts:
+        - host: keto.local
+          paths:
+            - path: /read
+              pathType: Prefix
+      tls: []
+      #  - secretName: keto-tls
+      #    hosts:
+      #      - keto.local
+    write:
+      enabled: false
+      className: ""
+      annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+      hosts:
+        - host: keto.local
+          paths:
+            - path: /write
+              pathType: Prefix
+      tls: []
+      #  - secretName: keto-tls
+      #    hosts:
+      #      - keto.local
+
+  service:
+    read:
+      enabled: true
+      type: ClusterIP
+      name: http-read
+      port: 80
+    write:
+      enabled: true
+      type: ClusterIP
+      name: http-write
+      port: 80
+
+  secret:
+    # -- Switch to false to prevent creating the secret
+    enabled: true
+    # ... and choose a different name for a secret you provide like this
+    # nameOverride: "MyOtherName"
+    secretAnnotations:
+      # Create the secret before installation, and only then. This saves the secret from regenerating during an upgrade
+      # pre-upgrade is needed to upgrade from 0.7.0 to newer. Can be deleted afterwards.
+        helm.sh/hook-weight: "0"
+        helm.sh/hook: "pre-install, pre-upgrade"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+        helm.sh/resource-policy: "keep"
+
+  keto:
+    # https://www.ory.sh/keto/docs/reference/configuration
+    config:
+      serve:
+        read:
+          port: 4466
+        write:
+          port: 4467
+      namespaces:
+        - id: 0
+          name: role
+        - id: 1
+          name: permission
+        - id: 2
+          name: participant
+
+    autoMigrate: true
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  extraEnv: []
+
+  extraVolumes: []
+  # - name: my-volume
+  #   secret:
+  #     secretName: my-secret
+
+  extraVolumeMounts: []
+  # - name: my-volume
+  #   mountPath: /etc/secrets/my-secret
+  #   readOnly: true
+
+  # -- Configuration for tracing providers. Only datadog is currently supported through this block.
+  # If you need to use a different tracing provider, please manually set the configuration values
+  # via "keto.config" or via "extraEnv".
+  tracing:
+    datadog:
+      enabled: false
+
+      # Sets the datadog DD_ENV environment variable. This value indicates the environment where keto is running.
+      # Default value: "none".
+      # env: production
+
+      # Sets the datadog DD_VERSION environment variable. This value indicates the version that keto is running.
+      # Default value: .Chart.AppVersion (i.e. the tag used for the docker image).
+      # version: X.Y.Z
+
+      # Sets the datadog DD_SERVICE environment variable. This value indicates the name of the service running.
+      # Default value: "ory/keto".
+      # service: ory/keto
+
+      # Sets the datadog DD_AGENT_HOST environment variable. This value indicates the host address of the datadog agent.
+      # If set to true, this configuration will automatically set DD_AGENT_HOST to the field "status.hostIP" of the pod.
+      # Default value: false.
+      # useHostIP: true
+
+  tolerations: []
+
+  affinity: {}
+
+  # -- Configure the probes for when the deployment is considered ready and ongoing health check
+  deployment:
+    livenessProbe:
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      failureThreshold: 5
+    readinessProbe:
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      failureThreshold: 5
+
+  # -- Watcher sidecar configuration
+  watcher:
+    enabled: false
+    image: oryd/k8s-toolbox:0.0.2
+    mountFile: ''
+    # mountFile: /etc/secrets/my-secret/foo
+
+  # -- PodDistributionBudget configuration
+  pdb:
+    enabled: false
+    spec:
+      minAvailable: 1

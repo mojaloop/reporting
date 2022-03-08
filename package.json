@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "start": "node src/server.js",
+    "dev": "nodemon src/index.js",
     "test": "npm run test:unit",
     "test:coverage": "jest --coverage --coverageThreshold='{}' --testMatch '**/test/unit/**/*.(test|spec).js'",
     "test:coverage-check": "jest -w 1 --coverage --testMatch '**/test/unit/**/*.(test|spec).js'",
@@ -36,6 +37,7 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.25.3",
     "jest": "^27.4.5",
+    "nodemon": "^2.0.15",
     "npm-audit-resolver": "^3.0.0-4",
     "npm-force-resolutions": "0.0.10",
     "supertest": "^6.1.3"

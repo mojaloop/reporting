@@ -65,6 +65,10 @@ docker run -v $PWD/config:/opt/reporting/config -p 3000:3000 --env-file=./.my.en
   ```
   kubectl port-forward -n default service/mysql 3306:3306
   ```
+- Insert sample data into database
+  ```
+  mysql -h127.0.0.1 -p3306 -uuser -ppassword default < ./resources/examples/participants_db_dump.sql
+  ```
 - Run the integration tests
   ```
   npm install
@@ -72,11 +76,11 @@ docker run -v $PWD/config:/opt/reporting/config -p 3000:3000 --env-file=./.my.en
   ```
 - Adding the custom resource for manual testing
   ```
-  kubectl apply -f resources/examples/participants.yaml
+  kubectl apply -f resources/examples/participant_list.yaml
   ```
 - Cleanup
   ```
-  kubectl delete -f resources/examples/participants.yaml
+  kubectl delete -f resources/examples/participant_list.yaml
   helm uninstall test1
   minikube stop
   ```

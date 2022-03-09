@@ -30,7 +30,7 @@ module.exports = {
         resourceVersion: env.get('WATCH_RESOURCE_VERSION').default('v1').asString(),
         namespace: env.get('WATCH_NAMESPACE').default('default').asString(),
         resourcePlural: env.get('WATCH_RESOURCE_PLURAL').default('mojaloopreports').asString(),
-        validationRetryCount: env.get('VALIDATION_RETRY_COUNT').default('5').asInt(),
-        validationRetryIntervalMs: env.get('VALIDATION_RETRY_INTERVAL_MS').default('5000').asInt(),
+        validationRetryCount: env.get('VALIDATION_RETRY_COUNT').default('10').asInt(),
+        validationRetryIntervalMs: env.get('VALIDATION_RETRY_INTERVAL_MS').default('10000').asInt(),
     },
 };

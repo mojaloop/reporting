@@ -69,7 +69,7 @@ class ReportingOperator {
                     return;
                 }
                 this.resourceGeneration[name] = generation;
-                for (let i = 1; i <= config.operator.validationRetryCount; i += 1) {
+                for (let i = config.operator.validationRetryCount; i >= 0; i -= 1) {
                     try {
                         // eslint-disable-next-line no-await-in-loop
                         handlerMap[path] = await createReportHandler(db, apiObj.spec);
@@ -80,8 +80,9 @@ class ReportingOperator {
                             case 'ER_ACCESS_DENIED_ERROR':
                             case 'ETIMEDOUT':
                             case 'ENOTFOUND':
-                                if (i !== config.operator.validationRetryCount) {
-                                    this.logger.info(`Retying after ${config.operator.validationRetryIntervalMs}ms...`);
+                                if (i !== 0) {
+                                    // eslint-disable-next-line max-len
+                                    this.logger.info(`Retying after ${config.operator.validationRetryIntervalMs}ms...(${i} retries left)`);
                                     // eslint-disable-next-line max-len,no-await-in-loop
                                     await new Promise((resolve) => { setTimeout(resolve, config.operator.validationRetryIntervalMs); });
                                     break;

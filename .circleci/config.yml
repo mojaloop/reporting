@@ -142,7 +142,9 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            sudo apt-get install -y conntrack
+            wget http://launchpadlibrarian.net/365853513/conntrack_1.4.4+snapshot20161117-6ubuntu2_amd64.deb
+            sudo rm /var/lib/dpkg/lock
+            dpkg -i conntrack_1.4.4+snapshot20161117-6ubuntu2_amd64.deb
       - run:
           name: Setup kubectl
           command: |

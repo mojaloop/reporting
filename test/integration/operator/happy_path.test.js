@@ -12,6 +12,7 @@ const k8s = require('@kubernetes/client-node');
 const Config = require('./config');
 const sampleResource1 = require('./data/sample-resource1.json');
 
+jest.unmock('@kubernetes/client-node');
 jest.setTimeout(50000);
 
 const kc = new k8s.KubeConfig();

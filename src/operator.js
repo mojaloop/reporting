@@ -74,7 +74,7 @@ class ReportingOperator {
                         // eslint-disable-next-line no-await-in-loop
                         handlerMap[path] = await createReportHandler(db, apiObj.spec);
                     } catch (e) {
-                        this.logger.error(`Error occured while validating resource. '${e.message}'`);
+                        this.logger.error(`Error occured while validating resource. '${e.message} ${e.message}'`);
                         switch (e.code) {
                             case 'ECONNREFUSED':
                             case 'ER_ACCESS_DENIED_ERROR':

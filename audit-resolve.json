@@ -183,6 +183,66 @@
     "1006882|shelljs": {
       "decision": "postpone",
       "madeAt": 1646044194057
+    },
+    "1059817|cheerio-select-tmp>css-what": {
+      "decision": "postpone",
+      "madeAt": 1646940303298
+    },
+    "1059817|node-table-to-csv>cheerio>css-select>css-what": {
+      "decision": "postpone",
+      "madeAt": 1646940303298
+    },
+    "1059367|follow-redirects": {
+      "decision": "postpone",
+      "madeAt": 1646940303835
+    },
+    "1059420|follow-redirects": {
+      "decision": "postpone",
+      "madeAt": 1646940304376
+    },
+    "1059486|jsprim>json-schema": {
+      "decision": "postpone",
+      "madeAt": 1646940304903
+    },
+    "1059620|node-table-to-csv>cheerio>css-select>css-what>nth-check": {
+      "decision": "postpone",
+      "madeAt": 1646940305379
+    },
+    "1060101|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646940305903
+    },
+    "1061316|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646940306874
+    },
+    "1061458|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646940307447
+    },
+    "1061750|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646940308087
+    },
+    "1061956|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646940308673
+    },
+    "1059740|node-zip>jszip": {
+      "decision": "postpone",
+      "madeAt": 1646940309381
+    },
+    "1059599|npm-audit-resolver>yargs-unparser>yargs>cliui>strip-ansi>ansi-regex": {
+      "decision": "postpone",
+      "madeAt": 1646940309813
+    },
+    "1059402|puppeteer>node-fetch": {
+      "decision": "postpone",
+      "madeAt": 1646940310396
+    },
+    "1059404|shelljs": {
+      "decision": "postpone",
+      "madeAt": 1646940310812
     }
   },
   "rules": {},

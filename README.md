@@ -67,7 +67,7 @@ docker run -v $PWD/config:/opt/reporting/config -p 3000:3000 --env-file=./.my.en
   ```
 - Insert sample data into database
   ```
-  mysql -h127.0.0.1 -p3306 -uuser -ppassword default < ./resources/examples/participants_db_dump.sql
+  mysql -h127.0.0.1 -P3306 -uuser -ppassword default < ./resources/examples/participants_db_dump.sql
   ```
 - Run the integration tests
   ```

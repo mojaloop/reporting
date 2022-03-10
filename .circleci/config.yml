@@ -145,6 +145,8 @@ jobs:
             wget http://launchpadlibrarian.net/365853513/conntrack_1.4.4+snapshot20161117-6ubuntu2_amd64.deb
             sudo rm -f /var/lib/dpkg/lock
             sudo dpkg -i conntrack_1.4.4+snapshot20161117-6ubuntu2_amd64.deb
+            sudo dpkg --configure -a
+            sudo apt-get install mysql-client-core-5.7
             # sudo apt-get install -y conntrack
       - run:
           name: Setup kubectl
@@ -185,6 +187,11 @@ jobs:
           name: Get all K8S pods
           command:
             kubectl get pods --all-namespaces
+      - run:
+          name: Insert sample data into DB
+          command: |
+            DB_HOST=`minikube service mysql -n default --url | awk -F[/:] '{print $4}'`
+            mysql -h$DB_HOST -P30306 -uuser -ppassword default < ./resources/examples/participants_db_dump.sql
       - run:
           name: Create dir for test results
           command: |

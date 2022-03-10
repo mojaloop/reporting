@@ -99,9 +99,6 @@ jobs:
           keys:
             - dependency-cache-{{ checksum "package-lock.json" }}
       - run:
-          name: Execute linting pass
-          command: npm run lint
-      - run:
           name: Create dir for test results
           command: mkdir -p ./test/results
       - run:
@@ -303,7 +300,7 @@ jobs:
           <<: *defaults_license_scanner
       - run:
           name: Run the license-scanner
-          command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local make run
+          command: cd /tmp/license-scanner && mode=docker dockerImages=${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local make run
       - store_artifacts:
           path: /tmp/license-scanner/results
           prefix: licenses
@@ -323,7 +320,7 @@ jobs:
           command: docker load -i /tmp/docker-image.tar
       - anchore/analyze_local_image:
           dockerfile_path: ./Dockerfile
-          image_name: ${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:local
+          image_name: ${DOCKER_ORG:-mojaloop}/${CIRCLE_PROJECT_REPONAME}:local
           # Anchore bug: if policy_failure is `true`, reports don't get written - we manually check for failures below
           policy_failure: false
           timeout: '500'

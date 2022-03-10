@@ -172,7 +172,8 @@ jobs:
             ./get_helm.sh
       - run:
           name: Deploy Helm Chart
-          command:
+          command: |
+            helm dep up ./resources/test-integration/
             helm install test1 ./resources/test-integration/ -n default
       - run:
           name: Waiting for deployments

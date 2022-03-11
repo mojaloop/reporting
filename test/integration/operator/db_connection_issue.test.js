@@ -13,7 +13,7 @@ const Config = require('./config');
 const sampleResource1 = require('./data/sample-resource1.json');
 
 jest.unmock('@kubernetes/client-node');
-jest.setTimeout(50000);
+jest.setTimeout(150000);
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -40,7 +40,7 @@ describe('K8S operator', () => {
     it('Wait for some time', async () => {
         await new Promise((resolve) => { setTimeout(resolve, 3 * Config.WAIT_TIME_MS_AFTER_K8S_RESOURCE_CHANGE); });
     });
-    it('Scale down the replicas fo mysql K8S service to disable it', async () => {
+    it('Scale down the replicas of mysql K8S service to disable it', async () => {
         const patch = [
             {
                 op: 'replace',
@@ -93,7 +93,7 @@ describe('K8S operator', () => {
         // expect(status.response.body.status).toHaveProperty('state');
         // expect(status.response.body.status.state).toEqual('VALID');
     });
-    it('Scale up the replicas fo mysql K8S service to re-enable it', async () => {
+    it('Scale up the replicas of mysql K8S service to re-enable it', async () => {
         const patch = [
             {
                 op: 'replace',

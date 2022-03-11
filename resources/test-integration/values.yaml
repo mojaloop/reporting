@@ -29,7 +29,7 @@ reporting-legacy-api:
   ##
   extraEnvVars:
     - name: VALIDATION_RETRY_COUNT
-      value: "50"
+      value: "120"
     - name: VALIDATION_RETRY_INTERVAL_MS
       value: "1000"
   podAffinityPreset: ""

@@ -183,6 +183,126 @@
     "1006882|shelljs": {
       "decision": "postpone",
       "madeAt": 1646044194057
+    },
+    "1059817|cheerio-select-tmp>css-what": {
+      "decision": "postpone",
+      "madeAt": 1646940303298
+    },
+    "1059817|node-table-to-csv>cheerio>css-select>css-what": {
+      "decision": "postpone",
+      "madeAt": 1646940303298
+    },
+    "1059367|follow-redirects": {
+      "decision": "postpone",
+      "madeAt": 1646940303835
+    },
+    "1059420|follow-redirects": {
+      "decision": "postpone",
+      "madeAt": 1646940304376
+    },
+    "1059486|jsprim>json-schema": {
+      "decision": "postpone",
+      "madeAt": 1646940304903
+    },
+    "1059620|node-table-to-csv>cheerio>css-select>css-what>nth-check": {
+      "decision": "postpone",
+      "madeAt": 1646940305379
+    },
+    "1060101|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646940305903
+    },
+    "1061316|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646940306874
+    },
+    "1061458|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646940307447
+    },
+    "1061750|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646940308087
+    },
+    "1061956|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646940308673
+    },
+    "1059740|node-zip>jszip": {
+      "decision": "postpone",
+      "madeAt": 1646940309381
+    },
+    "1059599|npm-audit-resolver>yargs-unparser>yargs>cliui>strip-ansi>ansi-regex": {
+      "decision": "postpone",
+      "madeAt": 1646940309813
+    },
+    "1059402|puppeteer>node-fetch": {
+      "decision": "postpone",
+      "madeAt": 1646940310396
+    },
+    "1059404|shelljs": {
+      "decision": "postpone",
+      "madeAt": 1646940310812
+    },
+    "1065061|cheerio-select-tmp>css-what": {
+      "decision": "postpone",
+      "madeAt": 1646999670248
+    },
+    "1065061|node-table-to-csv>cheerio>css-select>css-what": {
+      "decision": "postpone",
+      "madeAt": 1646999670248
+    },
+    "1064611|follow-redirects": {
+      "decision": "postpone",
+      "madeAt": 1646999672576
+    },
+    "1064664|follow-redirects": {
+      "decision": "postpone",
+      "madeAt": 1646999673419
+    },
+    "1064730|jsprim>json-schema": {
+      "decision": "postpone",
+      "madeAt": 1646999674274
+    },
+    "1064864|node-table-to-csv>cheerio>css-select>css-what>nth-check": {
+      "decision": "postpone",
+      "madeAt": 1646999675129
+    },
+    "1065345|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646999675883
+    },
+    "1066560|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646999676491
+    },
+    "1066702|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646999677717
+    },
+    "1066769|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646999678695
+    },
+    "1066994|node-table-to-csv>cheerio>css-select>css-what>nth-check>lodash": {
+      "decision": "postpone",
+      "madeAt": 1646999679550
+    },
+    "1064984|node-zip>jszip": {
+      "decision": "postpone",
+      "madeAt": 1646999681080
+    },
+    "1064843|npm-audit-resolver>yargs-unparser>yargs>cliui>strip-ansi>ansi-regex": {
+      "decision": "postpone",
+      "madeAt": 1646999682037
+    },
+    "1064646|puppeteer>node-fetch": {
+      "decision": "postpone",
+      "madeAt": 1646999683555
+    },
+    "1064648|shelljs": {
+      "decision": "postpone",
+      "madeAt": 1646999684568
     }
   },
   "rules": {},

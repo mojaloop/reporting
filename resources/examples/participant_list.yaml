@@ -1,0 +1,66 @@
+apiVersion: mojaloop.io/v1
+kind: MojaloopReport
+metadata:
+  name: participant-list
+spec:
+  endpoint:
+    path: /participant-list
+    params:
+      - name: limit
+        default: "100"
+  queries:
+    - name: participantList
+      query: |
+        SELECT participantId, name, createdDate
+        FROM participant
+        LIMIT :limit
+
+  template: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <style>
+            table {
+                font-family: arial, sans-serif;
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            td, th {
+                border: 1px solid #efefef;
+                text-align: left;
+                padding: 8px;
+            }
+
+            tr:nth-child(even) {
+                background-color: #efefef;
+            }
+
+            td > span {
+                font-weight: bold;
+            }
+
+        </style>
+        <title>Participants Summary</title>
+    </head>
+    <body>
+
+    <h2>Participants</h2>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Created Date</th>
+        </tr>
+        <% for(let p of participantList) { %>
+            <tr>
+                <td><%= p.participantId %></td>
+                <td><%= p.name %></td>
+                <td><%= p.createdDate %></td>
+            </tr>
+        <% } %>
+    </table>
+
+    </body>
+    </html>
+

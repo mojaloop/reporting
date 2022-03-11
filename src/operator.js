@@ -69,11 +69,31 @@ class ReportingOperator {
                     return;
                 }
                 this.resourceGeneration[name] = generation;
-                try {
-                    handlerMap[path] = await createReportHandler(db, apiObj.spec);
-                } catch (e) {
-                    await this.updateResourceStatus(apiObj, 'INVALID', e.message);
-                    return;
+                for (let i = config.operator.validationRetryCount; i >= 0; i -= 1) {
+                    try {
+                        // eslint-disable-next-line no-await-in-loop
+                        handlerMap[path] = await createReportHandler(db, apiObj.spec);
+                    } catch (e) {
+                        this.logger.error(`Error occured while validating resource. '${e.message} ${e.message}'`);
+                        switch (e.code) {
+                            case 'ECONNREFUSED':
+                            case 'ER_ACCESS_DENIED_ERROR':
+                            case 'ETIMEDOUT':
+                            case 'ENOTFOUND':
+                                if (i !== 0) {
+                                    // eslint-disable-next-line max-len
+                                    this.logger.info(`Retying after ${config.operator.validationRetryIntervalMs}ms...(${i} retries left)`);
+                                    // eslint-disable-next-line max-len,no-await-in-loop
+                                    await new Promise((resolve) => { setTimeout(resolve, config.operator.validationRetryIntervalMs); });
+                                    break;
+                                }
+                            // eslint-disable-next-line no-fallthrough
+                            default:
+                                // eslint-disable-next-line no-await-in-loop
+                                await this.updateResourceStatus(apiObj, 'INVALID', e.message);
+                                return;
+                        }
+                    }
                 }
                 pathMap[path] = apiObj.spec.permission || name;
                 await this.updateResourceStatus(apiObj, 'VALID');

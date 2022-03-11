@@ -99,14 +99,11 @@ jobs:
           keys:
             - dependency-cache-{{ checksum "package-lock.json" }}
       - run:
-          name: Execute linting pass
-          command: npm run lint
-      - run:
           name: Create dir for test results
           command: mkdir -p ./test/results
       - run:
           name: Execute unit tests
-          command: npm run test > ./test/results/results.txt
+          command: npm run test:unit > ./test/results/results.txt
       - store_artifacts:
           path: ./test/results
           prefix: test
@@ -114,24 +111,96 @@ jobs:
           path: ./test/results
 
   test-integration:
-    executor: docker-debian-with-nodejs
+    machine:
+      image: circleci/classic:201808-01
+      docker_layer_caching: true
+    environment:
+      K8S_VERSION: v1.21.5
+      KUBECONFIG: /home/circleci/.kube/config
+      MINIKUBE_VERSION: v1.21.0
+      MINIKUBE_WANTUPDATENOTIFICATION: false
+      MINIKUBE_WANTREPORTERRORPROMPT: false
+      MINIKUBE_HOME: /home/circleci
+      CHANGE_MINIKUBE_NONE_USER: true
+      GOPATH: /home/circleci/go
     steps:
-      - checkout
       - run:
-          name: Install general dependencies
-          command: *defaults_Dependencies
+          name: Change the node version
+          command: |
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm install v14.17.6
+            nvm alias default v14.17.6
+      - checkout
       - restore_cache:
           keys:
             - dependency-cache-{{ checksum "package-lock.json" }}
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Install dependencies
+          command: |
+            wget http://launchpadlibrarian.net/365853513/conntrack_1.4.4+snapshot20161117-6ubuntu2_amd64.deb
+            sudo rm -f /var/lib/dpkg/lock
+            sudo dpkg -i conntrack_1.4.4+snapshot20161117-6ubuntu2_amd64.deb
+            sudo dpkg --configure -a
+            sudo apt-get install mysql-client-core-5.7
+            # sudo apt-get install -y conntrack
+      - run:
+          name: Setup kubectl
+          command: |
+            curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+            mkdir -p ${HOME}/.kube
+            touch ${HOME}/.kube/config
+      - run:
+          name: Setup minikube
+          command: |
+            curl -Lo minikube https://github.com/kubernetes/minikube/releases/download/${MINIKUBE_VERSION}/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+      - run:
+          name: Start minikube
+          command: |
+            sudo -E minikube start --vm-driver=none --cpus 2 --memory 4096 --kubernetes-version=${K8S_VERSION}
+      - run:
+          name: Load the pre-built docker image from workspace
+          command: |
+            docker load -i /tmp/docker-image.tar
+      - run:
+          name: Install Helm
+          command: |
+            curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+            chmod 700 get_helm.sh
+            ./get_helm.sh
+      - run:
+          name: Deploy Helm Chart
+          command: |
+            helm dep up ./resources/test-integration/
+            helm install test1 ./resources/test-integration/ -n default
+      - run:
+          name: Waiting for deployments
+          command: |
+            kubectl -n default rollout status deployment test1-reporting-legacy-api
+            kubectl -n default rollout status statefulset mysql
+            # kubectl -n default rollout status deployment keto
+      - run:
+          name: Get all K8S pods
+          command:
+            kubectl get pods --all-namespaces
+      - run:
+          name: Insert sample data into DB
+          command: |
+            DB_HOST=`minikube service mysql -n default --url | awk -F[/:] '{print $4}'`
+            mysql -h$DB_HOST -P30306 -uuser -ppassword default < ./resources/examples/participants_db_dump.sql
       - run:
           name: Create dir for test results
-          command: mkdir -p ./test/results
+          command: |
+            mkdir -p ./test/results
       - run:
           name: Execute integration tests
-          command: npm run test:integration > ./test/results/results_integration.txt
+          command: |
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use v14.17.6
+            npm -s run test:integration
       - store_artifacts:
           path: ./test/results
-          prefix: test
       - store_test_results:
           path: ./test/results
 
@@ -209,10 +278,10 @@ jobs:
             --build-arg=VERSION="local"
             --build-arg=VCS_URL="$CIRCLE_REPOSITORY_URL"
             --build-arg=VCS_REF="$CIRCLE_SHA1"
-            -t $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local .
+            -t ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local .
       - run:
           name: Save docker image to workspace
-          command: docker save -o /tmp/docker-image.tar $DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local
+          command: docker save -o /tmp/docker-image.tar ${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -231,7 +300,7 @@ jobs:
           <<: *defaults_license_scanner
       - run:
           name: Run the license-scanner
-          command: cd /tmp/license-scanner && mode=docker dockerImages=$DOCKER_ORG/$CIRCLE_PROJECT_REPONAME:local make run
+          command: cd /tmp/license-scanner && mode=docker dockerImages=${DOCKER_ORG:-mojaloop}/$CIRCLE_PROJECT_REPONAME:local make run
       - store_artifacts:
           path: /tmp/license-scanner/results
           prefix: licenses
@@ -251,7 +320,7 @@ jobs:
           command: docker load -i /tmp/docker-image.tar
       - anchore/analyze_local_image:
           dockerfile_path: ./Dockerfile
-          image_name: ${DOCKER_ORG}/${CIRCLE_PROJECT_REPONAME}:local
+          image_name: ${DOCKER_ORG:-mojaloop}/${CIRCLE_PROJECT_REPONAME}:local
           # Anchore bug: if policy_failure is `true`, reports don't get written - we manually check for failures below
           policy_failure: false
           timeout: '500'
@@ -360,6 +429,7 @@ workflows:
           context: org-global
           requires:
             - setup
+            - build-local
           filters:
             branches:
               ignore:

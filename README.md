@@ -45,6 +45,46 @@ docker run -v $PWD/config:/opt/reporting/config -p 3000:3000 --env-file=./.my.en
  1. Run `npm run audit:check` to show the current issues.
  2. Run `npm run audit:resolve` to attempt to automatically fix the current issues.
 
+
+#### Running Integration test locally
+- Start minikube K8S cluster with the following command
+  ```
+  minikube start --driver=docker --kubernetes-version=v1.21.5
+  ```
+- Build local docker image which can be accessed from minikube cluster
+  ```
+  sh script-minikube-docker-build.sh
+  ```
+- Install helm chart for dependencies
+  ```
+  helm dep up ./resources/test-integration/
+  helm install test1 ./resources/test-integration/
+  ```
+- Wait for all the services to be up
+- Port forward the mysql service
+  ```
+  kubectl port-forward -n default service/mysql 3306:3306
+  ```
+- Insert sample data into database
+  ```
+  mysql -h127.0.0.1 -P3306 -uuser -ppassword default < ./resources/examples/participants_db_dump.sql
+  ```
+- Run the integration tests
+  ```
+  npm install
+  npm run test:integration
+  ```
+- Adding the custom resource for manual testing
+  ```
+  kubectl apply -f resources/examples/participant_list.yaml
+  ```
+- Cleanup
+  ```
+  kubectl delete -f resources/examples/participant_list.yaml
+  helm uninstall test1
+  minikube stop
+  ```
+
 #### TODO
 - OpenAPI validation on requests and responses (optionally for reports)
 - Streaming. The DB lib supports streaming, so does koa. This will be especially important for
@@ -53,3 +93,4 @@ docker run -v $PWD/config:/opt/reporting/config -p 3000:3000 --env-file=./.my.en
 - Measure test coverage
 - Logger: enable printing of requests as cURL- perhaps by providing a custom handler thingie
 - Eslint. Side-note: make sure 'no-floating-promises' is enabled.
+

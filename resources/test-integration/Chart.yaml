@@ -1,6 +1,6 @@
 apiVersion: v2
-name: reporting-service
-description: Mojaloop Reporting Service
+name: integrationtest
+description: A Helm chart for Kubernetes
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -15,10 +15,39 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 0.1.0
+version: 0.0.1
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "v10.6.0"
+appVersion: "0.0.1"
+dependencies:
+  - name: reporting-legacy-api
+    condition: reporting-legacy-api.enabled
+    repository: "http://docs.mojaloop.io/charts/repo"
+    tags:
+      - mojaloop
+      - reporting-legacy-api
+    version: 1.1.3
+  - name: mysql
+    alias: mysql
+    condition: mysql.enabled
+    repository: "https://charts.bitnami.com/bitnami"
+    tags:
+      - mojaloop
+      - dependency
+      - backend
+      - kafka
+    version: 8.8.8
+  - name: keto
+    alias: keto
+    condition: keto.enabled
+    repository: "https://k8s.ory.sh/helm/charts"
+    tags:
+      - mojaloop
+      - dependency
+      - backend
+      - keto
+      - bof
+    version: 0.19.5

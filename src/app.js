@@ -35,6 +35,7 @@ const createApp = async ({ db, logger, config }) => {
                     path: ctx.path,
                     method: ctx.method,
                     query: ctx.query,
+                    headers: ctx.headers,
                 },
             }),
         };

@@ -84,7 +84,7 @@ docker run -v $PWD/config:/opt/reporting/config -p 3000:3000 --env-file=./.my.en
   helm uninstall test1
   minikube stop
   ```
-
+ 
 #### TODO
 - OpenAPI validation on requests and responses (optionally for reports)
 - Streaming. The DB lib supports streaming, so does koa. This will be especially important for

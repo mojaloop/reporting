@@ -49,8 +49,8 @@
     "supertest": "^7.1.0"
   },
   "dependencies": {
-    "@fast-csv/format": "^4.3.5",
-    "@fast-csv/parse": "^4.3.6",
+    "@fast-csv/format": "^5.0.2",
+    "@fast-csv/parse": "^5.0.2",
     "@internal/randomphrase": "file:src/lib/randomphrase",
     "@koa/cors": "^5.0.0",
     "@kubernetes/client-node": "^0.16.1",

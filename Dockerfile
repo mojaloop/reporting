@@ -19,7 +19,6 @@ RUN apk add --no-cache -t build-dependencies make gcc g++ python3 libtool openss
     && cd $(npm root -g)/npm
 
 COPY package.json package-lock.json* /opt/app/
-COPY patches /opt/app/patches
 RUN npm ci
 
 COPY src /opt/app/src

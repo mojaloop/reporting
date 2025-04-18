@@ -11,7 +11,7 @@ Since the reporting service follows K8S operator pattern, we need to deploy a mi
   - kubectl
   - helm
   - mysql-client
-
+ 
 ## Install K8S
 - Start minikube K8S cluster with the following command
   ```

@@ -6,7 +6,6 @@ const keto = require('@ory/keto-client');
 const defaultConfig = require('./data/defaultConfig.json');
 const { parseCsvAsync } = require('../../src/lib/csvparser');
 
-
 const { createApp } = require('../../src/app');
 
 const createDbMock = (result) => ({

@@ -13,7 +13,7 @@ const parseCsvAsync = (input) => {
             return resolve(records);
         });
     });
-}
+};
 
 module.exports = {
     parseCsvAsync,

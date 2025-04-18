@@ -8,25 +8,10 @@
  *       Yevhen Kyriukha <yevhen.kyriukha@modusbox.com>                   *
  ************************************************************************* */
 
-const parse = require('csv-parse');
 const xlsx = require('xlsx');
 const htmlParser = require('node-html-parser');
 const tableToCsv = require('node-table-to-csv');
-
-function parseCsvAsync(input) {
-    const csvOptions = {
-        columns: true,
-        delimiter: ',',
-        ltrim: true,
-        rtrim: true,
-    };
-    return new Promise((resolve, reject) => {
-        parse(input, csvOptions, (err, records) => {
-            if (err) return reject(err);
-            return resolve(records);
-        });
-    });
-}
+const { parseCsvAsync } = require('./lib/csvparser');
 
 module.exports.formatResponse = async (ctx, htmlInput) => {
     const format = ctx.request.query.format || 'html';

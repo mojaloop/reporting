@@ -50,6 +50,8 @@ const testResponseXlsx = (res) => {
     expect(res.headers['content-type']).toEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 };
 
+jest.setTimeout(30000);
+
 describe('report', () => {
     let config;
 

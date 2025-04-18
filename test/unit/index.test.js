@@ -30,6 +30,7 @@ const createMockServer = async (opts) => {
 
 const testResponse = (res, { contentType = 'application/json; charset=utf-8' } = {}) => {
     expect(Object.keys(res.headers).sort()).toStrictEqual([
+        'access-control-allow-origin',
         'content-type',
         'content-length',
         'date',

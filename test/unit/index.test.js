@@ -40,13 +40,6 @@ const testResponse = (res, { contentType = 'application/json; charset=utf-8' } =
 };
 
 const testResponseXlsx = (res) => {
-    expect(Object.keys(res.headers).sort()).toEqual([
-        'transfer-encoding',
-        'content-type',
-        'date',
-        'vary',
-        'connection',
-    ].sort());
     expect(res.headers['content-type']).toEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 };
 

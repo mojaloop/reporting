@@ -15,7 +15,8 @@
     "test:coverage-check": "jest -w 1 --coverage --testMatch '**/test/unit/**/*.(test|spec).js'",
     "test:integration": "jest --testMatch '**/test/integration/**/*.(test|spec).js' --runInBand",
     "test:junit": "jest --reporters=default --reporters=jest-junit",
-    "test:unit": "jest -w 1 --testMatch '**/test/unit/**/*.(test|spec).js'",
+    "test:unit": "jest --runInBand --ci --reporters=default --reporters=jest-junit --env=node test/unit/",
+    "test:xunit": "JEST_JUNIT_OUTPUT_DIR=./test/reports/ JEST_JUNIT_OUTPUT_NAME=xunit-api-svc.xml npm run test:unit -- --reporters=jest-junit",
     "postinstall": "patch-package"
   },
   "repository": {
@@ -37,6 +38,7 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.25.3",
     "jest": "^27.4.5",
+    "jest-junit": "^16.0.0",
     "nodemon": "^2.0.15",
     "npm-audit-resolver": "^3.0.0-4",
     "npm-force-resolutions": "0.0.10",

@@ -6,3 +6,5 @@ node_modules/
 .vscode/
 
 coverage/
+test/reports/
+junit.xml

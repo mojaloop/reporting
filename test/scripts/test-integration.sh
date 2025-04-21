@@ -35,7 +35,7 @@ helm dep up ./resources/test-integration/
 helm install test1 ./resources/test-integration/
 
 ## Wait for some time
-sleep 10
+sleep 30
 
 ## Populate the database
 nohup kubectl port-forward -n default service/mysql 3306:3306 > portforward.log 2>&1 &

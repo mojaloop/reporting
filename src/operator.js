@@ -71,7 +71,6 @@ class ReportingOperator {
                 this.resourceGeneration[name] = generation;
                 for (let i = config.operator.validationRetryCount; i >= 0; i -= 1) {
                     try {
-                        // eslint-disable-next-line no-await-in-loop
                         handlerMap[path] = await createReportHandler(db, apiObj.spec);
                     } catch (e) {
                         this.logger.error(`Error occured while validating resource. '${e.message} ${e.message}'`);
@@ -81,15 +80,12 @@ class ReportingOperator {
                             case 'ETIMEDOUT':
                             case 'ENOTFOUND':
                                 if (i !== 0) {
-                                    // eslint-disable-next-line max-len
                                     this.logger.info(`Retying after ${config.operator.validationRetryIntervalMs}ms...(${i} retries left)`);
-                                    // eslint-disable-next-line max-len,no-await-in-loop
                                     await new Promise((resolve) => { setTimeout(resolve, config.operator.validationRetryIntervalMs); });
                                     break;
                                 }
                             // eslint-disable-next-line no-fallthrough
                             default:
-                                // eslint-disable-next-line no-await-in-loop
                                 await this.updateResourceStatus(apiObj, 'INVALID', e.message);
                                 return;
                         }

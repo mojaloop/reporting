@@ -15,6 +15,7 @@
     "test:integration": "./test/scripts/test-integration.sh",
     "test:junit": "jest --reporters=default --reporters=jest-junit",
     "test:unit": "jest --runInBand --ci --reporters=default --reporters=jest-junit --env=node test/unit/",
+    "test:functional": "exit 0",
     "test:xunit": "JEST_JUNIT_OUTPUT_DIR=./test/reports/ JEST_JUNIT_OUTPUT_NAME=xunit-api-svc.xml npm run test:unit -- --reporters=jest-junit",
     "audit:fix": "npm audit fix",
     "audit:check": "npx audit-ci --config ./audit-ci.jsonc",

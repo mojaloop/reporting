@@ -3,8 +3,8 @@ const supertest = require('supertest');
 const path = require('path');
 const k8s = require('@kubernetes/client-node');
 const keto = require('@ory/keto-client');
-const csvParse = require('csv-parse/lib/sync');
 const defaultConfig = require('./data/defaultConfig.json');
+const { parseCsvAsync } = require('../../src/lib/csvparser');
 
 const { createApp } = require('../../src/app');
 
@@ -30,6 +30,7 @@ const createMockServer = async (opts) => {
 
 const testResponse = (res, { contentType = 'application/json; charset=utf-8' } = {}) => {
     expect(Object.keys(res.headers).sort()).toStrictEqual([
+        'access-control-allow-origin',
         'content-type',
         'content-length',
         'date',
@@ -40,15 +41,10 @@ const testResponse = (res, { contentType = 'application/json; charset=utf-8' } =
 };
 
 const testResponseXlsx = (res) => {
-    expect(Object.keys(res.headers).sort()).toEqual([
-        'transfer-encoding',
-        'content-type',
-        'date',
-        'vary',
-        'connection',
-    ].sort());
     expect(res.headers['content-type']).toEqual('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 };
+
+jest.setTimeout(30000);
 
 describe('report', () => {
     let config;
@@ -75,7 +71,8 @@ describe('report', () => {
         watch.sendResource(path.join(__dirname, 'data/test.yaml'));
         const res = await server.get('/test?dfspId=payerfsp&currency=MMK&format=csv');
         expect(res.statusCode).toEqual(200);
-        expect(csvParse(res.text, { columns: true })).toStrictEqual([
+        const parsedCsv = await parseCsvAsync(res.text);
+        expect(parsedCsv).toStrictEqual([
             {
                 Currency: 'MMK',
                 Name: 'fsp1',

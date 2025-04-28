@@ -39,7 +39,7 @@ dependencies:
       - dependency
       - backend
       - kafka
-    version: 8.8.8
+    version: 9.19.1
   - name: keto
     alias: keto
     condition: keto.enabled

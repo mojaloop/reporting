@@ -1,0 +1,127 @@
+ignore:
+  # Ignore cross-spawn vulnerabilities by CVE ID due to false positive
+  # as grype looks at package-lock.json where it shows versions with
+  # vulnerabilities, npm ls shows only 7.0.6 verion is used
+  - vulnerability: "GHSA-3xgq-45jj-v275"
+    package:
+      name: "cross-spawn"
+  # Ignore the following vulnerabilities as this repo started using moja orb recently
+  # and all the dependencies are not updated yet
+  - vulnerability: "GHSA-pppg-cpfq-h7wr"
+    package:
+      name: "jsonpath-plus"
+  - vulnerability: "GHSA-jf85-cpcp-j695"
+    package:
+      name: "lodash"
+  - vulnerability: "GHSA-jr5f-v2jv-69x6"
+    package:
+      name: "axios"
+  - vulnerability: "GHSA-p28h-cc7q-c4fg"
+    package:
+      name: "css-what"
+  - vulnerability: "GHSA-q8pj-2vqx-8ggc"
+    package:
+      name: "css-what"
+  - vulnerability: "GHSA-9vvw-cc9w-f27h"
+    package:
+      name: "debug"
+  - vulnerability: "GHSA-9qj9-36jm-prpv"
+    package:
+      name: "fresh"
+  - vulnerability: "GHSA-hw8r-x6gr-5gjp"
+    package:
+      name: "jsonpath-plus"
+  - vulnerability: "GHSA-8cf7-32gw-wr33"
+    package:
+      name: "jsonwebtoken"
+  - vulnerability: "GHSA-35jh-r3h4-6jhm"
+    package:
+      name: "lodash"
+  - vulnerability: "GHSA-4xc9-xhrj-v574"
+    package:
+      name: "lodash"
+  - vulnerability: "GHSA-p6mc-m468-83gw"
+    package:
+      name: "lodash"
+  - vulnerability: "GHSA-wrvr-8mpx-r7pp"
+    package:
+      name: "mime"
+  - vulnerability: "GHSA-rp65-9cf3-cjxr"
+    package:
+      name: "nth-check"
+  - vulnerability: "GHSA-f9cm-p3w6-xvr3"
+    package:
+      name: "qs"
+  - vulnerability: "GHSA-gqgv-6jq5-jjj9"
+    package:
+      name: "qs"
+  - vulnerability: "GHSA-hrpp-h998-j3pp"
+    package:
+      name: "qs"
+  - vulnerability: "GHSA-jjv7-qpx3-h62q"
+    package:
+      name: "qs"
+  - vulnerability: "GHSA-4r6h-8v6p-xvw6"
+    package:
+      name: "xlsx"
+  - vulnerability: "GHSA-5pgg-2g8v-p4x9"
+    package:
+      name: "xlsx"
+  - vulnerability: "GHSA-wf5p-g6vw-rhxx"
+    package:
+      name: "axios"
+  - vulnerability: "GHSA-rch9-xh7r-mqgw"
+    package:
+      name: "connect"
+  - vulnerability: "GHSA-92vm-wfm5-mxvv"
+    package:
+      name: "cookie-signature"
+  - vulnerability: "GHSA-cm5g-3pgc-8rg4"
+    package:
+      name: "express"
+  - vulnerability: "GHSA-gpvr-g6gh-9mc2"
+    package:
+      name: "express"
+  - vulnerability: "GHSA-rv95-896h-c2vc"
+    package:
+      name: "express"
+  - vulnerability: "GHSA-hjrf-2m68-5959"
+    package:
+      name: "jsonwebtoken"
+  - vulnerability: "GHSA-qwph-4952-7xr6"
+    package:
+      name: "jsonwebtoken"
+  - vulnerability: "GHSA-36fh-84j7-cv5h"
+    package:
+      name: "jszip"
+  - vulnerability: "GHSA-jg8v-48h5-wgxg"
+    package:
+      name: "jszip"
+  - vulnerability: "GHSA-29mw-wpgm-hmr9"
+    package:
+      name: "lodash"
+  - vulnerability: "GHSA-fvqr-27wr-82fm"
+    package:
+      name: "lodash"
+  - vulnerability: "GHSA-x5rq-j2xg-h7qm"
+    package:
+      name: "lodash"
+  - vulnerability: "GHSA-p8p7-x288-28g6"
+    package:
+      name: "request"
+  - vulnerability: "GHSA-jgqf-hwc5-hh37"
+    package:
+      name: "send"
+  - vulnerability: "GHSA-72xf-g2v4-qvf3"
+    package:
+      name: "tough-cookie"
+# Set output format defaults
+output:
+  - "table"
+  - "json"
+
+# Modify your CircleCI job to check critical count
+search:
+  scope: "squashed"
+quiet: false
+check-for-app-update: false

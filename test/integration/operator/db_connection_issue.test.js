@@ -9,6 +9,7 @@
  ************************************************************************* */
 
 const k8s = require('@kubernetes/client-node');
+const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
 const Config = require('./config');
 const sampleResource1 = require('./data/sample-resource1.json');
 
@@ -17,6 +18,7 @@ jest.setTimeout(150000);
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
+const logger = new Logger({ stringify: () => '' });
 
 // If we want to do something in K8S, we can use the following APIs
 const k8sApi = kc.makeApiClient(k8s.AppsV1Api);
@@ -34,7 +36,7 @@ describe('K8S operator', () => {
                 sampleResource1.metadata.name,
             );
         } catch (err) {
-            console.log(err.message);
+            logger.info(err.message);
         }
     });
     it('Wait for some time', async () => {

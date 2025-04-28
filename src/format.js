@@ -8,26 +8,10 @@
  *       Yevhen Kyriukha <yevhen.kyriukha@modusbox.com>                   *
  ************************************************************************* */
 
-const conversionFactory = require('html-to-xlsx');
-const puppeteer = require('puppeteer');
+const xlsx = require('xlsx');
 const htmlParser = require('node-html-parser');
-const chromeEval = require('chrome-page-eval')({
-    puppeteer,
-    launchOptions: {
-        headless: true,
-        args: [
-            // Required for Docker version of Puppeteer
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            // This will write shared memory files into /tmp instead of /dev/shm,
-            // because Docker default for /dev/shm is 64MB
-            '--disable-dev-shm-usage',
-        ],
-    },
-});
 const tableToCsv = require('node-table-to-csv');
-
-const fs = require('fs').promises;
+const { parseCsvAsync } = require('./lib/csvparser');
 
 module.exports.formatResponse = async (ctx, htmlInput) => {
     const format = ctx.request.query.format || 'html';
@@ -37,33 +21,20 @@ module.exports.formatResponse = async (ctx, htmlInput) => {
 
             const reportName = ctx.request.path.substr(ctx.request.path.lastIndexOf('/'), ctx.request.path.length)
                 .replace('/', '').replace('.xlsx', '');
-            const conversion = conversionFactory({
-                extract: async ({ html, ...restOptions }) => {
-                    const tmpHtmlPath = `/tmp/${reportName}_${Date.now()}.html`;
 
-                    await fs.writeFile(tmpHtmlPath, html);
+            // get records
+            const csvInput = tableToCsv(htmlInput);
+            const records = await parseCsvAsync(csvInput);
 
-                    const result = await chromeEval({
-                        ...restOptions,
-                        html: tmpHtmlPath,
-                        scriptFn: conversionFactory.getScriptFn(),
-                    });
+            // prepare the xlsx workbook
+            const wb = xlsx.utils.book_new();
 
-                    const tables = Array.isArray(result) ? result : [result];
+            // insert the records as a sheet
+            const ws = xlsx.utils.json_to_sheet(records);
+            xlsx.utils.book_append_sheet(wb, ws, reportName);
 
-                    return tables.map((table) => ({
-                        name: table.name,
-                        getRows: async (rowCb) => {
-                            table.rows.forEach((row) => {
-                                rowCb(row);
-                            });
-                        },
-                        rowsCount: table.rows.length,
-                    }));
-                },
-            });
+            ctx.body = wb;
 
-            ctx.body = await conversion(htmlInput);
             ctx.set('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             break;
         }

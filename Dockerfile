@@ -1,26 +1,37 @@
-FROM node:lts-buster-slim as builder
+# Arguments
+ARG NODE_VERSION=lts-alpine
 
-RUN apt-get update \
- && apt-get install -y git
+# NOTE: Ensure you set NODE_VERSION Build Argument as follows...
+#
+#  export NODE_VERSION="$(cat .nvmrc)-alpine" \
+#  docker build \
+#    --build-arg NODE_VERSION=$NODE_VERSION \
+#    -t mojaloop/sdk-scheme-adapter:local \
+#    . \
+#
 
-WORKDIR /opt/reporting
+# Build Image
+FROM node:${NODE_VERSION} AS builder
 
-COPY package.json package-lock.json* /opt/reporting/
-COPY patches /opt/reporting/patches
+WORKDIR /opt/app
 
-RUN npm ci --production --unsafe-perm
+RUN apk add --no-cache -t build-dependencies make gcc g++ python3 libtool openssl-dev autoconf automake chromium \
+    && cd $(npm root -g)/npm
 
-COPY src /opt/reporting/src
+COPY package.json package-lock.json* /opt/app/
+RUN npm ci
 
+COPY src /opt/app/src
 
-FROM node:lts-buster-slim
+FROM node:${NODE_VERSION}
+WORKDIR /opt/app
 
-WORKDIR /opt/reporting
+# Create a non-root user: ml-user
+RUN adduser -D ml-user 
+USER ml-user
 
-RUN apt-get update \
- && apt-get install -y libdrm2 libgtk-3-0 libgbm1 libasound2 libxshmfence1 libnss3 libx11-xcb1
-
-COPY --from=builder /opt/reporting .
+COPY --chown=ml-user --from=builder /opt/app .
+RUN npm prune --production
 
 EXPOSE 3000
 CMD ["npm", "start"]

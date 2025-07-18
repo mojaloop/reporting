@@ -11,7 +11,7 @@
 require('dotenv/config');
 const env = require('env-var');
 
-module.exports = {
+const config = {
     oryKetoReadUrl: env.get('ORY_KETO_READ_URL').asUrlString(),
     userIdHeader: env.get('USER_ID_HEADER').default('x-user').asString(),
     port: env.get('PORT').default('3000').asPortNumber(),
@@ -24,6 +24,7 @@ module.exports = {
         database: env.get('DB_DATABASE').default('central_ledger').asString(),
         connectionLimit: env.get('DB_POOL_CONNECTION_LIMIT').default('10').asInt(),
         queueLimit: env.get('DB_POOL_QUEUE_LIMIT').default('0').asInt(),
+        additionalConnectionOptions: env.get('DB_ADDITIONAL_CONNECTION_OPTIONS').default('{}').asJsonObject(),
     },
     operator: {
         resourceGroup: env.get('WATCH_RESOURCE_GROUP').default('mojaloop.io').asString(),
@@ -34,3 +35,17 @@ module.exports = {
         validationRetryIntervalMs: env.get('VALIDATION_RETRY_INTERVAL_MS').default('10000').asInt(),
     },
 };
+
+// SSL logic for MySQL connection
+if (env.get('DB_SSL_ENABLED').default('false').asBool) {
+    config.database.additionalConnectionOptions = config.database.additionalConnectionOptions || {};
+    config.database.additionalConnectionOptions.ssl = {
+        rejectUnauthorized: env.get('DB_SSL_VERIFY').default('false').asBool(),
+    };
+    const sslCa = env.get('DB_SSL_CA').default('').asString();
+    if (sslCa) {
+        config.database.additionalConnectionOptions.ssl.ca = sslCa;
+    }
+}
+
+module.exports = config;

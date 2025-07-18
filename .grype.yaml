@@ -5,6 +5,14 @@ ignore:
   - vulnerability: "GHSA-3xgq-45jj-v275"
     package:
       name: "cross-spawn"
+  - vulnerability: "CVE-2025-23166"
+    package:
+      name: "node"
+      version: "18.20.6"
+  - vulnerability: "CVE-2025-23167"
+    package:
+      name: "node"
+      version: "18.20.6"
   # Ignore the following vulnerabilities as this repo started using moja orb recently
   # and all the dependencies are not updated yet
   - vulnerability: "GHSA-pppg-cpfq-h7wr"

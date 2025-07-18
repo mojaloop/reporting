@@ -10,6 +10,7 @@ const dbConfig = {
         password: config.database.password,
         database: config.database.database,
         port: config.database.port,
+        additionalConnectionOptions: config.database.additionalConnectionOptions || {}
     },
     pool: {
         connectionLimit: config.database.connectionLimit,

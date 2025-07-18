@@ -13,6 +13,7 @@ class Database {
             queueLimit = 0,
             connectionLimit = 10,
         } = {},
+        additionalConnectionOptions = {},
     }) {
         const connPool = mysql.createPool(
             {
@@ -25,6 +26,7 @@ class Database {
                 namedPlaceholders: true,
                 waitForConnections: true,
                 queueLimit,
+                ...additionalConnectionOptions,
             },
         );
         this.conn = connPool.promise();

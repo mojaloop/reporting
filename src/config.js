@@ -37,12 +37,12 @@ const config = {
 };
 
 // SSL logic for MySQL connection
-if (env.get('DB_SSL_ENABLED').default(false).asBool) {
+if (env.get('DB_SSL_ENABLED').default('false').asBool) {
     config.database.additionalConnectionOptions = config.database.additionalConnectionOptions || {};
     config.database.additionalConnectionOptions.ssl = {
-        rejectUnauthorized: env.get('DB_SSL_VERIFY').default(false).asBool(),
+        rejectUnauthorized: env.get('DB_SSL_VERIFY').default('false').asBool(),
     };
-    const sslCa = env.get('DB_SSL_CA').asString();
+    const sslCa = env.get('DB_SSL_CA').default('').asString();
     if (sslCa) {
         config.database.additionalConnectionOptions.ssl.ca = sslCa;
     }

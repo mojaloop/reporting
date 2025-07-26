@@ -54,7 +54,7 @@
     "@fast-csv/parse": "^5.0.2",
     "@internal/randomphrase": "file:src/lib/randomphrase",
     "@koa/cors": "^5.0.0",
-    "@kubernetes/client-node": "^0.16.1",
+    "@kubernetes/client-node": "^1.0.0",
     "@mojaloop/sdk-standard-components": "^15.10.5",
     "@ory/keto-client": "^0.6.0-alpha.6",
     "cheerio-select": "^2.1.0",

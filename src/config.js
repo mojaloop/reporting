@@ -16,6 +16,7 @@ const config = {
     userIdHeader: env.get('USER_ID_HEADER').default('x-user').asString(),
     port: env.get('PORT').default('3000').asPortNumber(),
     templatesDir: env.get('TEMPLATES_DIR').asString(),
+    pathPrefix: env.get('PATH_PREFIX').default('/api/reports').asString(),
     database: {
         host: env.get('DB_HOST').default('localhost').asString(),
         port: env.get('DB_PORT').default('3306').asPortNumber(),

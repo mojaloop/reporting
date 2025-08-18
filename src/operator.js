@@ -59,7 +59,7 @@ class ReportingOperator {
 
     async onEvent(phase, apiObj) {
         const name = apiObj?.metadata?.name;
-        const path = apiObj.spec.endpoint.path.toLowerCase();
+        const path = `${config.pathPrefix}${apiObj.spec.endpoint.path.toLowerCase()}`;
         const { handlerMap, pathMap, db } = this.reportData;
         if (name) {
             this.logger.info(`Received event in phase ${phase} for the resource ${name}`);

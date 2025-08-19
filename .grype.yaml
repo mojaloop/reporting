@@ -123,6 +123,12 @@ ignore:
   - vulnerability: "GHSA-72xf-g2v4-qvf3"
     package:
       name: "tough-cookie"
+  - vulnerability: "GHSA-5pgg-2g8v-p4x9"
+    package:
+      name: "form-data"
+  - vulnerability: "GHSA-fjxv-7rqg-78g4"
+    package:
+      name: "form-data"
 # Set output format defaults
 output:
   - "table"

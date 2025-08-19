@@ -5,7 +5,6 @@ const k8s = require('@kubernetes/client-node');
 const keto = require('@ory/keto-client');
 const defaultConfig = require('./data/defaultConfig.json');
 const { parseCsvAsync } = require('../../src/lib/csvparser');
-
 const { createApp } = require('../../src/app');
 
 const createDbMock = (result) => ({
@@ -69,7 +68,7 @@ describe('report', () => {
         const server = await createMockServer({ config });
         const watch = k8s.Watch.getInstance();
         watch.sendResource(path.join(__dirname, 'data/test.yaml'));
-        const res = await server.get('/test?dfspId=payerfsp&currency=MMK&format=csv');
+        const res = await server.get(`/api/reports/test?dfspId=payerfsp&currency=MMK&format=csv`);
         expect(res.statusCode).toEqual(200);
         const parsedCsv = await parseCsvAsync(res.text);
         expect(parsedCsv).toStrictEqual([
@@ -89,7 +88,7 @@ describe('report', () => {
         const server = await createMockServer({ config });
         const watch = k8s.Watch.getInstance();
         watch.sendResource(path.join(__dirname, 'data/test.yaml'));
-        const res = await server.get('/test?dfspId=payerfsp&currency=MMK&format=xlsx');
+        const res = await server.get(`/api/reports/test?dfspId=payerfsp&currency=MMK&format=xlsx`);
         expect(res.statusCode).toEqual(200);
         testResponseXlsx(res, { contentType: 'application/xlsx' });
     });
@@ -125,14 +124,14 @@ describe('report', () => {
         };
         const watch = k8s.Watch.getInstance();
         watch.sendResource(path.join(__dirname, 'data/test.yaml'));
-        let res = await server.get(`/test?dfspId=${fspId}&currency=MMK&format=xlsx`).set('x-user', userId);
+        let res = await server.get(`/api/reports/test?dfspId=${fspId}&currency=MMK&format=xlsx`).set('x-user', userId);
         expect(res.statusCode).toEqual(200);
         testResponseXlsx(res, { contentType: 'application/xlsx' });
 
-        res = await server.get(`/test?dfspId=${fspId}&currency=MMK&format=xlsx`).set('x-user', 'other-user');
+        res = await server.get(`/api/reports/test?dfspId=${fspId}&currency=MMK&format=xlsx`).set('x-user', 'other-user');
         expect(res.statusCode).toEqual(403);
 
-        res = await server.get('/test?dfspId=otherFsp&currency=MMK&format=xlsx').set('x-user', userId);
+        res = await server.get(`/api/reports/test?dfspId=otherFsp&currency=MMK&format=xlsx`).set('x-user', userId);
         expect(res.statusCode).toEqual(403);
     });
 });

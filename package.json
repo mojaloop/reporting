@@ -19,6 +19,7 @@
     "test:xunit": "JEST_JUNIT_OUTPUT_DIR=./test/reports/ JEST_JUNIT_OUTPUT_NAME=xunit-api-svc.xml npm run test:unit -- --reporters=jest-junit",
     "audit:fix": "npm audit fix",
     "audit:check": "npx audit-ci --config ./audit-ci.jsonc",
+    "release": "npx standard-version --no-verify --releaseCommitMessageFormat 'chore(release): {{currentTag}} [skip ci]'",
     "dep:check": "npx ncu -e 2",
     "dep:update": "npx ncu -u"
   },
@@ -47,6 +48,7 @@
     "npm-force-resolutions": "0.0.10",
     "parse-strings-in-object": "^1.6.0",
     "rc": "^1.2.8",
+    "standard-version": "^9.5.0",
     "supertest": "^7.1.4"
   },
   "dependencies": {

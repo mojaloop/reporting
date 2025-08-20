@@ -10,8 +10,28 @@
 
 const xlsx = require('xlsx');
 const htmlParser = require('node-html-parser');
-const tableToCsv = require('node-table-to-csv');
+const { stringify } = require('csv-stringify/sync');
 const { parseCsvAsync } = require('./lib/csvparser');
+
+// Convert HTML table to CSV using csv-stringify
+const tableToCsv = (html) => {
+    const root = htmlParser.parse(html);
+    const table = root.querySelector('table');
+    if (!table) return '';
+    
+    const rows = table.querySelectorAll('tr');
+    const data = [];
+    
+    for (const row of rows) {
+        const cells = row.querySelectorAll('th, td');
+        const rowData = cells.map(cell => cell.text.trim());
+        if (rowData.length > 0) {
+            data.push(rowData);
+        }
+    }
+    
+    return stringify(data);
+};
 
 module.exports.formatResponse = async (ctx, htmlInput) => {
     const format = ctx.request.query.format || 'html';

@@ -8,12 +8,12 @@ class Database {
             user = 'central_ledger',
             password = '',
             database = 'central_ledger',
+            additionalConnectionOptions = {},
         } = {},
         pool: {
             queueLimit = 0,
             connectionLimit = 10,
-        } = {},
-        additionalConnectionOptions = {},
+        } = {}
     }) {
         const connPool = mysql.createPool(
             {

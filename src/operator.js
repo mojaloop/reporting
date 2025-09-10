@@ -73,7 +73,7 @@ class ReportingOperator {
                     try {
                         handlerMap[path] = await createReportHandler(db, apiObj.spec);
                     } catch (e) {
-                        this.logger.error(`Error occured while validating resource. '${e.message} ${e.message}'`);
+                        this.logger.error(`Error occurred while validating resource. '${e.message} ${e.message}'`);
                         switch (e.code) {
                             case 'ECONNREFUSED':
                             case 'ER_ACCESS_DENIED_ERROR':
@@ -92,7 +92,7 @@ class ReportingOperator {
                     }
                 }
                 pathMap[path] = apiObj.spec.permission || name;
-                await this.updateResourceStatus(apiObj, 'VALID');
+                await this.updateResourceStatus(apiObj, 'VALIDATED');
             } else if (phase === 'DELETED') {
                 delete handlerMap[path];
                 delete pathMap[path];

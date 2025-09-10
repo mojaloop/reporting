@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [12.3.4](https://github.com/mojaloop/reporting/compare/v12.3.3...v12.3.4) (2025-09-10)
+
+
+### Bug Fixes
+
+* correct validation state message and update test expectations to 'VALIDATED' ([#49](https://github.com/mojaloop/reporting/issues/49)) ([44ac5f8](https://github.com/mojaloop/reporting/commit/44ac5f80c303eeefb3cb788bffe83be154b86221))
+
 ### [12.3.3](https://github.com/mojaloop/reporting/compare/v12.3.2...v12.3.3) (2025-09-10)
 
 

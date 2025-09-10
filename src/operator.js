@@ -44,14 +44,14 @@ class ReportingOperator {
         };
 
         try {
-            await this.k8sApiCustomObjects.replaceNamespacedCustomObjectStatus(
-                config.operator.resourceGroup,
-                config.operator.resourceVersion,
-                config.operator.namespace,
-                config.operator.resourcePlural,
-                apiObj.metadata.name,
-                status,
-            );
+            await this.k8sApiCustomObjects.replaceNamespacedCustomObjectStatus({
+                group: config.operator.resourceGroup,
+                version: config.operator.resourceVersion,
+                namespace: config.operator.namespace,
+                plural: config.operator.resourcePlural,
+                name: apiObj.metadata.name,
+                body: status,
+            });
         } catch (err) {
             this.logger.error(`Error updating status of the custom resource ${apiObj.metadata.name}: ${err.message}`);
         }

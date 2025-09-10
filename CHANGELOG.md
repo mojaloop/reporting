@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [12.3.3](https://github.com/mojaloop/reporting/compare/v12.3.2...v12.3.3) (2025-09-10)
+
+
+### Bug Fixes
+
+* fix argument call ([#48](https://github.com/mojaloop/reporting/issues/48)) ([b74ad28](https://github.com/mojaloop/reporting/commit/b74ad286b25a5362ed8e3b9591d5c4b65012cc5e))
+
 ### [12.3.2](https://github.com/mojaloop/reporting/compare/v12.3.1...v12.3.2) (2025-09-09)
 
 ### [12.3.1](https://github.com/mojaloop/reporting/compare/v12.3.0...v12.3.1) (2025-08-20)

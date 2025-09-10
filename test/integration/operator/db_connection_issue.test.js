@@ -93,7 +93,7 @@ describe('K8S operator', () => {
         expect(status.response.body.metadata.name).toEqual(sampleResource1.metadata.name);
         expect(status.response.body).not.toHaveProperty('status');
         // expect(status.response.body.status).toHaveProperty('state');
-        // expect(status.response.body.status.state).toEqual('VALID');
+        // expect(status.response.body.status.state).toEqual('VALIDATED');
     });
     it('Scale up the replicas of mysql K8S service to re-enable it', async () => {
         const patch = [
@@ -133,7 +133,7 @@ describe('K8S operator', () => {
         expect(status.response.body.metadata.name).toEqual(sampleResource1.metadata.name);
         expect(status.response.body).toHaveProperty('status');
         expect(status.response.body.status).toHaveProperty('state');
-        expect(status.response.body.status.state).toEqual('VALID');
+        expect(status.response.body.status.state).toEqual('VALIDATED');
     });
     it('Remove the K8S custom resource', async () => {
         const status = await k8sApiCustomObjects.deleteNamespacedCustomObject(

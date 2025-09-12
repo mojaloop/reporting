@@ -26,11 +26,6 @@ const config = {
         connectionLimit: env.get('DB_POOL_CONNECTION_LIMIT').default('10').asInt(),
         queueLimit: env.get('DB_POOL_QUEUE_LIMIT').default('0').asInt(),
         additionalConnectionOptions: env.get('DB_ADDITIONAL_CONNECTION_OPTIONS').default('{}').asJsonObject(),
-        dbRetries: env.get('DB_RETRIES').default('10').asInt(),
-        dbConnectionRetryWaitMilliseconds: env.get('DB_CONNECTION_RETRY_WAIT_MILLISECONDS')
-            .default('1000')
-            .asInt(),
-        dbPoolSizeMax: env.get('DB_POOL_SIZE_MAX').asInt()
     },
     operator: {
         resourceGroup: env.get('WATCH_RESOURCE_GROUP').default('mojaloop.io').asString(),

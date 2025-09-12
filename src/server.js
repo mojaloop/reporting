@@ -13,11 +13,8 @@ const dbConfig = {
         additionalConnectionOptions: config.database.additionalConnectionOptions || {},
     },
     pool: {
-        max: config.database.dbPoolSizeMax,
-    },
-    retry: {
-        dbRetries: config.database.dbRetries,
-        dbConnectionRetryWaitMilliseconds: config.database.dbConnectionRetryWaitMilliseconds,
+        connectionLimit: config.database.connectionLimit,
+        queueLimit: config.database.queueLimit,
     }
 };
 

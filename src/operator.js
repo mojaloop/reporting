@@ -14,6 +14,7 @@ const config = require('./config');
 const { createReportHandler } = require('./handlers');
 const { id } = require('@mojaloop/central-services-shared').Util
 const ulid = id({ type: 'ulid' })
+const process = require('process');
 class ReportingOperator {
     constructor(reportData) {
         this.reportData = reportData;
@@ -75,13 +76,11 @@ class ReportingOperator {
         const annotations = apiObj.metadata.annotations || {};
         const lockHolder = annotations['reporting-operator/lock'];
         let lockTimestamp = annotations['reporting-operator/lock-timestamp'];
-        let lockExpired = false;
 
         if (lockHolder && lockTimestamp) {
             const lockTime = new Date(lockTimestamp).getTime();
             const now = Date.now();
             if (now - lockTime > lockGracePeriodMs) {
-                lockExpired = true;
                 this.logger.info(`Lock for resource ${name} expired, attempting to acquire.`);
             }
         }
@@ -96,28 +95,37 @@ class ReportingOperator {
             if (!lockHolder) {
                 try {
                     // Patch the resource to set the lock annotation
-                    await this.k8sApiCustomObjects.patchNamespacedCustomObject(
-                        config.operator.resourceGroup,
-                        config.operator.resourceVersion,
-                        config.operator.namespace,
-                        config.operator.resourcePlural,
-                        name,
-                        {
-                            metadata: {
-                                annotations: {
-                                    'reporting-operator/lock': myId,
-                                    'reporting-operator/lock-timestamp': new Date().toISOString(),
+                    try {
+                        await this.k8sApiCustomObjects.patchNamespacedCustomObject(
+                            config.operator.resourceGroup,
+                            config.operator.resourceVersion,
+                            config.operator.namespace,
+                            config.operator.resourcePlural,
+                            name,
+                            {
+                                metadata: {
+                                    annotations: {
+                                        'reporting-operator/lock': myId,
+                                        'reporting-operator/lock-timestamp': new Date().toISOString(),
+                                    },
                                 },
                             },
-                        },
-                        undefined,
-                        undefined,
-                        undefined,
-                        { headers: { 'Content-Type': 'application/merge-patch+json' } }
-                    );
-                    this.logger.info(`Acquired lock for resource ${name}`);
-                    // After patch, return and wait for the next MODIFIED event with the lock set
-                    return;
+                            undefined,
+                            undefined,
+                            undefined,
+                            { headers: { 'Content-Type': 'application/merge-patch+json' } }
+                        );
+                        this.logger.info(`Acquired lock for resource ${name}`);
+                        // After patch, return and wait for the next MODIFIED event with the lock set
+                        return;
+                    } catch (patchErr) {
+                        if (patchErr.statusCode === 409) {
+                            this.logger.warn(`Conflict (409) while acquiring lock for resource ${name}, another operator may have acquired the lock.`);
+                        } else {
+                            this.logger.error(`Failed to acquire lock for resource ${name}: ${patchErr.message}`);
+                        }
+                        return;
+                    }
                 } catch (err) {
                     this.logger.error(`Failed to acquire lock for resource ${name}: ${err.message}`);
                     return;

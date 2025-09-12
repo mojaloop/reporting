@@ -1,9 +1,9 @@
+const process = require('process');
 const Koa = require('koa');
 const cors = require('@koa/cors');
 const randomphrase = require('@internal/randomphrase');
 
 const { createAuthMiddleware } = require('./auth');
-
 const {
     defaultHandlerMap,
     createRouter,

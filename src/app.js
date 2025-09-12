@@ -1,4 +1,3 @@
-const process = require('process');
 const Koa = require('koa');
 const cors = require('@koa/cors');
 const randomphrase = require('@internal/randomphrase');
@@ -22,6 +21,7 @@ const createApp = async ({ db, logger, config }) => {
         handlerMap: defaultHandlerMap,
         pathMap: {},
         db,
+        lockGracePeriodMs: config.operator.lockGracePeriodMs || 30000,
     };
 
     // Attach state for handlers
@@ -63,15 +63,6 @@ const createApp = async ({ db, logger, config }) => {
     await operator.start();
 
     app.use(createRouter());
-    process.on('SIGTERM', async () => {
-        await operator.stop();
-        process.exit(0);
-    });
-
-    process.on('SIGINT', async () => {
-        await operator.stop();
-        process.exit(0);
-    });
     return app;
 };
 

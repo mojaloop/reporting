@@ -56,6 +56,23 @@ class Database {
         const isSPCall = /^call\s/i.test(query);
         return isSPCall ? result[0][0] : result[0];
     }
+
+    /**
+     * Checks the health status of the database by verifying the latest migration lock.
+     *
+     * @async
+     * @returns {Promise<boolean>} Resolves to `true` if the migration lock is not active (healthy), or `false` if it is locked (unhealthy).
+     */
+    async getHealth() {
+        // Check the latest migration lock status
+        const result = await this.conn
+            .knex('migration_lock')
+            .select('is_locked AS isLocked')
+            .orderBy('index', 'desc')
+            .first();
+
+        return result && result.isLocked === 0;
+    }
 }
 
 module.exports = Database;

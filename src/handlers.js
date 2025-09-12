@@ -10,9 +10,28 @@
 
 const ejs = require('ejs');
 const { formatResponse } = require('./format');
+const { statusEnum, serviceName } = require('@mojaloop/central-services-shared').HealthCheck.HealthCheckEnums
 
 const healthCheck = async (ctx) => {
-    ctx.body = { status: 'ok' };
+    try {
+        const isHealthy = await ctx.db.getHealth();
+        ctx.body = {
+            status: isHealthy ? statusEnum.OK : statusEnum.DOWN,
+            subServices: [
+                {
+                    name: serviceName.datastore,
+                    status: isHealthy ? statusEnum.OK : statusEnum.DOWN
+                }
+            ]
+        };
+        ctx.status = isHealthy ? 200 : 503;
+    } catch (err) {
+        ctx.body = {
+            status: statusEnum.DOWN,
+            error: err.message
+        };
+        ctx.status = 503;
+    }
 };
 
 const createRouter = () => async (ctx, next) => {

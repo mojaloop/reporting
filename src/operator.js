@@ -96,13 +96,13 @@ class ReportingOperator {
                 try {
                     // Patch the resource to set the lock annotation
                     try {
-                        await this.k8sApiCustomObjects.patchNamespacedCustomObject(
-                            config.operator.resourceGroup,
-                            config.operator.resourceVersion,
-                            config.operator.namespace,
-                            config.operator.resourcePlural,
+                        await this.k8sApiCustomObjects.patchNamespacedCustomObject({
+                            group: config.operator.resourceGroup,
+                            version: config.operator.resourceVersion,
+                            namespace: config.operator.namespace,
+                            plural: config.operator.resourcePlural,
                             name,
-                            {
+                            body: {
                                 metadata: {
                                     annotations: {
                                         'reporting-operator/lock': myId,
@@ -110,11 +110,8 @@ class ReportingOperator {
                                     },
                                 },
                             },
-                            undefined,
-                            undefined,
-                            undefined,
-                            { headers: { 'Content-Type': 'application/merge-patch+json' } }
-                        );
+                            headers: { 'Content-Type': 'application/merge-patch+json' }
+                        });
                         this.logger.info(`Acquired lock for resource ${name}`);
                         // After patch, return and wait for the next MODIFIED event with the lock set
                         return;

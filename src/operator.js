@@ -73,8 +73,12 @@ class ReportingOperator {
                     try {
                         handlerMap[path] = await createReportHandler(db, apiObj.spec);
                     } catch (e) {
-                        this.logger.error(`Error occurred while validating resource. '${e.message} ${e.message}'`);
+                        this.logger.error(`Error occurred while validating resource. '${e.code} ${e.message}'`);
                         switch (e.code) {
+                            case 'ECONNRESET':
+                            case 'EPIPE':
+                            case 'ECONNABORTED':
+                            case 'ER_QUERY_INTERRUPTED':
                             case 'ECONNREFUSED':
                             case 'ER_ACCESS_DENIED_ERROR':
                             case 'ETIMEDOUT':

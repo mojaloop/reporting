@@ -12,9 +12,6 @@ const k8s = require('@kubernetes/client-node');
 const { logger } = require('./lib/logger');
 const config = require('./config');
 const { createReportHandler } = require('./handlers');
-const { id } = require('@mojaloop/central-services-shared').Util
-const ulid = id({ type: 'ulid' })
-const process = require('process');
 class ReportingOperator {
     constructor(reportData) {
         this.reportData = reportData;
@@ -66,12 +63,6 @@ class ReportingOperator {
         if (!name) return;
 
         this.logger.info(`Received event in phase ${phase} for the resource ${name}`);
-
-        // Only one replica should process a resource at a time.
-        // Use CustomObjectStatus as a lock: status.lockHolder and status.lockTimestamp
-
-        const myId = this.myId;
-        const status = apiObj.status || {};
 
         if (['ADDED', 'MODIFIED'].includes(phase)) {
             const { generation } = apiObj.metadata;

@@ -1,4 +1,4 @@
-const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
+const { logger } = require('../../src/lib/logger');
 const supertest = require('supertest');
 const path = require('path');
 const k8s = require('@kubernetes/client-node');
@@ -11,8 +11,7 @@ const createDbMock = (result) => ({
     query: async (/* qStr, bindings */) => result,
 });
 
-// Silent logger- remove the `stringify` option to print logs
-const logger = new Logger({ stringify: () => '' });
+
 const db = createDbMock([
     { name: 'fsp1', currency: 'MMK' },
     { name: 'fsp3', currency: 'MMK' },

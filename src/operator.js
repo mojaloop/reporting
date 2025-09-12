@@ -62,73 +62,18 @@ class ReportingOperator {
     async onEvent(phase, apiObj) {
         const name = apiObj?.metadata?.name;
         const path = `${config.pathPrefix}${apiObj.spec.endpoint.path.toLowerCase()}`;
-        const { handlerMap, pathMap, db, lockGracePeriodMs } = this.reportData;
+        const { handlerMap, pathMap, db } = this.reportData;
         if (!name) return;
 
         this.logger.info(`Received event in phase ${phase} for the resource ${name}`);
 
         // Only one replica should process a resource at a time.
-        // Use an annotation as a lock: 'reporting-operator/lock'
-        if (!this.myId) {
-            this.myId = process.env.HOSTNAME || ulid();
-        }
-        const myId = this.myId;
-        const annotations = apiObj.metadata.annotations || {};
-        const lockHolder = annotations['reporting-operator/lock'];
-        let lockTimestamp = annotations['reporting-operator/lock-timestamp'];
+        // Use CustomObjectStatus as a lock: status.lockHolder and status.lockTimestamp
 
-        if (lockHolder && lockTimestamp) {
-            const lockTime = new Date(lockTimestamp).getTime();
-            const now = Date.now();
-            if (now - lockTime > lockGracePeriodMs) {
-                this.logger.info(`Lock for resource ${name} expired, attempting to acquire.`);
-            }
-        }
+        const myId = this.myId;
+        const status = apiObj.status || {};
 
         if (['ADDED', 'MODIFIED'].includes(phase)) {
-            // Try to acquire the lock if not held or held by this replica
-            if (lockHolder && lockHolder !== myId) {
-                this.logger.info(`Resource ${name} is locked by ${lockHolder}, skipping.`);
-                return;
-            }
-            // If not locked, try to acquire the lock
-            if (!lockHolder) {
-                try {
-                    // Patch the resource to set the lock annotation
-                    try {
-                        await this.k8sApiCustomObjects.patchNamespacedCustomObject({
-                            group: config.operator.resourceGroup,
-                            version: config.operator.resourceVersion,
-                            namespace: config.operator.namespace,
-                            plural: config.operator.resourcePlural,
-                            name,
-                            body: {
-                                metadata: {
-                                    annotations: {
-                                        'reporting-operator/lock': myId,
-                                        'reporting-operator/lock-timestamp': new Date().toISOString(),
-                                    },
-                                },
-                            },
-                            headers: { 'Content-Type': 'application/merge-patch+json' }
-                        });
-                        this.logger.info(`Acquired lock for resource ${name}`);
-                        // After patch, return and wait for the next MODIFIED event with the lock set
-                        return;
-                    } catch (patchErr) {
-                        if (patchErr.statusCode === 409) {
-                            this.logger.warn(`Conflict (409) while acquiring lock for resource ${name}, another operator may have acquired the lock.`);
-                        } else {
-                            this.logger.error(`Failed to acquire lock for resource ${name}: ${patchErr.message}`);
-                        }
-                        return;
-                    }
-                } catch (err) {
-                    this.logger.error(`Failed to acquire lock for resource ${name}: ${err.message}`);
-                    return;
-                }
-            }
-
             const { generation } = apiObj.metadata;
             if (this.resourceGeneration[name] === generation) {
                 return;
@@ -137,31 +82,33 @@ class ReportingOperator {
             for (let i = config.operator.validationRetryCount; i >= 0; i -= 1) {
                 try {
                     handlerMap[path] = await createReportHandler(db, apiObj.spec);
+                    pathMap[path] = apiObj.spec.permission || name;
+                    await this.updateResourceStatus(apiObj, 'VALIDATED');
                 } catch (e) {
                     this.logger.error(`Error occurred while validating resource. '${e.code}'`, e);
-                    switch (e.code) {
-                        case 'ECONNRESET':
-                        case 'EPIPE':
-                        case 'ECONNABORTED':
-                        case 'ER_QUERY_INTERRUPTED':
-                        case 'ECONNREFUSED':
-                        case 'ER_ACCESS_DENIED_ERROR':
-                        case 'ETIMEDOUT':
-                        case 'ENOTFOUND':
-                            if (i !== 0) {
-                                this.logger.info(`Retying after ${config.operator.validationRetryIntervalMs}ms...(${i} retries left)`);
-                                await new Promise((resolve) => { setTimeout(resolve, config.operator.validationRetryIntervalMs); });
-                                break;
-                            }
-                        // eslint-disable-next-line no-fallthrough
-                        default:
-                            await this.updateResourceStatus(apiObj, 'INVALID', e.message);
-                            return;
+                    // Retry on specific error codes or statusCode 409
+                    if (
+                        [
+                            'ECONNRESET',
+                            'EPIPE',
+                            'ECONNABORTED',
+                            'ER_QUERY_INTERRUPTED',
+                            'ECONNREFUSED',
+                            'ER_ACCESS_DENIED_ERROR',
+                            'ETIMEDOUT',
+                            'ENOTFOUND'
+                        ].includes(e.code) || e.statusCode === 409
+                    ) {
+                        if (i !== 0) {
+                            this.logger.info(`Retying after ${config.operator.validationRetryIntervalMs}ms...(${i} retries left)`);
+                            await new Promise((resolve) => { setTimeout(resolve, config.operator.validationRetryIntervalMs); });
+                            continue;
+                        }
                     }
+                    await this.updateResourceStatus(apiObj, 'INVALID', e.message);
+                    return;
                 }
             }
-            pathMap[path] = apiObj.spec.permission || name;
-            await this.updateResourceStatus(apiObj, 'VALIDATED');
         } else if (phase === 'DELETED') {
             delete handlerMap[path];
             delete pathMap[path];

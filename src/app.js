@@ -21,7 +21,6 @@ const createApp = async ({ db, logger, config }) => {
         handlerMap: defaultHandlerMap,
         pathMap: {},
         db,
-        lockGracePeriodMs: config.operator.lockGracePeriodMs || 30000,
     };
 
     // Attach state for handlers

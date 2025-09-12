@@ -7,8 +7,6 @@ const defaultConfig = require('./data/defaultConfig.json');
 const { parseCsvAsync } = require('../../src/lib/csvparser');
 const { createApp } = require('../../src/app');
 
-process.env.HOSTNAME = 'pod-id-random';
-
 const createDbMock = (result) => ({
     query: async (/* qStr, bindings */) => result,
 });

@@ -4,8 +4,6 @@ metadata:
   name: test
   namespace: default
   generation: 1
-  annotations:
-    reporting-operator/lock: 'pod-id-random'
 spec:
   endpoint:
     path: /test

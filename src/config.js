@@ -34,7 +34,6 @@ const config = {
         resourcePlural: env.get('WATCH_RESOURCE_PLURAL').default('mojaloopreports').asString(),
         validationRetryCount: env.get('VALIDATION_RETRY_COUNT').default('10').asInt(),
         validationRetryIntervalMs: env.get('VALIDATION_RETRY_INTERVAL_MS').default('10000').asInt(),
-        lockGracePeriodMs: env.get('LOCK_GRACE_PERIOD_MS').default('30000').asInt(),
     },
 };
 

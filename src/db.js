@@ -51,7 +51,7 @@ class Database {
     async query(query, bindings = {}) {
         // Knex uses ? for positional bindings or :key for named bindings
         // If bindings is an array, use positional; if object, use named
-        const result = await this.conn.raw(query, bindings);
+        const result = await this.conn.knex.raw(query, bindings);
         // For stored procedures, result[0] is the rows
         const isSPCall = /^call\s/i.test(query);
         return isSPCall ? result[0][0] : result[0];

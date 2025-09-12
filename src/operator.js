@@ -9,7 +9,7 @@
  ************************************************************************* */
 
 const k8s = require('@kubernetes/client-node');
-const { Logger } = require('@mojaloop/sdk-standard-components').Logger;
+const { logger } = require('./lib/logger');
 const config = require('./config');
 const { createReportHandler } = require('./handlers');
 
@@ -19,7 +19,7 @@ class ReportingOperator {
 
         this.resourceGeneration = {};
 
-        this.logger = new Logger();
+        this.logger = logger;
 
         this.kc = new k8s.KubeConfig();
         this.kc.loadFromDefault();
@@ -107,12 +107,14 @@ class ReportingOperator {
         const {
             resourceGroup, resourceVersion, namespace, resourcePlural,
         } = config.operator;
-        return this.watch.watch(
+        // Store reference to the watch request
+        this.watchRequest = this.watch.watch(
             `/apis/${resourceGroup}/${resourceVersion}/namespaces/${namespace}/${resourcePlural}`,
             {},
             (phase, apiObj) => this.onEvent(phase, apiObj),
             () => setTimeout(() => this.watchResource(), 1000),
         );
+        return this.watchRequest;
     }
 
     start() {
@@ -124,6 +126,18 @@ class ReportingOperator {
             }
             throw err;
         });
+    }
+
+    async stop() {
+        if (this.watchRequest) {
+            try {
+                console.log('Stopping watch...');
+                this.watchRequest.abort(); // Abort the request to stop the watch
+                this.watchRequest = undefined;
+            } catch (err) {
+                this.logger.error(`Error stopping watch: ${err.message}`);
+            }
+        }
     }
 }
 

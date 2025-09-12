@@ -1,4 +1,6 @@
-const mysql = require('mysql2');
+const { KnexWrapper } = require('@mojaloop/central-services-shared/src/mysql');
+const metrics = require('@mojaloop/central-services-metrics');
+const { logger } = require('./lib/logger');
 
 class Database {
     constructor({
@@ -11,31 +13,48 @@ class Database {
             additionalConnectionOptions = {},
         } = {},
         pool: {
-            queueLimit = 0,
-            connectionLimit = 10,
+            min = 0,
+            max = 10,
+        } = {},
+        retry: {
+            dbRetries = 10,
+            dbConnectionRetryWaitMilliseconds = 1000,
         } = {}
     }) {
-        const connPool = mysql.createPool(
-            {
+        const knexOptions = {
+            client: 'mysql2',
+            connection: {
                 host,
-                user,
-                database,
-                password,
                 port,
-                connectionLimit,
-                namedPlaceholders: true,
-                waitForConnections: true,
-                queueLimit,
+                user,
+                password,
+                database,
                 ...additionalConnectionOptions,
             },
-        );
-        this.conn = connPool.promise();
+            pool: { min, max }
+        }
+        const retryOptions = {
+            retries: dbRetries,
+            minTimeout: dbConnectionRetryWaitMilliseconds,
+            factor: 1.3,
+        };
+
+        this.conn = new KnexWrapper({
+          knexOptions,
+          retryOptions,
+          logger,
+          metrics,
+          context: 'REPORTING_DB'
+        });
     }
 
     async query(query, bindings = {}) {
-        const isSPCall = (query.match(/^call\s/ig) !== null);
-        const result = await this.conn.execute(query, bindings);
-        return (isSPCall ? result[0][0] : result[0]);
+        // Knex uses ? for positional bindings or :key for named bindings
+        // If bindings is an array, use positional; if object, use named
+        const result = await this.conn.raw(query, bindings);
+        // For stored procedures, result[0] is the rows
+        const isSPCall = /^call\s/i.test(query);
+        return isSPCall ? result[0][0] : result[0];
     }
 }
 

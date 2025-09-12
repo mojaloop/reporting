@@ -24,7 +24,7 @@ const createRouter = () => async (ctx, next) => {
         return;
     }
 
-    ctx.state.logger.push({ handler }).log('Found handler');
+    ctx.state.logger.child({ handler }).info('Found handler');
     await handler(ctx);
     await next();
 };

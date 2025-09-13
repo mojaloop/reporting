@@ -29,27 +29,36 @@ class ReportingOperator {
     }
 
     async updateResourceStatus(apiObj, statusText, error) {
-        const status = {
-            apiVersion: apiObj.apiVersion,
-            kind: apiObj.kind,
-            metadata: {
-                name: apiObj.metadata.name,
-                resourceVersion: apiObj.metadata.resourceVersion,
-            },
-            status: {
-                state: statusText,
-                error,
-            },
-        };
-
         try {
+            // Fetch the latest version of the resource to get the current resourceVersion
+            const latest = await this.k8sApiCustomObjects.getNamespacedCustomObject({
+                group: config.operator.resourceGroup,
+                version: config.operator.resourceVersion,
+                namespace: config.operator.namespace,
+                plural: config.operator.resourcePlural,
+                name: apiObj.metadata.name
+            });
+
+            const status = {
+                apiVersion: apiObj.apiVersion,
+                kind: apiObj.kind,
+                metadata: {
+                    name: apiObj.metadata.name,
+                    resourceVersion: latest.body.metadata.resourceVersion,
+                },
+                status: {
+                    state: statusText,
+                    error,
+                },
+            };
+
             await this.k8sApiCustomObjects.replaceNamespacedCustomObjectStatus({
                 group: config.operator.resourceGroup,
                 version: config.operator.resourceVersion,
                 namespace: config.operator.namespace,
                 plural: config.operator.resourcePlural,
                 name: apiObj.metadata.name,
-                body: status,
+                body: status
             });
         } catch (err) {
             this.logger.error(`Error updating status of the custom resource ${apiObj.metadata.name}: ${err.message}`);

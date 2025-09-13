@@ -3,7 +3,6 @@ const cors = require('@koa/cors');
 const randomphrase = require('@internal/randomphrase');
 
 const { createAuthMiddleware } = require('./auth');
-
 const {
     defaultHandlerMap,
     createRouter,
@@ -29,7 +28,7 @@ const createApp = async ({ db, logger, config }) => {
         ctx.state = {
             ...ctx.state,
             reportData,
-            logger: logger.push({
+            logger: logger.child({
                 request: {
                     id: randomphrase(),
                     path: ctx.path,
@@ -43,16 +42,16 @@ const createApp = async ({ db, logger, config }) => {
 
     // Log request receipt and response, handle exceptions
     app.use(async (ctx, next) => {
-        ctx.state.logger.log('Received request');
+        ctx.state.logger.info('Received request');
         try {
             await next();
         } catch (err) {
-            ctx.state.logger.push({ err }).log('Error handling request');
+            ctx.state.logger.error('Error handling request', err);
             ctx.response.status = err.statusCode || err.status || 500;
             ctx.response.body = JSON.stringify(err);
             ctx.response.set('content-type', 'application/json');
         }
-        ctx.state.logger.log('Handled request');
+        ctx.state.logger.info('Handled request');
     });
 
     if (config.oryKetoReadUrl) {
@@ -63,7 +62,6 @@ const createApp = async ({ db, logger, config }) => {
     await operator.start();
 
     app.use(createRouter());
-
     return app;
 };
 

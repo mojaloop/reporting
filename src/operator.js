@@ -38,7 +38,7 @@ class ReportingOperator {
                 plural: config.operator.resourcePlural,
                 name: apiObj.metadata.name
             });
-            logger.info(`latest: `, latest);
+
             const status = {
                 apiVersion: apiObj.apiVersion,
                 kind: apiObj.kind,

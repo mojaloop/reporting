@@ -85,7 +85,7 @@ class ReportingOperator {
                     pathMap[path] = apiObj.spec.permission || name;
                     await this.updateResourceStatus(apiObj, 'VALIDATED');
                 } catch (e) {
-                    this.logger.error(`Error occurred while validating resource. '${e.code}'`, e);
+                    this.logger.error(`Error occurred while validating resource. ${e.code}`, e);
                     // Retry on specific error codes or statusCode 409
                     if (
                         [

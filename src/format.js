@@ -18,10 +18,10 @@ const tableToCsv = (html) => {
     const root = htmlParser.parse(html);
     const table = root.querySelector('table');
     if (!table) return '';
-    
+
     const rows = table.querySelectorAll('tr');
     const data = [];
-    
+
     for (const row of rows) {
         const cells = row.querySelectorAll('th, td');
         const rowData = cells.map(cell => cell.text.trim());
@@ -29,7 +29,7 @@ const tableToCsv = (html) => {
             data.push(rowData);
         }
     }
-    
+
     return stringify(data);
 };
 
@@ -37,7 +37,7 @@ module.exports.formatResponse = async (ctx, htmlInput) => {
     const format = ctx.request.query.format || 'html';
     switch (format) {
         case 'xlsx': {
-            ctx.state.logger.log('Setting XLSX response');
+            ctx.state.logger.info('Setting XLSX response');
 
             const reportName = ctx.request.path.substr(ctx.request.path.lastIndexOf('/'), ctx.request.path.length)
                 .replace('/', '').replace('.xlsx', '');
@@ -59,13 +59,13 @@ module.exports.formatResponse = async (ctx, htmlInput) => {
             break;
         }
         case 'csv': {
-            ctx.state.logger.log('Setting CSV response');
+            ctx.state.logger.info('Setting CSV response');
             ctx.body = tableToCsv(htmlInput);
             ctx.set('content-type', 'application/csv');
             break;
         }
         case 'html': {
-            ctx.state.logger.log('Setting HTML response');
+            ctx.state.logger.info('Setting HTML response');
             ctx.body = htmlInput;
             ctx.set('content-type', 'text/html');
             break;

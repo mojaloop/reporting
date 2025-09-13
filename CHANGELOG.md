@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [12.4.0](https://github.com/mojaloop/reporting/compare/v12.3.4...v12.4.0) (2025-09-13)
+
+
+### Features
+
+* db and watch logic improvements ([#50](https://github.com/mojaloop/reporting/issues/50)) ([7ed535a](https://github.com/mojaloop/reporting/commit/7ed535a466af24e8c2ee9e7c19007b4ff299b932))
+
 ### [12.3.4](https://github.com/mojaloop/reporting/compare/v12.3.3...v12.3.4) (2025-09-10)
 
 

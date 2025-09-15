@@ -96,7 +96,8 @@ class ReportingOperator {
                             'ECONNREFUSED',
                             'ER_ACCESS_DENIED_ERROR',
                             'ETIMEDOUT',
-                            'ENOTFOUND'
+                            'ENOTFOUND',
+                            'PROTOCOL_CONNECTION_LOST'
                         ].includes(e.code) || e.statusCode === 409
                     ) {
                         if (i !== 0) {

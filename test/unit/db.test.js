@@ -168,7 +168,7 @@ describe('Database', () => {
   });
 
   it('should call the error listener when pool emits error', () => {
-    const db = new Database({});
+    new Database({});
     // Find the error handler attached
     const errorHandler = mockConnPool.on.mock.calls.find(
       ([event]) => event === 'error'

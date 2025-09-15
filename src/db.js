@@ -1,4 +1,5 @@
 const mysql = require('mysql2');
+const { logger } = require('./lib/logger')
 
 class Database {
     constructor({
@@ -15,7 +16,7 @@ class Database {
             connectionLimit = 10,
         } = {}
     }) {
-        const connPool = mysql.createPool(
+        const createPool = () => mysql.createPool(
             {
                 host,
                 user,
@@ -29,7 +30,19 @@ class Database {
                 ...additionalConnectionOptions,
             },
         );
+
+        let connPool = createPool();
         this.conn = connPool.promise();
+
+        // Listen for connection errors and recreate pool if lost
+        connPool.on('error', (err) => {
+            if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+                connPool.end();
+                connPool = createPool();
+                this.conn = connPool.promise();
+                logger.warn('MySQL pool recreated after PROTOCOL_CONNECTION_LOST');
+            }
+        });
     }
 
     async query(query, bindings = {}) {
@@ -37,6 +50,8 @@ class Database {
         const result = await this.conn.execute(query, bindings);
         return (isSPCall ? result[0][0] : result[0]);
     }
+
+
 }
 
 module.exports = Database;

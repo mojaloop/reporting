@@ -11,7 +11,8 @@ describe('Database', () => {
       execute: jest.fn()
     };
     mockConnPool = {
-      promise: jest.fn(() => mockPromiseConn)
+      promise: jest.fn(() => mockPromiseConn),
+      on: jest.fn()
     };
     mysql.createPool.mockReturnValue(mockConnPool);
   });
@@ -20,7 +21,7 @@ describe('Database', () => {
     jest.clearAllMocks();
   });
 
-  it('should create a connection pool with default options', () => {
+  it('should create a connection pool with default options and attach error listener', () => {
     new Database({});
     expect(mysql.createPool).toHaveBeenCalledWith(expect.objectContaining({
       host: '127.0.0.1',
@@ -33,9 +34,10 @@ describe('Database', () => {
       namedPlaceholders: true,
       waitForConnections: true
     }));
+    expect(mockConnPool.on).toHaveBeenCalledWith('error', expect.any(Function));
   });
 
-  it('should create a connection pool with custom options', () => {
+  it('should create a connection pool with custom options and attach error listener', () => {
     new Database({
       connection: {
         host: 'localhost',
@@ -60,6 +62,7 @@ describe('Database', () => {
       queueLimit: 5,
       ssl: true
     }));
+    expect(mockConnPool.on).toHaveBeenCalledWith('error', expect.any(Function));
   });
 
   it('should execute a normal query and return result[0]', async () => {
@@ -90,7 +93,8 @@ describe('Database', () => {
     mockPromiseConn.execute.mockRejectedValueOnce(new Error('fail'));
     await expect(db.query('SELECT 1')).rejects.toThrow('fail');
   });
-  it('should pass ca in additionalConnectionOptions to createPool', () => {
+
+  it('should pass ca in additionalConnectionOptions to createPool and attach error listener', () => {
     const caValue = '-----BEGIN CERTIFICATE-----\n...';
     new Database({
       connection: {
@@ -100,9 +104,10 @@ describe('Database', () => {
     expect(mysql.createPool).toHaveBeenCalledWith(expect.objectContaining({
       ssl: expect.objectContaining({ ca: caValue })
     }));
+    expect(mockConnPool.on).toHaveBeenCalledWith('error', expect.any(Function));
   });
 
-  it('should merge additionalConnectionOptions.ssl.ca with other ssl options', () => {
+  it('should merge additionalConnectionOptions.ssl.ca with other ssl options and attach error listener', () => {
     const additionalOptions = { ssl: { rejectUnauthorized: false, ca: 'cert' } };
     new Database({
       connection: {
@@ -118,9 +123,10 @@ describe('Database', () => {
       connectionLimit: 20,
       ssl: expect.objectContaining({ rejectUnauthorized: false, ca: 'cert' })
     }));
+    expect(mockConnPool.on).toHaveBeenCalledWith('error', expect.any(Function));
   });
 
-  it('should not fail if additionalConnectionOptions is not provided', () => {
+  it('should not fail if additionalConnectionOptions is not provided and attach error listener', () => {
     expect(() => {
       new Database({
         connection: {
@@ -131,9 +137,10 @@ describe('Database', () => {
     expect(mysql.createPool).toHaveBeenCalledWith(expect.objectContaining({
       host: 'nooptions'
     }));
+    expect(mockConnPool.on).toHaveBeenCalledWith('error', expect.any(Function));
   });
 
-  it('should default to empty object if pool is not provided', () => {
+  it('should default to empty object if pool is not provided and attach error listener', () => {
     new Database({
       connection: {
         host: 'hostonly'
@@ -144,9 +151,10 @@ describe('Database', () => {
       connectionLimit: 10,
       queueLimit: 0
     }));
+    expect(mockConnPool.on).toHaveBeenCalledWith('error', expect.any(Function));
   });
 
-  it('should default to empty object if connection is not provided', () => {
+  it('should default to empty object if connection is not provided and attach error listener', () => {
     new Database({
       pool: {
         connectionLimit: 5
@@ -156,5 +164,41 @@ describe('Database', () => {
       host: '127.0.0.1',
       connectionLimit: 5
     }));
+    expect(mockConnPool.on).toHaveBeenCalledWith('error', expect.any(Function));
+  });
+
+  it('should call the error listener when pool emits error', () => {
+    new Database({});
+    // Find the error handler attached
+    const errorHandler = mockConnPool.on.mock.calls.find(
+      ([event]) => event === 'error'
+    )[1];
+    const error = new Error('pool error');
+    // Should not throw
+    expect(() => errorHandler(error)).not.toThrow();
+  });
+  it('should recreate the pool and reassign this.conn on PROTOCOL_CONNECTION_LOST', () => {
+    const db = new Database({});
+    // Find the error handler attached
+    const errorHandler = mockConnPool.on.mock.calls.find(
+      ([event]) => event === 'error'
+    )[1];
+
+    // Mock connPool.end and mysql.createPool for recreation
+    mockConnPool.end = jest.fn();
+    const newMockConnPool = {
+      promise: jest.fn(() => mockPromiseConn),
+      on: jest.fn()
+    };
+    mysql.createPool.mockReturnValueOnce(newMockConnPool);
+
+    // Simulate PROTOCOL_CONNECTION_LOST error
+    const error = { code: 'PROTOCOL_CONNECTION_LOST' };
+    errorHandler(error);
+
+    expect(mockConnPool.end).toHaveBeenCalled();
+    expect(mysql.createPool).toHaveBeenCalledTimes(2); // initial + recreation
+    expect(newMockConnPool.promise).toHaveBeenCalled();
+    expect(db.conn).toBe(mockPromiseConn);
   });
 });

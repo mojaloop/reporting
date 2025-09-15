@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [12.4.1](https://github.com/mojaloop/reporting/compare/v12.4.0...v12.4.1) (2025-09-15)
+
+
+### Bug Fixes
+
+* add new error and remake pool ([#51](https://github.com/mojaloop/reporting/issues/51)) ([d49a7d7](https://github.com/mojaloop/reporting/commit/d49a7d7cefece01ddb2602c0c18a1e2d016a9d9e))
+
 ## [12.4.0](https://github.com/mojaloop/reporting/compare/v12.3.4...v12.4.0) (2025-09-13)
 
 

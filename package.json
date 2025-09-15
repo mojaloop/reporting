@@ -59,7 +59,7 @@
     "@koa/cors": "^5.0.0",
     "@kubernetes/client-node": "^1.0.0",
     "@mojaloop/central-services-logger": "^11.9.3",
-    "@mojaloop/central-services-shared": "^18.32.0",
+    "@mojaloop/central-services-shared": "^18.33.0",
     "@ory/keto-client": "^0.6.0-alpha.6",
     "async-exit-hook": "^2.0.1",
     "cheerio-select": "^2.1.0",

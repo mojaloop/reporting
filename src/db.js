@@ -1,4 +1,5 @@
 const mysql = require('mysql2');
+const { logger } = require('./lib/logger')
 
 class Database {
     constructor({
@@ -39,7 +40,7 @@ class Database {
                 connPool.end();
                 connPool = createPool();
                 this.conn = connPool.promise();
-                console.warn('MySQL pool recreated after PROTOCOL_CONNECTION_LOST');
+                logger.warn('MySQL pool recreated after PROTOCOL_CONNECTION_LOST');
             }
         });
     }

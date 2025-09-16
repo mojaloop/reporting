@@ -86,7 +86,10 @@ class ReportingOperator {
                     await this.updateResourceStatus(apiObj, 'VALIDATED');
                 } catch (e) {
                     this.logger.error(`Error occurred while validating resource. ${e.code}`, e);
-                    // Retry on specific error codes or statusCode 409
+                    // Retry on specific error codes, statusCode 409, or message containing any of the retry substrings
+                    const retryMessageSubstrings = [
+                        'connection is in closed state'
+                    ];
                     if (
                         [
                             'ECONNRESET',
@@ -98,10 +101,15 @@ class ReportingOperator {
                             'ETIMEDOUT',
                             'ENOTFOUND',
                             'PROTOCOL_CONNECTION_LOST'
-                        ].includes(e.code) || e.statusCode === 409
+                        ].includes(e.code) ||
+                        e.statusCode === 409 ||
+                        (
+                            typeof e.message === 'string' &&
+                            retryMessageSubstrings.some(sub => e.message.toLowerCase().includes(sub))
+                        )
                     ) {
                         if (i !== 0) {
-                            this.logger.info(`Retying after ${config.operator.validationRetryIntervalMs}ms...(${i} retries left)`);
+                            this.logger.info(`Retrying after ${config.operator.validationRetryIntervalMs}ms...(${i} retries left)`);
                             await new Promise((resolve) => { setTimeout(resolve, config.operator.validationRetryIntervalMs); });
                             continue;
                         }

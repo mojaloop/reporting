@@ -1,0 +1,21 @@
+{
+  "userIdHeader": "x-user",
+  "port": 3001,
+  "pathPrefix": "/api/reports",
+  "database": {
+    "host": "localhost",
+    "port": 3306,
+    "user": "central_ledger",
+    "password": "password",
+    "database": "central_ledger",
+    "connectionLimit": 10,
+    "queueLimit": 0,
+    "additionalConnectionOptions": {}
+  },
+  "operator": {
+    "resourceGroup": "mojaloop.io",
+    "resourceVersion": "v1",
+    "namespace": "default",
+    "resourcePlural": "mojaloopreports"
+  }
+}

@@ -1,0 +1,10 @@
+# npm
+node_modules/
+
+# IDE's
+.idea/
+.vscode/
+
+coverage/
+test/reports/
+junit.xml

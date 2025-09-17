@@ -1,0 +1,25 @@
+{
+  "apiVersion": "mojaloop.io/v1",
+  "kind": "MojaloopReport",
+  "metadata": {
+    "name": "participant-list"
+  },
+  "spec": {
+    "endpoint": {
+      "path": "/participant-list",
+      "params": [
+        {
+          "name": "limit",
+          "default": "100"
+        }
+      ]
+    },
+    "queries": [
+      {
+        "name": "participantList",
+        "query": "SELECT participantId, name, createdDate\nFROM participant\nLIMIT :limit\n"
+      }
+    ],
+    "template": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <style>\n        table {\n            font-family: arial, sans-serif;\n            border-collapse: collapse;\n            width: 100%;\n        }\n\n        td, th {\n            border: 1px solid #efefef;\n            text-align: left;\n            padding: 8px;\n        }\n\n        tr:nth-child(even) {\n            background-color: #efefef;\n        }\n\n        td > span {\n            font-weight: bold;\n        }\n\n    </style>\n    <title>Participants Summary</title>\n</head>\n<body>\n\n<h2>Participants</h2>\n<table>\n    <tr>\n        <th>ID</th>\n        <th>Name</th>\n        <th>Created Date</th>\n    </tr>\n    <% for(let p of participantList) { %>\n        <tr>\n            <td><%= p.participantId %></td>\n            <td><%= p.name %></td>\n            <td><%= p.createdDate %></td>\n        </tr>\n    <% } %>\n</table>\n\n</body>\n</html>\n"
+  }
+}

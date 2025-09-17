@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [12.4.2](https://github.com/mojaloop/reporting/compare/v12.4.1...v12.4.2) (2025-09-17)
+
+
+### Bug Fixes
+
+* retry on undefined connection closed error ([#52](https://github.com/mojaloop/reporting/issues/52)) ([dc9544e](https://github.com/mojaloop/reporting/commit/dc9544ef0cebd0294e7d0df57fe1c879b5624dd0))
+
 ### [12.4.1](https://github.com/mojaloop/reporting/compare/v12.4.0...v12.4.1) (2025-09-15)
 
 

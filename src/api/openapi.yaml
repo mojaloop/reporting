@@ -1,0 +1,66 @@
+openapi: 3.1.0
+info:
+  title: Mojaloop Reporting
+  version: '1.0'
+  description: >-
+    Serves the reports a deployment has defined. Each report is a
+    MojaloopReport custom resource applied to the cluster, and its endpoint
+    appears without redeploying this service, so the surface described here is
+    one operation over however many reports exist.
+servers:
+  - url: /api
+x-authz:
+  service: reports
+  resourceTypes: [reports, participants]
+paths:
+  /reports/{reportName}:
+    parameters:
+      - name: reportName
+        in: path
+        required: true
+        description: The report's endpoint, as its custom resource declares it
+        schema:
+          type: string
+    get:
+      operationId: getReport
+      summary: Runs a report and returns its rows
+      description: >-
+        Query parameters are the report's own, declared by its custom resource.
+        Rows are restricted to the participants the caller may see.
+      # What the caller holds of each type reaches the service; a report
+      # whose custom resource declares the type filters its rows by it
+      x-authz:
+        scopedBy: [reports, participants]
+      security:
+      - session: []
+      responses:
+        '200':
+          description: The report
+          content:
+            application/json:
+              schema:
+                type: object
+            text/html:
+              schema:
+                type: string
+        '400':
+          description: A required query parameter is missing
+        '404':
+          description: No such report
+
+  /reports/health:
+    get:
+      operationId: getHealth
+      summary: Reports whether the service is up
+      security: []
+      responses:
+        '200':
+          description: The service is up
+
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: ory_kratos_session
+      description: A human's browser session

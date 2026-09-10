@@ -8,12 +8,12 @@ info:
     appears without redeploying this service, so the surface described here is
     one operation over however many reports exist.
 servers:
-  - url: /api
+  - url: /
 x-authz:
   service: reports
   resourceTypes: [reports, participants]
 paths:
-  /reports/{reportName}:
+  /{reportName}:
     parameters:
       - name: reportName
         in: path
@@ -48,7 +48,7 @@ paths:
         '404':
           description: No such report
 
-  /reports/health:
+  /:
     get:
       operationId: getHealth
       summary: Reports whether the service is up

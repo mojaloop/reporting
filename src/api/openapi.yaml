@@ -27,10 +27,12 @@ paths:
       description: >-
         Query parameters are the report's own, declared by its custom resource.
         Rows are restricted to the participants the caller may see.
-      # What the caller holds of each type reaches the service; a report
-      # whose custom resource declares the type filters its rows by it
+      # The path carries the report's own id, so which reports a caller may
+      # run is settled before the request arrives. What it holds of every
+      # other type reaches the service, and a report whose custom resource
+      # declares that type filters its rows by it
       x-authz:
-        scopedBy: [reports, participants]
+        scopedBy: [{ reports: reportName }, participants]
       security:
       - session: []
       responses:

@@ -7,6 +7,9 @@ The Reporting Service allows to create HTTP API endpoints using SQL queries and 
   The schema can be found in `helm/reporting-service/crds/mojaloopreport-crd.yaml`
 
   Examples in `resources/examples` directory
+- Applying the resource also names the report to the IAM, which makes it grantable, so an
+  operator can hand someone a new report without a deploy. Requests arrive already authorized,
+  carrying the participants the caller may see, and a report is run only for those.
 - See architecture diagram in docs [here](docs/Mojaloop%20Reporting%20Service%20Architecture.png) .
 - Make requests as follows:
     ```
@@ -32,7 +35,7 @@ DB_HOST="localhost"
 DB_USER="central_ledger"
 DB_PASSWORD="password"
 DB_DATABASE="central_ledger"
-KETO_READ_URL=http://keto/
+IAM_PROVISIONING_URL=http://ml-iam-services-provisioning:3003
 EOF
 ```
 Where `reporting` is the image name from the build stage:

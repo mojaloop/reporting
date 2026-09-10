@@ -1,32 +1,24 @@
 apiVersion: mojaloop.io/v1
 kind: MojaloopReport
 metadata:
-  name: test
+  name: hubwide
   namespace: default
   generation: 1
 spec:
   endpoint:
-    path: /test
-    scopedBy: [participants]
+    path: /hubwide
     params:
       - name: currency
-        required: true
-      - name: active
-        default: "1"
-        required: false
-      - name: dfspId
         required: true
   queries:
     - name: participants
       query: |
-        SELECT name, currency FROM participant
-        WHERE currency = :currency AND active = :active AND name = :dfspId
-          AND (:participants IS NULL OR FIND_IN_SET(name, :participants))
+        SELECT name, currency FROM participant WHERE currency = :currency
   template: |
     <!DOCTYPE html>
     <html lang="en">
     <head>
-        <title>Participants</title>
+        <title>Every participant</title>
     </head>
     <body>
 
@@ -37,7 +29,6 @@ spec:
         </tr>
         <% for(let p of participants) { %>
             <tr>
-
                 <td><%= p.name %></td>
                 <td><%= p.currency %></td>
             </tr>

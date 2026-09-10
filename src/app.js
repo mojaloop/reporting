@@ -1,25 +1,27 @@
+const path = require('node:path');
 const Koa = require('koa');
 const cors = require('@koa/cors');
 const randomphrase = require('@internal/randomphrase');
+const { createGuard } = require('@mojaloop/authz');
 
-const { createAuthMiddleware } = require('./auth');
 const {
     defaultHandlerMap,
     createRouter,
 } = require('./handlers');
 const ReportingOperator = require('./operator');
 
-const createApp = async ({ db, logger, config }) => {
+const createApp = async ({ db, logger }) => {
     const app = new Koa();
 
     // Default context
     app.context.db = db;
+    // What this service may answer, from the document that describes it
+    app.context.authz = await createGuard(path.join(__dirname, 'api', 'openapi.yaml'));
 
     app.use(cors());
 
     const reportData = {
         handlerMap: defaultHandlerMap,
-        pathMap: {},
         db,
     };
 
@@ -53,10 +55,6 @@ const createApp = async ({ db, logger, config }) => {
         }
         ctx.state.logger.info('Handled request');
     });
-
-    if (config.oryKetoReadUrl) {
-        app.use(createAuthMiddleware(config.userIdHeader, config.oryKetoReadUrl));
-    }
 
     const operator = new ReportingOperator(reportData);
     await operator.start();

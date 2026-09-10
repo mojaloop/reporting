@@ -1,0 +1,31 @@
+apiVersion: mojaloop.io/v1
+kind: MojaloopReport
+metadata:
+  name: mixed-case
+  namespace: default
+  generation: 1
+spec:
+  permission: report-mixed-case
+  endpoint:
+    path: /dfspSettlement
+    params:
+      - name: currency
+        required: true
+  queries:
+    - name: participants
+      query: |
+        SELECT name, currency FROM participant WHERE currency = :currency
+  template: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <title>Participants</title>
+    </head>
+    <body>
+    <table>
+        <% for(let p of participants) { %>
+            <tr><td><%= p.name %></td></tr>
+        <% } %>
+    </table>
+    </body>
+    </html>

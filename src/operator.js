@@ -12,6 +12,7 @@ const k8s = require('@kubernetes/client-node');
 const { logger } = require('./lib/logger');
 const config = require('./config');
 const { createReportHandler } = require('./handlers');
+const { provisionReport, deprovisionReport } = require('./provisioning');
 class ReportingOperator {
     constructor(reportData) {
         this.reportData = reportData;
@@ -28,7 +29,7 @@ class ReportingOperator {
         this.watch = new k8s.Watch(this.kc);
     }
 
-    async updateResourceStatus(apiObj, statusText, error) {
+    async updateResourceStatus(apiObj, statusText, messages) {
         try {
             // Fetch the latest version of the resource to get the current resourceVersion
             const latest = await this.k8sApiCustomObjects.getNamespacedCustomObject({
@@ -48,7 +49,7 @@ class ReportingOperator {
                 },
                 status: {
                     state: statusText,
-                    error,
+                    messages,
                 },
             };
 
@@ -67,8 +68,11 @@ class ReportingOperator {
 
     async onEvent(phase, apiObj) {
         const name = apiObj?.metadata?.name;
-        const path = `${config.pathPrefix}${apiObj.spec.endpoint.path.toLowerCase()}`;
-        const { handlerMap, pathMap, db } = this.reportData;
+        const path = apiObj.spec.endpoint.path;
+        // A grant names the report by the segment its URL carries, so the id
+        // here and the one the gateway reads off a request are the same string.
+        const reportId = path.replace(/^\//, '');
+        const { handlerMap, db } = this.reportData;
         if (!name) return;
 
         this.logger.info(`Received event in phase ${phase} for the resource ${name}`);
@@ -79,11 +83,27 @@ class ReportingOperator {
                 return;
             }
             this.resourceGeneration[name] = generation;
+
+            const notices = [];
+            if (reportId.includes('/')) {
+                // A request carries one segment after /reports, so a deeper
+                // path is a report no grant can name and no request can reach.
+                await this.updateResourceStatus(apiObj, 'INVALID', [
+                    `endpoint.path must be a single segment, so "${path}" cannot be granted or reached`,
+                ]);
+                return;
+            }
+            if (apiObj.spec.permission) {
+                notices.push(`spec.permission is not used; this report is granted as reports/${reportId}`);
+                this.logger.warn(`${name}: ${notices[0]}`);
+            }
+
             for (let i = config.operator.validationRetryCount; i >= 0; i -= 1) {
                 try {
                     handlerMap[path] = await createReportHandler(db, apiObj.spec);
-                    pathMap[path] = apiObj.spec.permission || name;
-                    await this.updateResourceStatus(apiObj, 'VALIDATED');
+                    await provisionReport(reportId, this.logger);
+                    await this.updateResourceStatus(apiObj, 'VALIDATED', notices);
+                    return;
                 } catch (e) {
                     this.logger.error(`Error occurred while validating resource. ${e.code}`, e);
                     // Retry on specific error codes, statusCode 409, or message containing any of the retry substrings
@@ -114,14 +134,14 @@ class ReportingOperator {
                             continue;
                         }
                     }
-                    await this.updateResourceStatus(apiObj, 'INVALID', e.message);
+                    await this.updateResourceStatus(apiObj, 'INVALID', [...notices, e.message]);
                     return;
                 }
             }
         } else if (phase === 'DELETED') {
             delete handlerMap[path];
-            delete pathMap[path];
             delete this.resourceGeneration[name];
+            await deprovisionReport(reportId, this.logger);
         } else {
             this.logger.warn(`Unknown event type: ${phase}`);
         }

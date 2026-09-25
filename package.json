@@ -58,7 +58,7 @@
     "@internal/randomphrase": "file:src/lib/randomphrase",
     "@koa/cors": "^5.0.0",
     "@kubernetes/client-node": "^1.0.0",
-    "@mojaloop/authz": "^0.11.0",
+    "@mojaloop/authz": "^0.13.2",
     "@mojaloop/central-services-logger": "^11.9.3",
     "@mojaloop/central-services-shared": "^18.33.0",
     "async-exit-hook": "^2.0.1",

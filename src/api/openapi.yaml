@@ -10,7 +10,6 @@ info:
 servers:
   - url: /
 x-authz:
-  service: reports
   resourceTypes: [reports, participants]
 paths:
   /{reportName}:

@@ -68,6 +68,16 @@ describe('report', () => {
         await createMockServer({ config });
     });
 
+    test('serves its API document where the platform reads it', async () => {
+        const server = await createMockServer({ config });
+        const res = await server.get('/.authz/openapi');
+        expect(res.statusCode).toEqual(200);
+        expect(res.headers['content-type']).toEqual('application/json');
+        expect(res.body.openapi).toMatch(/^3\.1/);
+        const again = await server.get('/.authz/openapi').set('if-none-match', res.headers.etag);
+        expect(again.statusCode).toEqual(304);
+    });
+
     test('healthcheck passes', async () => {
         const server = await createMockServer({ config });
         const res = await server.get('/');

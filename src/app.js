@@ -16,7 +16,15 @@ const createApp = async ({ db, logger }) => {
     // Default context
     app.context.db = db;
     // What this service may answer, from the document that describes it
-    app.context.authz = await createGuard(path.join(__dirname, 'api', 'openapi.yaml'));
+    const authz = await createGuard(path.join(__dirname, 'api', 'openapi.yaml'));
+    app.context.authz = authz;
+
+    const expose = authz.expose();
+    app.use(async (ctx, next) => {
+        if (ctx.path !== authz.path) return next();
+        ctx.respond = false;
+        expose(ctx.req, ctx.res);
+    });
 
     app.use(cors());
 
